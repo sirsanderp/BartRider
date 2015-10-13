@@ -8,8 +8,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.sanderp.bartrider.BartXmlParser.StationDeparture;
-
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -25,7 +23,7 @@ public class BartMainActivity extends AppCompatActivity {
 
     private static final String TAG = BartMainActivity.class.getSimpleName();
 
-    private List<StationDeparture> departures;
+    private List<BartRouteScheduleParser.RouteSchedule> departures;
     private TextView mDestination;
     private TextView mPlatform;
     private TextView mMinutes;
@@ -59,7 +57,8 @@ public class BartMainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 return true;
             case R.id.action_refresh:
-                new BartAPISyncTask().execute("http://api.bart.gov/api/etd.aspx?cmd=etd&orig=cast&key=MW9S-E7SL-26DU-VV8V");
+//                new BartAPISyncTask().execute("http://api.bart.gov/api/etd.aspx?cmd=etd&orig=CAST&key=MW9S-E7SL-26DU-VV8V");
+                new BartAPISyncTask().execute("http://api.bart.gov/api/sched.aspx?cmd=depart&orig=cast&dest=mont&a=4&b=0&key=MW9S-E7SL-26DU-VV8V");
                 return true;
         }
 
@@ -84,10 +83,10 @@ public class BartMainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            for (StationDeparture d : departures) {
-                mDestination.setText(d.destination);
-                mPlatform.setText(d.platform);
-                mMinutes.setText(d.minutes);
+            for (BartRouteScheduleParser.RouteSchedule d : departures) {
+                mDestination.setText(d.orig_time);
+                mPlatform.setText(d.dest_time);
+                mMinutes.setText(d.fare);
             }
             Log.i(TAG, result);
         }
@@ -98,8 +97,7 @@ public class BartMainActivity extends AppCompatActivity {
      */
     private String refreshData(String bartUrl) throws XmlPullParserException, IOException {
         InputStream stream = null;
-        BartXmlParser parser = new BartXmlParser();
-        String data = "";
+        BartRouteScheduleParser parser = new BartRouteScheduleParser();
 
         try {
             stream = downloadData(bartUrl);

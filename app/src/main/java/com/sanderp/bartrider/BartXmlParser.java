@@ -18,7 +18,6 @@ public class BartXmlParser {
 
     private static final String TAG = BartXmlParser.class.getSimpleName();
 
-    private static final String ROOT = "root";
     private static final String STATION = "station";
     private static final String ESTIMATE_TIME_TO_DEPARTURE = "etd";
     private static final String ESTIMATE = "estimate";
