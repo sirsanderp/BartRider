@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class BartXmlParser {
 
-    private static final String TAG = BartXmlParser.class.getSimpleName();
+    private static final String TAG = "BartXmlParser";
 
     private static final String STATION = "station";
     private static final String ESTIMATE_TIME_TO_DEPARTURE = "etd";
@@ -40,7 +40,9 @@ public class BartXmlParser {
         }
     }
 
-    public List<StationDeparture> parse(InputStream in) throws XmlPullParserException, IOException {
+    public List<StationDeparture> parse(InputStream in)
+            throws XmlPullParserException, IOException {
+
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -50,14 +52,15 @@ public class BartXmlParser {
                 if (parser.getEventType() != XmlPullParser.START_TAG) continue;
                 if (parser.getName().equals(STATION)) break;
             }
-
             return readAPI(parser);
         } finally {
             in.close();
         }
     }
 
-    public List<StationDeparture> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
+    public List<StationDeparture> readAPI(XmlPullParser parser)
+            throws XmlPullParserException, IOException {
+
         List<StationDeparture> departures = new ArrayList();
 
         parser.require(XmlPullParser.START_TAG, ns, STATION);
@@ -72,7 +75,9 @@ public class BartXmlParser {
         return departures;
     }
 
-    public List<StationDeparture> readEstimatedDepartures(XmlPullParser parser) throws XmlPullParserException, IOException {
+    public List<StationDeparture> readEstimatedDepartures(XmlPullParser parser)
+            throws XmlPullParserException, IOException {
+
         List<StationDeparture> departures = new ArrayList();
         String destination = "";
 
@@ -91,8 +96,9 @@ public class BartXmlParser {
         return departures;
     }
 
-    public StationDeparture readEstimate(XmlPullParser parser, String dest) throws XmlPullParserException, IOException {
-        String destination = dest;
+    public StationDeparture readEstimate(XmlPullParser parser, String destination)
+            throws XmlPullParserException, IOException {
+
         String minutes = "";
         String platform = "";
 
@@ -113,15 +119,16 @@ public class BartXmlParser {
         return new StationDeparture(destination, platform, minutes);
     }
 
-    public String readTag(XmlPullParser parser, String tag) throws XmlPullParserException, IOException {
-        parser.require(XmlPullParser.START_TAG, ns, tag);
+    public String readTag(XmlPullParser parser, String tag)
+            throws XmlPullParserException, IOException {
 
         String value = "";
+
+        parser.require(XmlPullParser.START_TAG, ns, tag);
         if (parser.next() == XmlPullParser.TEXT) {
             value = parser.getText();
             parser.nextTag();
         }
-
         parser.require(XmlPullParser.END_TAG, ns, tag);
         return value;
     }

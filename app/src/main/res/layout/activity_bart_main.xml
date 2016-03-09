@@ -8,24 +8,37 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".BartMainActivity">
 
+    <Spinner
+        android:id="@+id/orig_spinner"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+
+    <Spinner
+        android:id="@+id/dest_spinner"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/orig_spinner" />
+
     <TextView
         android:id="@+id/destination"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/dest_spinner"
+        android:layout_marginTop="10dp"
         android:text="@string/hello_world" />
 
     <TextView
         android:id="@+id/platform"
-        android:layout_below="@+id/destination"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/destination"
         android:text="@string/hello_world" />
 
     <TextView
         android:id="@+id/minutes"
-        android:layout_below="@+id/platform"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/platform"
         android:text="@string/hello_world" />
 
 </RelativeLayout>

@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -21,21 +23,53 @@ import java.util.List;
  */
 public class BartMainActivity extends AppCompatActivity {
 
-    private static final String TAG = BartMainActivity.class.getSimpleName();
+    private static final String TAG = "BartMainActivity";
 
-    private List<BartRouteScheduleParser.RouteSchedule> departures;
-    private TextView mDestination;
-    private TextView mPlatform;
-    private TextView mMinutes;
+    private static final String API_URL = "http://api.bart.gov/api/";
+    private static final String API_KEY = "MW9S-E7SL-26DU-VV8V";
+
+    private List<BartRouteScheduleParser.RouteSchedule> routeSchedule;
+    private List<BartStationParser.Station> stations;
+
+    private Spinner mOrigSpinner;
+    private Spinner mDestSpinner;
+    private TextView mOrigTime;
+    private TextView mDestTime;
+    private TextView mFare;
+
+    public BartMainActivity() {
+        super();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bart_main);
 
-        mDestination = (TextView) findViewById(R.id.destination);
-        mPlatform = (TextView) findViewById(R.id.platform);
-        mMinutes = (TextView) findViewById(R.id.minutes);
+        // Initialize text fields
+        mOrigTime = (TextView) findViewById(R.id.destination);
+        mDestTime = (TextView) findViewById(R.id.platform);
+        mFare = (TextView) findViewById(R.id.minutes);
+
+        // Initialize spinners
+        mOrigSpinner = (Spinner) findViewById(R.id.orig_spinner);
+        ArrayAdapter<CharSequence> origAdapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.stations,
+                android.R.layout.simple_spinner_item);
+        origAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mOrigSpinner.setAdapter(origAdapter);
+
+        mDestSpinner = (Spinner) findViewById(R.id.dest_spinner);
+        ArrayAdapter<CharSequence> destAdapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.stations,
+                android.R.layout.simple_spinner_item);
+        destAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mDestSpinner.setAdapter(destAdapter);
+
+        Log.i(TAG, "Getting station data...");
+        new BartStationSyncTask().execute(API_URL + "stn.aspx?cmd=stns&key=" + API_KEY);
     }
 
     @Override
@@ -57,23 +91,24 @@ public class BartMainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 return true;
             case R.id.action_refresh:
-//                new BartAPISyncTask().execute("http://api.bart.gov/api/etd.aspx?cmd=etd&orig=CAST&key=MW9S-E7SL-26DU-VV8V");
-                new BartAPISyncTask().execute("http://api.bart.gov/api/sched.aspx?cmd=depart&orig=cast&dest=mont&a=4&b=0&key=MW9S-E7SL-26DU-VV8V");
+//                new BartAPISyncTask().execute(API_URL + "etd.aspx?cmd=etd&orig=CAST&key" + API_KEY);
+                new BartScheduleSyncTask().execute(
+                        API_URL + "sched.aspx?cmd=depart&orig=cast&dest=mont&a=4&b=0&key=" + API_KEY
+                );
                 return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
     /**
-     * Implementation of the AsyncTask to download data from the BART API.
+     * Implementation of the AsyncTask to download data from the BART Schedule API.
      */
-    private class BartAPISyncTask extends AsyncTask<String, Void, String> {
+    private class BartScheduleSyncTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... bartUrl) {
             try {
-                return refreshData(bartUrl[0]);
+                return refreshSchedule(bartUrl[0]);
             } catch (IOException e) {
                 return "Failed to refresh";
             } catch (XmlPullParserException e) {
@@ -83,32 +118,66 @@ public class BartMainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            for (BartRouteScheduleParser.RouteSchedule d : departures) {
-                mDestination.setText(d.orig_time);
-                mPlatform.setText(d.dest_time);
-                mMinutes.setText(d.fare);
+            for (BartRouteScheduleParser.RouteSchedule r : routeSchedule) {
+                mOrigTime.setText(r.orig_time);
+                mDestTime.setText(r.dest_time);
+                mFare.setText(r.fare);
             }
-            Log.i(TAG, result);
+        }
+    }
+
+    /**
+     * Implementation of the AsyncTask to download data from the BART Station API.
+     */
+    private class BartStationSyncTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... bartUrl) {
+            try {
+                return getStations(bartUrl[0]);
+            } catch (IOException e) {
+                return "Failed to refresh";
+            } catch (XmlPullParserException e) {
+                return "XML parser failed";
+            }
         }
     }
 
     /**
      * Creates the stream for AsyncTask
      */
-    private String refreshData(String bartUrl) throws XmlPullParserException, IOException {
+    private String refreshSchedule(String bartUrl) throws XmlPullParserException, IOException {
         InputStream stream = null;
         BartRouteScheduleParser parser = new BartRouteScheduleParser();
 
         try {
             stream = downloadData(bartUrl);
-            departures = parser.parse(stream);
+            routeSchedule = parser.parse(stream);
         } finally {
             if (stream != null) {
                 stream.close();
             }
         }
+        return null;
+    }
 
-        return departures.toString();
+    /**
+     * Creates the stream for Stations AsyncTask
+     */
+    private String getStations(String bartUrl) throws XmlPullParserException, IOException {
+        InputStream stream = null;
+        BartStationParser parser = new BartStationParser();
+
+        Log.i(TAG, "Parsing stations...");
+        try {
+            stream = downloadData(bartUrl);
+            stations = parser.parse(stream);
+        } finally {
+            if (stream != null) {
+                stream.close();
+            }
+        }
+        return null;
     }
 
     /**
@@ -121,8 +190,8 @@ public class BartMainActivity extends AppCompatActivity {
         conn.setConnectTimeout(15000);
         conn.setRequestMethod("GET");
         conn.setDoInput(true);
-
         conn.connect();
+
         return conn.getInputStream();
     }
 }
