@@ -1,4 +1,4 @@
-package com.sanderp.bartrider;
+package com.sanderp.bartrider.xmlparser;
 
 import android.util.Log;
 import android.util.Xml;
@@ -15,7 +15,6 @@ import java.util.List;
  * Created by Sander Peerna on 8/30/2015.
  */
 public class BartXmlParser {
-
     private static final String TAG = "BartXmlParser";
 
     private static final String STATION = "station";

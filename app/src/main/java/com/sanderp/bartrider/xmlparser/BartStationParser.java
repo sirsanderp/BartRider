@@ -1,7 +1,9 @@
-package com.sanderp.bartrider;
+package com.sanderp.bartrider.xmlparser;
 
 import android.util.Log;
 import android.util.Xml;
+
+import com.sanderp.bartrider.structure.Station;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -31,31 +33,6 @@ public class BartStationParser {
 
     // Namespace is not used for this parser
     public static final String ns = null;
-
-    public static class Station {
-        public final String name;
-        public final String abbr;
-        public final String latitude;
-        public final String longitude;
-        public final String address;
-        public final String city;
-        public final String county;
-        public final String state;
-        public final String zipcode;
-
-        private Station(String name, String abbr, String latitude, String longitude, String address,
-                        String city, String county, String state, String zipcode) {
-            this.name = name;
-            this.abbr = abbr;
-            this.latitude = latitude;
-            this.longitude = longitude;
-            this.address = address;
-            this.city = city;
-            this.county = county;
-            this.state = state;
-            this.zipcode = zipcode;
-        }
-    }
 
     public List<Station> parse(InputStream in)
             throws XmlPullParserException, IOException {
@@ -111,30 +88,41 @@ public class BartStationParser {
 
             if (parser.getEventType() == XmlPullParser.START_TAG) {
                 attr = parser.getName();
-                Log.i(TAG, "ATTR: " + attr);
                 continue;
             }
 
-            if (attr.equals(NAME)) {
-                name = parser.getText();
-            } else if (attr.equals(ABBR)) {
-                abbr = parser.getText();
-            } else if (attr.equals(LAT)) {
-                latitude = parser.getText();
-            } else if (attr.equals(LONG)) {
-                longitude = parser.getText();
-            } else if (attr.equals(ADDR)) {
-                address = parser.getText();
-            } else if (attr.equals(CITY)) {
-                city = parser.getText();
-            } else if (attr.equals(CNTY)) {
-                county = parser.getText();
-            } else if (attr.equals(STATE)) {
-                state = parser.getText();
-            } else if (attr.equals(ZIP)) {
-                zipcode = parser.getText();
+            String value = parser.getText();
+            switch (attr) {
+                case NAME:
+                    name = value;
+                    break;
+                case ABBR:
+                    abbr = value;
+                    break;
+                case LAT:
+                    latitude = value;
+                    break;
+                case LONG:
+                    longitude = value;
+                    break;
+                case ADDR:
+                    address = value;
+                    break;
+                case CITY:
+                    city = value;
+                    break;
+                case CNTY:
+                    county = value;
+                    break;
+                case STATE:
+                    state = value;
+                    break;
+                case ZIP:
+                    zipcode = value;
+                    break;
             }
-            Log.i(TAG, parser.getText());
+            Log.i(TAG, "ATTR: " + attr);
+            Log.i(TAG, "VALUE: " + value);
         }
         return new Station(name, abbr, latitude, longitude, address, city, county, state, zipcode);
     }

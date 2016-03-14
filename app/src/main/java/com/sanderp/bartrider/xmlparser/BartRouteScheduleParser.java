@@ -1,7 +1,9 @@
-package com.sanderp.bartrider;
+package com.sanderp.bartrider.xmlparser;
 
 import android.util.Log;
 import android.util.Xml;
+
+import com.sanderp.bartrider.structure.RouteSchedule;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -15,7 +17,6 @@ import java.util.List;
  * Created by Sander on 10/12/2015.
  */
 public class BartRouteScheduleParser {
-
     private static final String TAG = "BartRouteScheduleParser";
 
     private static final String SCHEDULE = "schedule";
@@ -30,22 +31,6 @@ public class BartRouteScheduleParser {
 
     // Namespace is not used for this parser
     public static final String ns = null;
-
-    public static class RouteSchedule {
-        public final String orig;
-        public final String orig_time;
-        public final String dest;
-        public final String dest_time;
-        public final String fare;
-
-        private RouteSchedule(String orig, String orig_time, String dest, String dest_time, String fare) {
-            this.orig = orig;
-            this.orig_time = orig_time;
-            this.dest = dest;
-            this.dest_time = dest_time;
-            this.fare = fare;
-        }
-    }
 
     public List<RouteSchedule> parse(InputStream in)
             throws XmlPullParserException, IOException {
@@ -92,23 +77,27 @@ public class BartRouteScheduleParser {
         int attr_count = parser.getAttributeCount();
         for (int i = 0; i < attr_count; i++){
             String attr = parser.getAttributeName(i);
-            Log.i(TAG, "ATTR: " + attr);
-            if (attr.equals(ATTR_ORIGIN)) {
-                origin = parser.getAttributeValue(i);
-                Log.i(TAG, origin);
-            } else if (attr.equals(ATTR_ORIGIN_TIME)) {
-                origin_time = parser.getAttributeValue(i);
-                Log.i(TAG, origin_time);
-            } else if (attr.equals(ATTR_DEST)) {
-                destination = parser.getAttributeValue(i);
-                Log.i(TAG, destination);
-            } else if (attr.equals(ATTR_DEST_TIME)) {
-                destination_time = parser.getAttributeValue(i);
-                Log.i(TAG, destination_time);
-            } else if (attr.equals(ATTR_FARE)) {
-                fare = parser.getAttributeValue(i);
-                Log.i(TAG, fare);
+            String value = parser.getAttributeValue(i);
+
+            switch (attr) {
+                case ATTR_ORIGIN:
+                    origin = value;
+                    break;
+                case ATTR_ORIGIN_TIME:
+                    origin_time = value;
+                    break;
+                case ATTR_DEST:
+                    destination = value;
+                    break;
+                case ATTR_DEST_TIME:
+                    destination_time = value;
+                    break;
+                case ATTR_FARE:
+                    fare = value;
+                    break;
             }
+            Log.i(TAG, "ATTR: " + attr);
+            Log.i(TAG, "VALUE: " + value);
         }
         return new RouteSchedule(origin, origin_time, destination, destination_time, fare);
     }

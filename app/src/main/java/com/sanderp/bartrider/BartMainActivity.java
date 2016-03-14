@@ -1,5 +1,7 @@
 package com.sanderp.bartrider;
 
+import android.content.ContentValues;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -9,6 +11,12 @@ import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import com.sanderp.bartrider.database.StationContract;
+import com.sanderp.bartrider.structure.RouteSchedule;
+import com.sanderp.bartrider.structure.Station;
+import com.sanderp.bartrider.xmlparser.BartRouteScheduleParser;
+import com.sanderp.bartrider.xmlparser.BartStationParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -22,14 +30,13 @@ import java.util.List;
  * Created by Sander Peerna on 8/23/2015.
  */
 public class BartMainActivity extends AppCompatActivity {
-
     private static final String TAG = "BartMainActivity";
 
     private static final String API_URL = "http://api.bart.gov/api/";
     private static final String API_KEY = "MW9S-E7SL-26DU-VV8V";
 
-    private List<BartRouteScheduleParser.RouteSchedule> routeSchedule;
-    private List<BartStationParser.Station> stations;
+    private List<RouteSchedule> routeSchedule;
+    private List<Station> stations;
 
     private Spinner mOrigSpinner;
     private Spinner mDestSpinner;
@@ -118,7 +125,7 @@ public class BartMainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            for (BartRouteScheduleParser.RouteSchedule r : routeSchedule) {
+            for (RouteSchedule r : routeSchedule) {
                 mOrigTime.setText(r.orig_time);
                 mDestTime.setText(r.dest_time);
                 mFare.setText(r.fare);
@@ -141,6 +148,21 @@ public class BartMainActivity extends AppCompatActivity {
                 return "XML parser failed";
             }
         }
+    }
+
+    /**
+     * Sets up a connection and gets an input stream
+     */
+    private InputStream downloadData(String bartUrl) throws IOException {
+        URL url = new URL(bartUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setReadTimeout(10000);
+        conn.setConnectTimeout(15000);
+        conn.setRequestMethod("GET");
+        conn.setDoInput(true);
+        conn.connect();
+
+        return conn.getInputStream();
     }
 
     /**
@@ -172,26 +194,31 @@ public class BartMainActivity extends AppCompatActivity {
         try {
             stream = downloadData(bartUrl);
             stations = parser.parse(stream);
+
+            ContentValues values = new ContentValues();
+            for (Station station : stations) {
+                values.clear();
+                values.put(StationContract.Column.ID, station.getId());
+                values.put(StationContract.Column.NAME, station.getName());
+                values.put(StationContract.Column.ABBREVATION, station.getAbbr());
+                values.put(StationContract.Column.LATITUDE, station.getLatitude());
+                values.put(StationContract.Column.LONGITDUE, station.getLongitude());
+                values.put(StationContract.Column.ADDRESS, station.getAddress());
+                values.put(StationContract.Column.CITY, station.getCity());
+                values.put(StationContract.Column.COUNTY, station.getCounty());
+                values.put(StationContract.Column.STATE, station.getState());
+                values.put(StationContract.Column.ZIPCODE, station.getZipcode());
+
+                Uri uri = getContentResolver().insert(StationContract.CONTENT_URI, values);
+                if (uri != null) {
+                    Log.i(TAG, String.format("%s: %s", station.getId(), station.getAbbr()));
+                }
+            }
         } finally {
             if (stream != null) {
                 stream.close();
             }
         }
         return null;
-    }
-
-    /**
-     * Sets up a connection and gets an input stream
-     */
-    private InputStream downloadData(String bartUrl) throws IOException {
-        URL url = new URL(bartUrl);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(10000);
-        conn.setConnectTimeout(15000);
-        conn.setRequestMethod("GET");
-        conn.setDoInput(true);
-        conn.connect();
-
-        return conn.getInputStream();
     }
 }
