@@ -1,6 +1,5 @@
 package com.sanderp.bartrider.xmlparser;
 
-import android.util.Log;
 import android.util.Xml;
 
 import com.sanderp.bartrider.structure.Station;
@@ -121,8 +120,8 @@ public class BartStationParser {
                     zipcode = value;
                     break;
             }
-            Log.i(TAG, "ATTR: " + attr);
-            Log.i(TAG, "VALUE: " + value);
+//            Log.i(TAG, "ATTR: " + attr);
+//            Log.i(TAG, "VALUE: " + value);
         }
         return new Station(name, abbr, latitude, longitude, address, city, county, state, zipcode);
     }

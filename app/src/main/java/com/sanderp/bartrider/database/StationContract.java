@@ -31,5 +31,5 @@ public class StationContract {
     public static final int STATION_ITEM = 1;
     public static final int STATION_DIR = 2;
 
-    public static final String DEFAULT_SORT = Column.NAME + " DESC";
+    public static final String DEFAULT_SORT = Column.NAME + " ASC";
 }

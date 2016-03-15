@@ -1,6 +1,7 @@
 package com.sanderp.bartrider;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -8,7 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -44,6 +45,10 @@ public class BartMainActivity extends AppCompatActivity {
     private TextView mDestTime;
     private TextView mFare;
 
+    private static final String[] FROM = {StationContract.Column.NAME};
+    private static final int [] TO = {android.R.id.text1};
+    private SimpleCursorAdapter mAdapter;
+
     public BartMainActivity() {
         super();
     }
@@ -60,23 +65,24 @@ public class BartMainActivity extends AppCompatActivity {
 
         // Initialize spinners
         mOrigSpinner = (Spinner) findViewById(R.id.orig_spinner);
-        ArrayAdapter<CharSequence> origAdapter = ArrayAdapter.createFromResource(
-                this,
-                R.array.stations,
-                android.R.layout.simple_spinner_item);
-        origAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mOrigSpinner.setAdapter(origAdapter);
-
         mDestSpinner = (Spinner) findViewById(R.id.dest_spinner);
-        ArrayAdapter<CharSequence> destAdapter = ArrayAdapter.createFromResource(
-                this,
-                R.array.stations,
-                android.R.layout.simple_spinner_item);
-        destAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mDestSpinner.setAdapter(destAdapter);
 
-        Log.i(TAG, "Getting station data...");
+        // Populate the database with station info
         new BartStationSyncTask().execute(API_URL + "stn.aspx?cmd=stns&key=" + API_KEY);
+
+        // Populate the spinners with stations
+        String[] projection = {StationContract.Column.ID, StationContract.Column.NAME};
+
+        Cursor c = getContentResolver().query(StationContract.CONTENT_URI, projection,
+                null, null, StationContract.DEFAULT_SORT);
+
+//        System.out.println(DatabaseUtils.dumpCursorToString(c));
+
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
+                android.R.layout.simple_spinner_item, c, FROM, TO, 0);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mOrigSpinner.setAdapter(adapter);
+        mDestSpinner.setAdapter(adapter);
     }
 
     @Override

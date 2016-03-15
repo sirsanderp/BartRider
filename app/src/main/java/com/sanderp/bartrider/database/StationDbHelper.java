@@ -8,10 +8,10 @@ import android.util.Log;
 /**
  * Created by Sander on 3/13/2016.
  */
-public class BartDbHelper extends SQLiteOpenHelper {
-    private static final String TAG = "BartDbHelper";
+public class StationDbHelper extends SQLiteOpenHelper {
+    private static final String TAG = "StationDbHelper";
 
-    public BartDbHelper(Context context) {
+    public StationDbHelper(Context context) {
         super(context, StationContract.DB_NAME, null, StationContract.DB_VERSION);
     }
 

@@ -13,7 +13,7 @@ import android.util.Log;
 
 public class StationProvider extends ContentProvider {
     private static final String TAG = "StationProvider";
-    private BartDbHelper mBartDbHelper;
+    private StationDbHelper mStationDbHelper;
 
     private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     static {
@@ -25,7 +25,7 @@ public class StationProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mBartDbHelper = new BartDbHelper(getContext());
+        mStationDbHelper = new StationDbHelper(getContext());
         return true;
     }
 
@@ -49,7 +49,7 @@ public class StationProvider extends ContentProvider {
         }
         String orderBy = (TextUtils.isEmpty(sortOrder)) ? StationContract.DEFAULT_SORT : sortOrder;
 
-        SQLiteDatabase db = mBartDbHelper.getReadableDatabase();
+        SQLiteDatabase db = mStationDbHelper.getReadableDatabase();
         Cursor cursor = qb.query(db, projection, selection, selectionArgs, null, null, orderBy);
 
 //        cursor.setNotificationUri(getContext().getContentResolver(), uri);
@@ -67,7 +67,7 @@ public class StationProvider extends ContentProvider {
             throw new IllegalArgumentException("Illegal uri: " + uri);
         }
 
-        SQLiteDatabase db = mBartDbHelper.getWritableDatabase();
+        SQLiteDatabase db = mStationDbHelper.getWritableDatabase();
         long rowId = db.insertWithOnConflict(StationContract.TABLE, null,
                 values, SQLiteDatabase.CONFLICT_IGNORE);
 
@@ -112,7 +112,7 @@ public class StationProvider extends ContentProvider {
                 throw new IllegalArgumentException("Illegal uri: " + uri);
         }
 
-        SQLiteDatabase db = mBartDbHelper.getWritableDatabase();
+        SQLiteDatabase db = mStationDbHelper.getWritableDatabase();
         int ret = db.delete(StationContract.TABLE, where, selectionArgs);
 
         if (ret > 0) {
