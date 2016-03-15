@@ -23,11 +23,11 @@ public class BartStationParser {
     private static final String STATION = "station";
     private static final String NAME = "name";
     private static final String ABBR = "abbr";
-    private static final String LAT = "gtfs_latitude";
-    private static final String LONG = "gtfs_longitude";
-    private static final String ADDR = "address";
+    private static final String LATITUDE = "gtfs_latitude";
+    private static final String LONGITUDE = "gtfs_longitude";
+    private static final String ADDRESS = "address";
     private static final String CITY = "city";
-    private static final String CNTY = "county";
+    private static final String COUNTY = "county";
     private static final String STATE = "state";
     private static final String ZIP = "zipcode";
 
@@ -99,19 +99,19 @@ public class BartStationParser {
                 case ABBR:
                     abbr = value;
                     break;
-                case LAT:
+                case LATITUDE:
                     latitude = value;
                     break;
-                case LONG:
+                case LONGITUDE:
                     longitude = value;
                     break;
-                case ADDR:
+                case ADDRESS:
                     address = value;
                     break;
                 case CITY:
                     city = value;
                     break;
-                case CNTY:
+                case COUNTY:
                     county = value;
                     break;
                 case STATE:

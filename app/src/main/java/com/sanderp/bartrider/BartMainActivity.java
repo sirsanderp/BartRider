@@ -98,9 +98,9 @@ public class BartMainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 return true;
             case R.id.action_refresh:
-//                new BartAPISyncTask().execute(API_URL + "etd.aspx?cmd=etd&orig=CAST&key" + API_KEY);
+//                new BartAPISyncTask().execute(API_URL + "etd.aspx?cmd=etd&origin=CAST&key" + API_KEY);
                 new BartScheduleSyncTask().execute(
-                        API_URL + "sched.aspx?cmd=depart&orig=cast&dest=mont&a=4&b=0&key=" + API_KEY
+                        API_URL + "sched.aspx?cmd=depart&origin=cast&destination=mont&a=4&b=0&key=" + API_KEY
                 );
                 return true;
         }
@@ -126,8 +126,8 @@ public class BartMainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
             for (RouteSchedule r : routeSchedule) {
-                mOrigTime.setText(r.orig_time);
-                mDestTime.setText(r.dest_time);
+                mOrigTime.setText(r.originTime);
+                mDestTime.setText(r.destinationTime);
                 mFare.setText(r.fare);
             }
         }

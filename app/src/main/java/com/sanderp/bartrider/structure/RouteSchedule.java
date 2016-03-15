@@ -4,34 +4,34 @@ package com.sanderp.bartrider.structure;
  * Created by Sander on 3/13/2016.
  */
 public class RouteSchedule {
-    public final String orig;
-    public final String orig_time;
-    public final String dest;
-    public final String dest_time;
+    public final String origin;
+    public final String originTime;
+    public final String destination;
+    public final String destinationTime;
     public final String fare;
 
-    public RouteSchedule(String orig, String orig_time, String dest, String dest_time, String fare) {
-        this.orig = orig;
-        this.orig_time = orig_time;
-        this.dest = dest;
-        this.dest_time = dest_time;
+    public RouteSchedule(String origin, String originTime, String destination, String destTime, String fare) {
+        this.origin = origin;
+        this.originTime = originTime;
+        this.destination = destination;
+        this.destinationTime = destTime;
         this.fare = fare;
     }
 
-    public String getOrig() {
-        return orig;
+    public String getOrigin() {
+        return origin;
     }
 
-    public String getOrig_time() {
-        return orig_time;
+    public String getOriginTime() {
+        return originTime;
     }
 
-    public String getDest() {
-        return dest;
+    public String getDestination() {
+        return destination;
     }
 
-    public String getDest_time() {
-        return dest_time;
+    public String getDestinationTime() {
+        return destinationTime;
     }
 
     public String getFare() {

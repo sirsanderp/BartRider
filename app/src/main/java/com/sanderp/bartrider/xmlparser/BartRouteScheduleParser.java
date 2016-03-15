@@ -20,14 +20,12 @@ public class BartRouteScheduleParser {
     private static final String TAG = "BartRouteScheduleParser";
 
     private static final String SCHEDULE = "schedule";
-    private static final String REQUEST = "request";
     private static final String TRIP = "trip";
-    private static final String LEG = "leg";
-    private static final String ATTR_ORIGIN = "origin";
-    private static final String ATTR_ORIGIN_TIME = "origTimeMin";
-    private static final String ATTR_DEST = "destination";
-    private static final String ATTR_DEST_TIME = "destTimeMin";
-    private static final String ATTR_FARE = "fare";
+    private static final String ORIGIN = "origin";
+    private static final String ORIGIN_TIME = "origTimeMin";
+    private static final String DESTINATION = "destination";
+    private static final String DESTINATION_TIME = "destTimeMin";
+    private static final String FARE = "fare";
 
     // Namespace is not used for this parser
     public static final String ns = null;
@@ -80,19 +78,19 @@ public class BartRouteScheduleParser {
             String value = parser.getAttributeValue(i);
 
             switch (attr) {
-                case ATTR_ORIGIN:
+                case ORIGIN:
                     origin = value;
                     break;
-                case ATTR_ORIGIN_TIME:
+                case ORIGIN_TIME:
                     origin_time = value;
                     break;
-                case ATTR_DEST:
+                case DESTINATION:
                     destination = value;
                     break;
-                case ATTR_DEST_TIME:
+                case DESTINATION_TIME:
                     destination_time = value;
                     break;
-                case ATTR_FARE:
+                case FARE:
                     fare = value;
                     break;
             }
