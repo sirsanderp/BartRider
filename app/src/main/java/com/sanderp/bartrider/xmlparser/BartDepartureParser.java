@@ -3,7 +3,7 @@ package com.sanderp.bartrider.xmlparser;
 import android.util.Log;
 import android.util.Xml;
 
-import com.sanderp.bartrider.structure.RouteSchedule;
+import com.sanderp.bartrider.structure.Departure;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -16,8 +16,8 @@ import java.util.List;
 /**
  * Created by Sander on 10/12/2015.
  */
-public class BartRouteScheduleParser {
-    private static final String TAG = "BartRouteScheduleParser";
+public class BartDepartureParser {
+    private static final String TAG = "BartDepartureParser";
 
     private static final String SCHEDULE = "schedule";
     private static final String TRIP = "trip";
@@ -30,7 +30,7 @@ public class BartRouteScheduleParser {
     // Namespace is not used for this parser
     public static final String ns = null;
 
-    public List<RouteSchedule> parse(InputStream in)
+    public List<Departure> parse(InputStream in)
             throws XmlPullParserException, IOException {
 
         try {
@@ -48,10 +48,10 @@ public class BartRouteScheduleParser {
         }
     }
 
-    public List<RouteSchedule> readAPI(XmlPullParser parser)
+    public List<Departure> readAPI(XmlPullParser parser)
             throws XmlPullParserException, IOException {
 
-        List<RouteSchedule> departures = new ArrayList();
+        List<Departure> departures = new ArrayList();
 
         parser.require(XmlPullParser.START_TAG, ns, SCHEDULE);
         while (parser.next() !=  XmlPullParser.END_DOCUMENT) {
@@ -61,7 +61,7 @@ public class BartRouteScheduleParser {
         return departures;
     }
 
-    public RouteSchedule readTrip(XmlPullParser parser)
+    public Departure readTrip(XmlPullParser parser)
             throws XmlPullParserException, IOException {
 
         String origin = "";
@@ -97,6 +97,6 @@ public class BartRouteScheduleParser {
             Log.i(TAG, "ATTR: " + attr);
             Log.i(TAG, "VALUE: " + value);
         }
-        return new RouteSchedule(origin, origin_time, destination, destination_time, fare);
+        return new Departure(origin, origin_time, destination, destination_time, fare);
     }
 }

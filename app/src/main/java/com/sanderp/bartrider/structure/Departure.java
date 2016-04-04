@@ -3,14 +3,14 @@ package com.sanderp.bartrider.structure;
 /**
  * Created by Sander on 3/13/2016.
  */
-public class RouteSchedule {
+public class Departure {
     public final String origin;
     public final String originTime;
     public final String destination;
     public final String destinationTime;
     public final String fare;
 
-    public RouteSchedule(String origin, String originTime, String destination, String destTime, String fare) {
+    public Departure(String origin, String originTime, String destination, String destTime, String fare) {
         this.origin = origin;
         this.originTime = originTime;
         this.destination = destination;

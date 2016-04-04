@@ -14,9 +14,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.sanderp.bartrider.database.StationContract;
-import com.sanderp.bartrider.structure.RouteSchedule;
+import com.sanderp.bartrider.structure.Departure;
 import com.sanderp.bartrider.structure.Station;
-import com.sanderp.bartrider.xmlparser.BartRouteScheduleParser;
+import com.sanderp.bartrider.xmlparser.BartDepartureParser;
 import com.sanderp.bartrider.xmlparser.BartStationParser;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -36,7 +36,7 @@ public class BartMainActivity extends AppCompatActivity {
     private static final String API_URL = "http://api.bart.gov/api/";
     private static final String API_KEY = "MW9S-E7SL-26DU-VV8V";
 
-    private List<RouteSchedule> routeSchedule;
+    private List<Departure> departures;
     private List<Station> stations;
 
     private Spinner mOrigSpinner;
@@ -47,7 +47,6 @@ public class BartMainActivity extends AppCompatActivity {
 
     private static final String[] FROM = {StationContract.Column.NAME};
     private static final int [] TO = {android.R.id.text1};
-    private SimpleCursorAdapter mAdapter;
 
     public BartMainActivity() {
         super();
@@ -105,8 +104,8 @@ public class BartMainActivity extends AppCompatActivity {
                 return true;
             case R.id.action_refresh:
 //                new BartAPISyncTask().execute(API_URL + "etd.aspx?cmd=etd&origin=CAST&key" + API_KEY);
-                new BartScheduleSyncTask().execute(
-                        API_URL + "sched.aspx?cmd=depart&origin=cast&destination=mont&a=4&b=0&key=" + API_KEY
+                new BartDepartureSyncTask().execute(
+                        API_URL + "sched.aspx?cmd=depart&orig=cast&dest=mont&a=4&b=0&key=" + API_KEY
                 );
                 return true;
         }
@@ -116,12 +115,12 @@ public class BartMainActivity extends AppCompatActivity {
     /**
      * Implementation of the AsyncTask to download data from the BART Schedule API.
      */
-    private class BartScheduleSyncTask extends AsyncTask<String, Void, String> {
+    private class BartDepartureSyncTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... bartUrl) {
             try {
-                return refreshSchedule(bartUrl[0]);
+                return refreshDepartures(bartUrl[0]);
             } catch (IOException e) {
                 return "Failed to refresh";
             } catch (XmlPullParserException e) {
@@ -131,12 +130,30 @@ public class BartMainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            for (RouteSchedule r : routeSchedule) {
-                mOrigTime.setText(r.originTime);
-                mDestTime.setText(r.destinationTime);
-                mFare.setText(r.fare);
+            for (Departure d : departures) {
+                mOrigTime.setText(d.originTime);
+                mDestTime.setText(d.destinationTime);
+                mFare.setText(d.fare);
             }
         }
+    }
+
+    /**
+     * Creates the stream for AsyncTask
+     */
+    private String refreshDepartures(String bartUrl) throws XmlPullParserException, IOException {
+        InputStream stream = null;
+        BartDepartureParser parser = new BartDepartureParser();
+
+        try {
+            stream = downloadData(bartUrl);
+            departures = parser.parse(stream);
+        } finally {
+            if (stream != null) {
+                stream.close();
+            }
+        }
+        return null;
     }
 
     /**
@@ -154,39 +171,6 @@ public class BartMainActivity extends AppCompatActivity {
                 return "XML parser failed";
             }
         }
-    }
-
-    /**
-     * Sets up a connection and gets an input stream
-     */
-    private InputStream downloadData(String bartUrl) throws IOException {
-        URL url = new URL(bartUrl);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(10000);
-        conn.setConnectTimeout(15000);
-        conn.setRequestMethod("GET");
-        conn.setDoInput(true);
-        conn.connect();
-
-        return conn.getInputStream();
-    }
-
-    /**
-     * Creates the stream for AsyncTask
-     */
-    private String refreshSchedule(String bartUrl) throws XmlPullParserException, IOException {
-        InputStream stream = null;
-        BartRouteScheduleParser parser = new BartRouteScheduleParser();
-
-        try {
-            stream = downloadData(bartUrl);
-            routeSchedule = parser.parse(stream);
-        } finally {
-            if (stream != null) {
-                stream.close();
-            }
-        }
-        return null;
     }
 
     /**
@@ -226,5 +210,20 @@ public class BartMainActivity extends AppCompatActivity {
             }
         }
         return null;
+    }
+
+    /**
+     * Sets up a connection and gets an input stream
+     */
+    private InputStream downloadData(String bartUrl) throws IOException {
+        URL url = new URL(bartUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setReadTimeout(10000);
+        conn.setConnectTimeout(15000);
+        conn.setRequestMethod("GET");
+        conn.setDoInput(true);
+        conn.connect();
+
+        return conn.getInputStream();
     }
 }
