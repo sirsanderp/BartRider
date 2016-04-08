@@ -94,8 +94,8 @@ public class BartDepartureParser {
                     fare = value;
                     break;
             }
-            Log.i(TAG, "ATTR: " + attr);
-            Log.i(TAG, "VALUE: " + value);
+            Log.d(TAG, "ATTR: " + attr);
+            Log.d(TAG, "VALUE: " + value);
         }
         return new Departure(origin, origin_time, destination, destination_time, fare);
     }
