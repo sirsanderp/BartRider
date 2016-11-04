@@ -8,7 +8,7 @@ import java.net.URL;
 /**
  * Created by Sander on 4/8/2016.
  */
-public class BartApiConnection {
+public class ApiConnection {
 
     /**
      * Sets up a connection and gets an input stream

@@ -4,8 +4,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.sanderp.bartrider.structure.Departure;
-import com.sanderp.bartrider.utility.BartApiConnection;
-import com.sanderp.bartrider.xmlparser.BartDepartureParser;
+import com.sanderp.bartrider.utility.ApiConnection;
+import com.sanderp.bartrider.xmlparser.QuickPlannerDepartureParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -16,13 +16,13 @@ import java.util.List;
 /**
  * Implementation of the AsyncTask to download data from the BART Schedule API.
  */
-public class BartDepartureSyncTask extends AsyncTask<String, Void, String> {
-    private static final String TAG = "BartDepartureSyncTask";
+public class QuickPlannerDepartureAsyncTask extends AsyncTask<String, Void, String> {
+    private static final String TAG = "QuickPlannerDepartureAsyncTask";
 
     private AsyncTaskResponse delegate;
     private List<Departure> departures;
 
-    public BartDepartureSyncTask(AsyncTaskResponse delegate) {
+    public QuickPlannerDepartureAsyncTask(AsyncTaskResponse delegate) {
         this.delegate = delegate;
     }
 
@@ -47,11 +47,11 @@ public class BartDepartureSyncTask extends AsyncTask<String, Void, String> {
      */
     private String refreshDepartures(String bartUrl) throws XmlPullParserException, IOException {
         InputStream stream = null;
-        BartDepartureParser parser = new BartDepartureParser();
+        QuickPlannerDepartureParser parser = new QuickPlannerDepartureParser();
 
         Log.i(TAG, "Refreshing departure info...");
         try {
-            stream = BartApiConnection.downloadData(bartUrl);
+            stream = ApiConnection.downloadData(bartUrl);
             departures = parser.parse(stream);
         } finally {
             if (stream != null) {

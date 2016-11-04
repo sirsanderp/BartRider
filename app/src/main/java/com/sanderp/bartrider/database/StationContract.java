@@ -25,7 +25,7 @@ public class StationContract {
         public static final String ZIPCODE = "zipcode";
     }
 
-    public static final String AUTHORITY = "com.sanderp.bartrider.database.StationProvider";
+    public static final String AUTHORITY = "com.sanderp.bartrider.database.StationProvider"; // Shorten to com.sanderp.bartrider.provider?
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + TABLE);
 
     public static final int STATION_ITEM = 1;

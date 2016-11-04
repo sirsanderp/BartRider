@@ -26,7 +26,7 @@ public class StationProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         mStationDbHelper = new StationDbHelper(getContext());
-        return true;
+        return (mStationDbHelper == null) ? false : true;
     }
 
     @Override

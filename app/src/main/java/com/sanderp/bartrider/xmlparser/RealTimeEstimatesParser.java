@@ -14,8 +14,8 @@ import java.util.List;
 /**
  * Created by Sander Peerna on 8/30/2015.
  */
-public class BartXmlParser {
-    private static final String TAG = "BartXmlParser";
+public class RealTimeEstimatesParser {
+    private static final String TAG = "RealTimeEstimatesParser";
 
     private static final String STATION = "station";
     private static final String ESTIMATE_TIME_TO_DEPARTURE = "etd";

@@ -8,8 +8,8 @@ import android.util.Log;
 
 import com.sanderp.bartrider.database.StationContract;
 import com.sanderp.bartrider.structure.Station;
-import com.sanderp.bartrider.utility.BartApiConnection;
-import com.sanderp.bartrider.xmlparser.BartStationParser;
+import com.sanderp.bartrider.utility.ApiConnection;
+import com.sanderp.bartrider.xmlparser.StationListParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -20,14 +20,14 @@ import java.util.List;
 /**
  * Implementation of the AsyncTask to download data from the BART Station API.
  */
-public class BartStationSyncTask extends AsyncTask<String, Void, String> {
-    private static final String TAG = "BartStationSyncTask";
+public class StationListAsyncTask extends AsyncTask<String, Void, String> {
+    private static final String TAG = "StationListAsyncTask";
 
     private AsyncTaskResponse delegate;
     private Context context;
     private List<Station> stations;
 
-    public BartStationSyncTask(AsyncTaskResponse delegate, Context context) {
+    public StationListAsyncTask(AsyncTaskResponse delegate, Context context) {
         this.context = context;
         this.delegate = delegate;
     }
@@ -53,11 +53,11 @@ public class BartStationSyncTask extends AsyncTask<String, Void, String> {
      */
     private String getStations(String bartUrl) throws XmlPullParserException, IOException {
         InputStream stream = null;
-        BartStationParser parser = new BartStationParser();
+        StationListParser parser = new StationListParser();
 
         Log.i(TAG, "Parsing stations...");
         try {
-            stream = BartApiConnection.downloadData(bartUrl);
+            stream = ApiConnection.downloadData(bartUrl);
             stations = parser.parse(stream);
 
             ContentValues values = new ContentValues();

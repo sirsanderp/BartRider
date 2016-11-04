@@ -16,8 +16,8 @@ import java.util.List;
 /**
  * Created by Sander on 3/8/2016.
  */
-public class BartStationParser {
-    private static final String TAG = "BartStationParser";
+public class StationListParser {
+    private static final String TAG = "StationListParser";
 
     private static final String STATIONS = "stations";
     private static final String STATION = "station";

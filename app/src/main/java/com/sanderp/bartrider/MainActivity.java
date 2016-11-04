@@ -1,5 +1,6 @@
 package com.sanderp.bartrider;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
@@ -7,37 +8,41 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
-import com.sanderp.bartrider.asynctask.BartDepartureSyncTask;
-import com.sanderp.bartrider.asynctask.BartStationSyncTask;
+import com.sanderp.bartrider.asynctask.QuickPlannerDepartureAsyncTask;
+import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.StationContract;
 import com.sanderp.bartrider.structure.Departure;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Sander Peerna on 8/23/2015.
  */
-public class BartMainActivity extends AppCompatActivity {
-    private static final String TAG = "BartMainActivity";
-
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private static final String API_URL = "http://api.bart.gov/api/";
     private static final String API_KEY = "MW9S-E7SL-26DU-VV8V";
 
+    private static final String[] FROM = {StationContract.Column.NAME};
+    private static final int [] TO = {android.R.id.text1};
+
+    private Context mainContext = this;
+    private ListView mListView;
     private Spinner mOrigSpinner;
     private Spinner mDestSpinner;
     private TextView mOrigTime;
     private TextView mDestTime;
     private TextView mFare;
 
-    private static final String[] FROM = {StationContract.Column.NAME};
-    private static final int [] TO = {android.R.id.text1};
-
-    public BartMainActivity() {
+    public MainActivity() {
         super();
     }
 
@@ -55,8 +60,11 @@ public class BartMainActivity extends AppCompatActivity {
         mOrigSpinner = (Spinner) findViewById(R.id.orig_spinner);
         mDestSpinner = (Spinner) findViewById(R.id.dest_spinner);
 
+        // Initialize list view
+        mListView = (ListView) findViewById(R.id.list_view);
+
         // Populate the database with station info
-        new BartStationSyncTask(new AsyncTaskResponse() {
+        new StationListAsyncTask(new AsyncTaskResponse() {
             @Override
             public void processFinish(Object output) {
                 // Populate the spinners with stations
@@ -67,7 +75,7 @@ public class BartMainActivity extends AppCompatActivity {
 
                 Log.d(TAG, DatabaseUtils.dumpCursorToString(c));
 
-                SimpleCursorAdapter adapter = new SimpleCursorAdapter(BartMainActivity.this,
+                SimpleCursorAdapter adapter = new SimpleCursorAdapter(MainActivity.this,
                         android.R.layout.simple_spinner_item, c, FROM, TO, 0);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 mOrigSpinner.setAdapter(adapter);
@@ -95,15 +103,22 @@ public class BartMainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 return true;
             case R.id.action_refresh:
-                new BartDepartureSyncTask(new AsyncTaskResponse() {
+                new QuickPlannerDepartureAsyncTask(new AsyncTaskResponse() {
                     @Override
                     public void processFinish(Object result) {
                         List<Departure> departures = (List<Departure>) result;
+//                        ArrayAdapter adapter = new ArrayAdapter(mainContext, android.R.layout.simple_list_item_1, departures);
+//                        mListView.setAdapter(adapter);
+
+                        ArrayList<String> originTimes = new ArrayList<String>();
                         for (Departure d : departures) {
                             mOrigTime.setText(d.originTime);
+                            originTimes.add(d.originTime);
                             mDestTime.setText(d.destinationTime);
                             mFare.setText(d.fare);
                         }
+                        ArrayAdapter adapter = new ArrayAdapter(mainContext, android.R.layout.simple_list_item_1, originTimes);
+                        mListView.setAdapter(adapter);
                     }
                 }).execute(API_URL + "sched.aspx?cmd=depart&orig=cast&dest=mont&a=4&b=0&key=" + API_KEY);
                 return true;
