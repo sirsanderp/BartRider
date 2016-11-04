@@ -8,19 +8,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
-import android.widget.TextView;
 
+import com.sanderp.bartrider.adapters.QuickPlannerDepartureAdapter;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.QuickPlannerDepartureAsyncTask;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.StationContract;
 import com.sanderp.bartrider.structure.Departure;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,9 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private ListView mListView;
     private Spinner mOrigSpinner;
     private Spinner mDestSpinner;
-    private TextView mOrigTime;
-    private TextView mDestTime;
-    private TextView mFare;
 
     public MainActivity() {
         super();
@@ -50,11 +45,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bart_main);
-
-        // Initialize text fields
-        mOrigTime = (TextView) findViewById(R.id.destination);
-        mDestTime = (TextView) findViewById(R.id.platform);
-        mFare = (TextView) findViewById(R.id.minutes);
 
         // Initialize spinners
         mOrigSpinner = (Spinner) findViewById(R.id.orig_spinner);
@@ -107,17 +97,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void processFinish(Object result) {
                         List<Departure> departures = (List<Departure>) result;
-//                        ArrayAdapter adapter = new ArrayAdapter(mainContext, android.R.layout.simple_list_item_1, departures);
-//                        mListView.setAdapter(adapter);
-
-                        ArrayList<String> originTimes = new ArrayList<String>();
-                        for (Departure d : departures) {
-                            mOrigTime.setText(d.originTime);
-                            originTimes.add(d.originTime);
-                            mDestTime.setText(d.destinationTime);
-                            mFare.setText(d.fare);
-                        }
-                        ArrayAdapter adapter = new ArrayAdapter(mainContext, android.R.layout.simple_list_item_1, originTimes);
+                        QuickPlannerDepartureAdapter adapter = new QuickPlannerDepartureAdapter(mainContext, departures);
                         mListView.setAdapter(adapter);
                     }
                 }).execute(API_URL + "sched.aspx?cmd=depart&orig=cast&dest=mont&a=4&b=0&key=" + API_KEY);
