@@ -65,9 +65,9 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
                 values.clear();
                 values.put(StationContract.Column.ID, station.getId());
                 values.put(StationContract.Column.NAME, station.getName());
-                values.put(StationContract.Column.ABBREVATION, station.getAbbr());
+                values.put(StationContract.Column.ABBREVIATION, station.getAbbr());
                 values.put(StationContract.Column.LATITUDE, station.getLatitude());
-                values.put(StationContract.Column.LONGITDUE, station.getLongitude());
+                values.put(StationContract.Column.LONGITUDE, station.getLongitude());
                 values.put(StationContract.Column.ADDRESS, station.getAddress());
                 values.put(StationContract.Column.CITY, station.getCity());
                 values.put(StationContract.Column.COUNTY, station.getCounty());

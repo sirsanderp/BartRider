@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void processFinish(Object output) {
                 // Populate the spinners with stations
-                String[] projection = {StationContract.Column.ID, StationContract.Column.NAME};
+                String[] projection = {StationContract.Column.ID, StationContract.Column.NAME, StationContract.Column.ABBREVIATION};
 
                 Cursor c = getContentResolver().query(StationContract.CONTENT_URI, projection,
                         null, null, StationContract.DEFAULT_SORT);
@@ -93,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 return true;
             case R.id.action_refresh:
+                String origin = getAbbreviation((Cursor) mOrigSpinner.getSelectedItem());
+                String destination = getAbbreviation((Cursor) mDestSpinner.getSelectedItem());
                 new QuickPlannerDepartureAsyncTask(new AsyncTaskResponse() {
                     @Override
                     public void processFinish(Object result) {
@@ -100,9 +102,13 @@ public class MainActivity extends AppCompatActivity {
                         QuickPlannerDepartureAdapter adapter = new QuickPlannerDepartureAdapter(mainContext, departures);
                         mListView.setAdapter(adapter);
                     }
-                }).execute(API_URL + "sched.aspx?cmd=depart&orig=cast&dest=mont&a=4&b=0&key=" + API_KEY);
+                }).execute(API_URL + "sched.aspx?cmd=depart&orig=" + origin + "&dest=" + destination + "&a=4&b=0&key=" + API_KEY);
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public String getAbbreviation(Cursor c) {
+        return c.getString(c.getColumnIndex(StationContract.Column.ABBREVIATION));
     }
 }

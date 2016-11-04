@@ -15,9 +15,9 @@ public class StationContract {
     public class Column {
         public static final String ID = BaseColumns._ID;
         public static final String NAME = "name";
-        public static final String ABBREVATION = "abbr";
+        public static final String ABBREVIATION = "abbr";
         public static final String LATITUDE = "gtfs_latitude";
-        public static final String LONGITDUE = "gtfs_longitude";
+        public static final String LONGITUDE = "gtfs_longitude";
         public static final String ADDRESS = "address";
         public static final String CITY = "city";
         public static final String COUNTY = "county";

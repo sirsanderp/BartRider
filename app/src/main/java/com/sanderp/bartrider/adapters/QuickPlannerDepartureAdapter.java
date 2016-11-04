@@ -54,9 +54,9 @@ public class QuickPlannerDepartureAdapter extends BaseAdapter {
         TextView mFare = (TextView) rowView.findViewById(R.id.minutes);
 
         Departure d = (Departure) getItem(position);
-        mOrigTime.setText(d.originTime);
-        mDestTime.setText(d.destinationTime);
-        mFare.setText(d.fare);
+        mOrigTime.setText("Depart: " + d.originTime);
+        mDestTime.setText("Arrive: " + d.destinationTime);
+        mFare.setText("$" + d.fare);
 
         return rowView;
     }
