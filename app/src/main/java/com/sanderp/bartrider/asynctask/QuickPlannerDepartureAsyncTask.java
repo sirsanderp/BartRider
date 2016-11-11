@@ -17,7 +17,7 @@ import java.util.List;
  * Implementation of the AsyncTask to download data from the BART Schedule API.
  */
 public class QuickPlannerDepartureAsyncTask extends AsyncTask<String, Void, String> {
-    private static final String TAG = "QuickPlannerDepartureAsyncTask";
+    private static final String TAG = "QPDepartureAsyncTask";
 
     private AsyncTaskResponse delegate;
     private List<Departure> departures;
