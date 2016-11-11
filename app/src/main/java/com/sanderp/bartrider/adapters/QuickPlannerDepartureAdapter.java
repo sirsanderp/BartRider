@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 public class QuickPlannerDepartureAdapter extends BaseAdapter {
-    private static final String TAG = "QuickPlannerDepartureAdapter";
+    private static final String TAG = "QPDepartureAdapter";
 
     private Context mContext;
     private LayoutInflater mInflater;
@@ -49,13 +49,13 @@ public class QuickPlannerDepartureAdapter extends BaseAdapter {
         View rowView = mInflater.inflate(R.layout.list_item, parent, false);
 
         // Initialize text fields
-        TextView mOrigTime = (TextView) rowView.findViewById(R.id.destination);
-        TextView mDestTime = (TextView) rowView.findViewById(R.id.platform);
-        TextView mFare = (TextView) rowView.findViewById(R.id.minutes);
+        TextView mOrigTime = (TextView) rowView.findViewById(R.id.originTime);
+        TextView mDestTime = (TextView) rowView.findViewById(R.id.destinationTime);
+        TextView mFare = (TextView) rowView.findViewById(R.id.fare);
 
         Departure d = (Departure) getItem(position);
-        mOrigTime.setText("Depart: " + d.originTime);
-        mDestTime.setText("Arrive: " + d.destinationTime);
+        mOrigTime.setText(d.originTime);
+        mDestTime.setText(d.destinationTime);
         mFare.setText("$" + d.fare);
 
         return rowView;
