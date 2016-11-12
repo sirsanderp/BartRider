@@ -8,24 +8,25 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.sanderp.bartrider.R;
-import com.sanderp.bartrider.structure.Departure;
+import com.sanderp.bartrider.structure.Trip;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 /**
  * Created by Sander Peerna on 11/3/2016.
  */
 
-public class QuickPlannerDepartureAdapter extends BaseAdapter {
-    private static final String TAG = "QPDepartureAdapter";
+public class QuickPlannerAdapter extends BaseAdapter {
+    private static final String TAG = "QuickPlannerAdapter";
 
     private Context mContext;
     private LayoutInflater mInflater;
-    private List<Departure> mDataSource;
+    private List<Trip> mDataSource;
 
-    public QuickPlannerDepartureAdapter(Context context, List<Departure> departures) {
+    public QuickPlannerAdapter(Context context, List<Trip> trips) {
         mContext = context;
-        mDataSource = departures;
+        mDataSource = trips;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
@@ -53,10 +54,10 @@ public class QuickPlannerDepartureAdapter extends BaseAdapter {
         TextView mDestTime = (TextView) rowView.findViewById(R.id.destinationTime);
         TextView mFare = (TextView) rowView.findViewById(R.id.fare);
 
-        Departure d = (Departure) getItem(position);
-        mOrigTime.setText(d.originTime);
-        mDestTime.setText(d.destinationTime);
-        mFare.setText("$" + d.fare);
+        Trip d = (Trip) getItem(position);
+        mOrigTime.setText(d.getOrigTimeMin());
+        mDestTime.setText(d.getDestTimeMin());
+        mFare.setText("$" + new DecimalFormat("#.00").format(d.getFare()));
 
         return rowView;
     }

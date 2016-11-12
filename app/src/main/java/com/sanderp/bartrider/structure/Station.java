@@ -3,24 +3,29 @@ package com.sanderp.bartrider.structure;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by Sander on 3/13/2016.
+ * Created by Sander Peerna on 3/13/2016.
  */
 public class Station {
     static AtomicInteger nextId = new AtomicInteger();
     private final int id;
 
-    private final String name;
-    private final String abbr;
-    private final String latitude;
-    private final String longitude;
-    private final String address;
-    private final String city;
-    private final String county;
-    private final String state;
-    private final String zipcode;
+    // Station attributes
+    private String name;
+    private String abbr;
+    private String latitude;
+    private String longitude;
+    private String address;
+    private String city;
+    private String county;
+    private String state;
+    private String zipcode;
+
+    public Station() {
+        id = nextId.incrementAndGet();
+    }
 
     public Station(String name, String abbr, String latitude, String longitude, String address,
-                    String city, String county, String state, String zipcode) {
+                   String city, String county, String state, String zipcode) {
         id = nextId.incrementAndGet();
         this.name = name;
         this.abbr = abbr;
@@ -30,6 +35,42 @@ public class Station {
         this.city = city;
         this.county = county;
         this.state = state;
+        this.zipcode = zipcode;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setAbbr(String abbr) {
+        this.abbr = abbr;
+    }
+
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
+    }
+
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public void setCounty(String county) {
+        this.county = county;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public void setZipcode(String zipcode) {
         this.zipcode = zipcode;
     }
 

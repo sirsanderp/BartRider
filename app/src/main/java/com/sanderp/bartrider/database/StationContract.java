@@ -4,7 +4,7 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 /**
- * Created by Sander on 3/13/2016.
+ * Created by Sander Peerna on 3/13/2016.
  */
 public class StationContract {
 

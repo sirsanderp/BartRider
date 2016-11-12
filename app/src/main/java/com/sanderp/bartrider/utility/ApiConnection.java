@@ -6,7 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Created by Sander on 4/8/2016.
+ * Created by Sander Peerna on 4/8/2016.
  */
 public class ApiConnection {
 

@@ -12,12 +12,12 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
-import com.sanderp.bartrider.adapters.QuickPlannerDepartureAdapter;
+import com.sanderp.bartrider.adapters.QuickPlannerAdapter;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
-import com.sanderp.bartrider.asynctask.QuickPlannerDepartureAsyncTask;
+import com.sanderp.bartrider.asynctask.QuickPlannerAsyncTask;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.StationContract;
-import com.sanderp.bartrider.structure.Departure;
+import com.sanderp.bartrider.structure.Trip;
 
 import java.util.List;
 
@@ -26,8 +26,6 @@ import java.util.List;
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    private static final String API_URL = "http://api.bart.gov/api/";
-    private static final String API_KEY = "MW9S-E7SL-26DU-VV8V";
 
     private static final String[] FROM = {StationContract.Column.NAME};
     private static final int [] TO = {android.R.id.text1};
@@ -71,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 mOrigSpinner.setAdapter(adapter);
                 mDestSpinner.setAdapter(adapter);
             }
-        }, this).execute(API_URL + "stn.aspx?cmd=stns&key=" + API_KEY);
+        }, this).execute();
     }
 
     @Override
@@ -95,14 +93,14 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_refresh:
                 String origin = getAbbreviation((Cursor) mOrigSpinner.getSelectedItem());
                 String destination = getAbbreviation((Cursor) mDestSpinner.getSelectedItem());
-                new QuickPlannerDepartureAsyncTask(new AsyncTaskResponse() {
+                new QuickPlannerAsyncTask(new AsyncTaskResponse() {
                     @Override
                     public void processFinish(Object result) {
-                        List<Departure> departures = (List<Departure>) result;
-                        QuickPlannerDepartureAdapter adapter = new QuickPlannerDepartureAdapter(mainContext, departures);
+                        List<Trip> trips = (List<Trip>) result;
+                        QuickPlannerAdapter adapter = new QuickPlannerAdapter(mainContext, trips);
                         mListView.setAdapter(adapter);
                     }
-                }).execute(API_URL + "sched.aspx?cmd=depart&orig=" + origin + "&dest=" + destination + "&a=4&b=0&key=" + API_KEY);
+                }).execute(origin, destination);
                 return true;
         }
         return super.onOptionsItemSelected(item);

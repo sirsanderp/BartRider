@@ -19,24 +19,13 @@ import java.util.List;
 public class StationListParser {
     private static final String TAG = "StationListParser";
 
+    // Important XML field names
     private static final String STATIONS = "stations";
     private static final String STATION = "station";
-    private static final String NAME = "name";
-    private static final String ABBR = "abbr";
-    private static final String LATITUDE = "gtfs_latitude";
-    private static final String LONGITUDE = "gtfs_longitude";
-    private static final String ADDRESS = "address";
-    private static final String CITY = "city";
-    private static final String COUNTY = "county";
-    private static final String STATE = "state";
-    private static final String ZIP = "zipcode";
 
-    // Namespace is not used for this parser
-    public static final String ns = null;
+    private static final String ns = null;
 
-    public List<Station> parse(InputStream in)
-            throws XmlPullParserException, IOException {
-
+    public List<Station> parse(InputStream in) throws XmlPullParserException, IOException {
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -52,9 +41,7 @@ public class StationListParser {
         }
     }
 
-    public List<Station> readAPI(XmlPullParser parser)
-            throws XmlPullParserException, IOException {
-
+    public List<Station> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
         List<Station> stations = new ArrayList();
 
         parser.require(XmlPullParser.START_TAG, ns, STATIONS);
@@ -65,65 +52,48 @@ public class StationListParser {
         return stations;
     }
 
-    public Station readStation(XmlPullParser parser)
-            throws XmlPullParserException, IOException {
+    public Station readStation(XmlPullParser parser) throws XmlPullParserException, IOException {
+        Station station = new Station();
 
-        String name = "";
-        String abbr = "";
-        String latitude = "";
-        String longitude = "";
-        String address = "";
-        String city = "";
-        String county = "";
-        String state = "";
-        String zipcode = "";
-
-        String attr = "";
         parser.require(XmlPullParser.START_TAG, ns, STATION);
         while(parser.next() != XmlPullParser.END_DOCUMENT) {
-            if (parser.getEventType() == XmlPullParser.END_TAG) {
-                if (parser.getName().equals(STATION)) break;
-                else continue;
-            }
+            if (parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(STATION)) break;
+            if (parser.getEventType() != XmlPullParser.START_TAG) continue;
 
-            if (parser.getEventType() == XmlPullParser.START_TAG) {
-                attr = parser.getName();
-                continue;
-            }
-
+            String attr = parser.getName();
+            parser.next();
             String value = parser.getText();
+            Log.d(TAG, attr + ": " + value);
             switch (attr) {
-                case NAME:
-                    name = value;
+                case "name":
+                    station.setName(value);
                     break;
-                case ABBR:
-                    abbr = value;
+                case "abbr":
+                    station.setAbbr(value);
                     break;
-                case LATITUDE:
-                    latitude = value;
+                case "gtfs_latitude":
+                    station.setLatitude(value);
                     break;
-                case LONGITUDE:
-                    longitude = value;
+                case "gtfs_longitude":
+                    station.setLongitude(value);
                     break;
-                case ADDRESS:
-                    address = value;
+                case "address":
+                    station.setAddress(value);
                     break;
-                case CITY:
-                    city = value;
+                case "city":
+                    station.setCity(value);
                     break;
-                case COUNTY:
-                    county = value;
+                case "county":
+                    station.setCounty(value);
                     break;
-                case STATE:
-                    state = value;
+                case "state":
+                    station.setState(value);
                     break;
-                case ZIP:
-                    zipcode = value;
+                case "zipcode":
+                    station.setZipcode(value);
                     break;
             }
-            Log.d(TAG, "ATTR: " + attr);
-            Log.d(TAG, "VALUE: " + value);
         }
-        return new Station(name, abbr, latitude, longitude, address, city, county, state, zipcode);
+        return station;
     }
 }

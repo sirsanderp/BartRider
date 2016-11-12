@@ -11,6 +11,9 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
+/**
+ * Created by Sander Peerna on 3/13/2016.
+ */
 public class StationProvider extends ContentProvider {
     private static final String TAG = "StationProvider";
     private StationDbHelper mStationDbHelper;

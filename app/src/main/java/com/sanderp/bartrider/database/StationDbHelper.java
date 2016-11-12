@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 /**
- * Created by Sander on 3/13/2016.
+ * Created by Sander Peerna on 3/13/2016.
  */
 public class StationDbHelper extends SQLiteOpenHelper {
     private static final String TAG = "StationDbHelper";

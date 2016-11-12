@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.sanderp.bartrider.database.ApiContract;
 import com.sanderp.bartrider.database.StationContract;
 import com.sanderp.bartrider.structure.Station;
 import com.sanderp.bartrider.utility.ApiConnection;
@@ -33,9 +34,9 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
     }
 
     @Override
-    protected String doInBackground(String... bartUrl) {
+    protected String doInBackground(String... params) {
         try {
-            return getStations(bartUrl[0]);
+            return getStations();
         } catch (IOException e) {
             return "Failed to refresh";
         } catch (XmlPullParserException e) {
@@ -51,14 +52,15 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
     /**
      * Creates the stream for Stations AsyncTask
      */
-    private String getStations(String bartUrl) throws XmlPullParserException, IOException {
+    private String getStations() throws XmlPullParserException, IOException {
         InputStream stream = null;
-        StationListParser parser = new StationListParser();
+        StationListParser stationList = new StationListParser();
 
         Log.i(TAG, "Parsing stations...");
+        String url = ApiContract.API_URL + "stn.aspx?cmd=stns&key=" + ApiContract.API_KEY;
         try {
-            stream = ApiConnection.downloadData(bartUrl);
-            stations = parser.parse(stream);
+            stream = ApiConnection.downloadData(url);
+            stations = stationList.parse(stream);
 
             ContentValues values = new ContentValues();
             for (Station station : stations) {
