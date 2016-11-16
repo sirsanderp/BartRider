@@ -98,6 +98,10 @@ public class Trip {
     public static class TripLeg {
         // Trip leg attributes
         private String transferCode;
+        private String origin;
+        private String origTimeMin;
+        private String destination;
+        private String destTimeMin;
         private String line;
         private boolean bikeFlag;
         private String trainHeadStation;
@@ -109,6 +113,22 @@ public class Trip {
 
         public void setTransferCode(String transferCode) {
             this.transferCode = transferCode;
+        }
+
+        public void setOrigin(String origin) {
+            this.origin = origin;
+        }
+
+        public void setOrigTimeMin(String origTimeMin) {
+            this.origTimeMin = origTimeMin;
+        }
+
+        public void setDestination(String destination) {
+            this.destination = destination;
+        }
+
+        public void setDestTimeMin(String destTimeMin) {
+            this.destTimeMin = destTimeMin;
         }
 
         public void setLine(String line) {
@@ -137,6 +157,22 @@ public class Trip {
 
         public String getTransferCode() {
             return transferCode;
+        }
+
+        public String getOrigin() {
+            return origin;
+        }
+
+        public String getOrigTimeMin() {
+            return origTimeMin;
+        }
+
+        public String getDestination() {
+            return destination;
+        }
+
+        public String getDestTimeMin() {
+            return destTimeMin;
         }
 
         public String getLine() {

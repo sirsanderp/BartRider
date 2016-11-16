@@ -115,6 +115,18 @@ public class QuickPlannerParser {
                 case "transferCode":
                     tripLeg.setTransferCode(value);
                     break;
+                case "origin":
+                    tripLeg.setOrigin(value);
+                    break;
+                case "origTimeMin":
+                    tripLeg.setOrigTimeMin(value);
+                    break;
+                case "destination":
+                    tripLeg.setDestination(value);
+                    break;
+                case "destTimeMin":
+                    tripLeg.setDestTimeMin(value);
+                    break;
                 case "line":
                     tripLeg.setLine(value);
                     break;

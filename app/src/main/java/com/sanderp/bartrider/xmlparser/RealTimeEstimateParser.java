@@ -16,8 +16,8 @@ import java.util.List;
 /**
  * Created by Sander Peerna on 8/30/2015.
  */
-public class RealTimeParser {
-    private static final String TAG = "RealTimeParser";
+public class RealTimeEstimateParser {
+    private static final String TAG = "RealTimeEstimateParser";
 
     // Important XML field names
     private static final String STATION = "station";
@@ -50,8 +50,6 @@ public class RealTimeParser {
     }
 
     public List<TripEstimate> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
-        List<TripEstimate> estimates = new ArrayList();
-
         Log.i(TAG, "Reading station...");
         parser.require(XmlPullParser.START_TAG, ns, STATION);
         while (parser.next() !=  XmlPullParser.END_DOCUMENT) {
@@ -65,14 +63,14 @@ public class RealTimeParser {
                     return null;
                 }
             } else if (name.equals(ESTIMATE_TIME_TO_DEPARTURE)) {
-                estimates = readEstimatedDepartures(parser);
+                return readEstimatedDepartures(parser);
             }
         }
-        return estimates;
+        return null;
     }
 
     public List<TripEstimate> readEstimatedDepartures(XmlPullParser parser) throws XmlPullParserException, IOException {
-        List<TripEstimate> departures = new ArrayList();
+        List<TripEstimate> estimates = new ArrayList();
         boolean correctDestination = false;
 
         Log.i(TAG, "Reading etd...");
@@ -93,9 +91,9 @@ public class RealTimeParser {
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(ESTIMATE_TIME_TO_DEPARTURE)) break;
             if (parser.getEventType() != XmlPullParser.START_TAG) continue;
-            if (parser.getName().equals(ESTIMATE)) departures.add(readEstimate(parser));
+            if (parser.getName().equals(ESTIMATE)) estimates.add(readEstimate(parser));
         }
-        return departures;
+        return estimates;
     }
 
     public TripEstimate readEstimate(XmlPullParser parser) throws XmlPullParserException, IOException {
@@ -113,7 +111,8 @@ public class RealTimeParser {
             Log.d(TAG, attr + ": " + value);
             switch (attr) {
                 case "minutes":
-                    estimate.setMinutes(Integer.parseInt(value));
+                    if (value.equals("Leaving")) estimate.setMinutes(0);
+                    else estimate.setMinutes(Integer.parseInt(value));
                     break;
                 case "platform":
                     estimate.setPlatform(Integer.parseInt(value));
@@ -135,6 +134,6 @@ public class RealTimeParser {
                     break;
             }
         }
-        return null;
+        return estimate;
     }
 }
