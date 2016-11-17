@@ -6,7 +6,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".MainActivity">
+    tools:context=".TripOverviewActivity">
 
     <Spinner
         android:id="@+id/orig_spinner"
@@ -20,7 +20,7 @@
         android:layout_below="@+id/orig_spinner" />
 
     <ListView
-        android:id="@+id/list_view"
+        android:id="@+id/trip_list_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/dest_spinner" />

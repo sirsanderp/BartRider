@@ -1,6 +1,7 @@
 package com.sanderp.bartrider;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
@@ -8,11 +9,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
-import com.sanderp.bartrider.adapters.QuickPlannerAdapter;
+import com.sanderp.bartrider.adapters.TripAdapter;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.QuickPlannerAsyncTask;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
@@ -24,32 +27,43 @@ import java.util.List;
 /**
  * Created by Sander Peerna on 8/23/2015.
  */
-public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
+public class TripOverviewActivity extends AppCompatActivity {
+    private static final String TAG = "TripOverviewActivity";
 
     private static final String[] FROM = {StationContract.Column.NAME};
     private static final int [] TO = {android.R.id.text1};
 
-    private Context mainContext = this;
+    private List<Trip> trips;
+
     private ListView mListView;
     private Spinner mOrigSpinner;
     private Spinner mDestSpinner;
 
-    public MainActivity() {
+    public TripOverviewActivity() {
         super();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_bart_main);
+        setContentView(R.layout.trip_overview);
 
         // Initialize spinners
         mOrigSpinner = (Spinner) findViewById(R.id.orig_spinner);
         mDestSpinner = (Spinner) findViewById(R.id.dest_spinner);
 
         // Initialize list view
-        mListView = (ListView) findViewById(R.id.list_view);
+        mListView = (ListView) findViewById(R.id.trip_list_view);
+        mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
+             @Override
+             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                 Trip selectedTrip = trips.get(position);
+
+                 Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class);
+                 tripDetailIntent.putExtra("trip", selectedTrip);
+                 startActivity(tripDetailIntent);
+             }
+         });
 
         // Populate the database with station info
         new StationListAsyncTask(new AsyncTaskResponse() {
@@ -63,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d(TAG, DatabaseUtils.dumpCursorToString(c));
 
-                SimpleCursorAdapter adapter = new SimpleCursorAdapter(MainActivity.this,
+                SimpleCursorAdapter adapter = new SimpleCursorAdapter(TripOverviewActivity.this,
                         android.R.layout.simple_spinner_item, c, FROM, TO, 0);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 mOrigSpinner.setAdapter(adapter);
@@ -96,14 +110,22 @@ public class MainActivity extends AppCompatActivity {
                 new QuickPlannerAsyncTask(new AsyncTaskResponse() {
                     @Override
                     public void processFinish(Object result) {
-                        List<Trip> trips = (List<Trip>) result;
-                        QuickPlannerAdapter adapter = new QuickPlannerAdapter(mainContext, trips);
+                        trips = (List<Trip>) result;
+                        for (Trip t : trips) {
+                            t.setOrigFullName(getName((Cursor) mOrigSpinner.getSelectedItem()));
+                            t.setDestFullName(getName((Cursor) mDestSpinner.getSelectedItem()));
+                        }
+                        TripAdapter adapter = new TripAdapter(TripOverviewActivity.this, trips);
                         mListView.setAdapter(adapter);
                     }
                 }).execute(origin, destination);
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public String getName(Cursor c) {
+        return c.getString(c.getColumnIndex(StationContract.Column.NAME));
     }
 
     public String getAbbreviation(Cursor c) {

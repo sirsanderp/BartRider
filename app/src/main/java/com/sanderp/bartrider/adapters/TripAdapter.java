@@ -17,14 +17,14 @@ import java.util.List;
  * Created by Sander Peerna on 11/3/2016.
  */
 
-public class QuickPlannerAdapter extends BaseAdapter {
-    private static final String TAG = "QuickPlannerAdapter";
+public class TripAdapter extends BaseAdapter {
+    private static final String TAG = "TripAdapter";
 
     private Context mContext;
     private LayoutInflater mInflater;
     private List<Trip> mDataSource;
 
-    public QuickPlannerAdapter(Context context, List<Trip> trips) {
+    public TripAdapter(Context context, List<Trip> trips) {
         mContext = context;
         mDataSource = trips;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -47,17 +47,17 @@ public class QuickPlannerAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View rowView = mInflater.inflate(R.layout.list_item, parent, false);
+        View rowView = mInflater.inflate(R.layout.trip_overview_list_item, parent, false);
 
         // Initialize text fields
-        TextView mOrigTime = (TextView) rowView.findViewById(R.id.originTime);
-        TextView mDestTime = (TextView) rowView.findViewById(R.id.destinationTime);
-        TextView mFare = (TextView) rowView.findViewById(R.id.fare);
+        TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_orig_time);
+        TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_dest_time);
+        TextView mFare = (TextView) rowView.findViewById(R.id.trip_fare);
 
-        Trip d = (Trip) getItem(position);
-        mOrigTime.setText(d.getOrigTimeMin());
-        mDestTime.setText(d.getDestTimeMin());
-        mFare.setText("$" + new DecimalFormat("#.00").format(d.getFare()));
+        Trip trip = (Trip) getItem(position);
+        mOrigTime.setText(trip.getOrigTimeMin());
+        mDestTime.setText(trip.getDestTimeMin());
+        mFare.setText("$" + new DecimalFormat("#.00").format(trip.getFare()));
 
         return rowView;
     }
