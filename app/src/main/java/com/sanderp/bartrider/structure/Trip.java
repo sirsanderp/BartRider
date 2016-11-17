@@ -1,13 +1,16 @@
 package com.sanderp.bartrider.structure;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Sander Peerna on 3/13/2016.
  */
-public class Trip {
+public class Trip implements Serializable {
     // Trip attributes
+    private String origFullName;
+    private String destFullName;
     private String origin;
     private String origTimeMin;
     private String destination;
@@ -20,6 +23,14 @@ public class Trip {
 
     public Trip() {
         tripLegs = new ArrayList<>();
+    }
+
+    public void setOrigFullName(String origFullName) {
+        this.origFullName = origFullName;
+    }
+
+    public void setDestFullName(String destFullName) {
+        this.destFullName = destFullName;
     }
 
     public void setOrigin(String origin) {
@@ -52,6 +63,14 @@ public class Trip {
 
     public void setCo2(double co2) {
         this.co2 = co2;
+    }
+
+    public String getOrigFullName() {
+        return origFullName;
+    }
+
+    public String getDestFullName() {
+        return destFullName;
     }
 
     public String getOrigin() {
@@ -94,8 +113,7 @@ public class Trip {
         return tripLegs;
     }
 
-
-    public static class TripLeg {
+    public static class TripLeg implements Serializable {
         // Trip leg attributes
         private String transferCode;
         private String origin;
