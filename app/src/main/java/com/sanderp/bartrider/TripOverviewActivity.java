@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -38,6 +39,7 @@ public class TripOverviewActivity extends AppCompatActivity {
     private List<Trip> trips;
     private SharedPreferences prefs;
 
+    private FloatingActionButton mFab;
     private ListView mListView;
     private Spinner mOrigSpinner;
     private Spinner mDestSpinner;
@@ -53,9 +55,13 @@ public class TripOverviewActivity extends AppCompatActivity {
 
         prefs = getSharedPreferences(PREFS_NAME, 0);
 
-        // Initialize spinners
-        mOrigSpinner = (Spinner) findViewById(R.id.orig_spinner);
-        mDestSpinner = (Spinner) findViewById(R.id.dest_spinner);
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                
+            }
+        });
 
         // Initialize list view
         mListView = (ListView) findViewById(R.id.trip_list_view);
@@ -69,6 +75,10 @@ public class TripOverviewActivity extends AppCompatActivity {
                  startActivity(tripDetailIntent);
              }
          });
+
+        // Initialize spinners
+        mOrigSpinner = (Spinner) findViewById(R.id.orig_spinner);
+        mDestSpinner = (Spinner) findViewById(R.id.dest_spinner);
 
         if (prefs.getBoolean(FIRST_RUN, true)) {
             // Populate the database with station info
