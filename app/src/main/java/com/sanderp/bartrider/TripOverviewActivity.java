@@ -1,7 +1,7 @@
 package com.sanderp.bartrider;
 
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
@@ -30,10 +30,13 @@ import java.util.List;
 public class TripOverviewActivity extends AppCompatActivity {
     private static final String TAG = "TripOverviewActivity";
 
+    private static final String PREFS_NAME = "BartRiderPrefs";
+    private static final String FIRST_RUN = "first_Run";
     private static final String[] FROM = {StationContract.Column.NAME};
     private static final int [] TO = {android.R.id.text1};
 
     private List<Trip> trips;
+    private SharedPreferences prefs;
 
     private ListView mListView;
     private Spinner mOrigSpinner;
@@ -47,6 +50,8 @@ public class TripOverviewActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.trip_overview);
+
+        prefs = getSharedPreferences(PREFS_NAME, 0);
 
         // Initialize spinners
         mOrigSpinner = (Spinner) findViewById(R.id.orig_spinner);
@@ -65,25 +70,19 @@ public class TripOverviewActivity extends AppCompatActivity {
              }
          });
 
-        // Populate the database with station info
-        new StationListAsyncTask(new AsyncTaskResponse() {
-            @Override
-            public void processFinish(Object output) {
-                // Populate the spinners with stations
-                String[] projection = {StationContract.Column.ID, StationContract.Column.NAME, StationContract.Column.ABBREVIATION};
-
-                Cursor c = getContentResolver().query(StationContract.CONTENT_URI, projection,
-                        null, null, StationContract.DEFAULT_SORT);
-
-                Log.d(TAG, DatabaseUtils.dumpCursorToString(c));
-
-                SimpleCursorAdapter adapter = new SimpleCursorAdapter(TripOverviewActivity.this,
-                        android.R.layout.simple_spinner_item, c, FROM, TO, 0);
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                mOrigSpinner.setAdapter(adapter);
-                mDestSpinner.setAdapter(adapter);
-            }
-        }, this).execute();
+        if (prefs.getBoolean(FIRST_RUN, true)) {
+            // Populate the database with station info
+            new StationListAsyncTask(new AsyncTaskResponse() {
+                @Override
+                public void processFinish(Object output) {
+                    setSpinners();
+                    prefs.edit().putBoolean(FIRST_RUN, false).commit();
+                }
+            }, this).execute();
+        }
+        else {
+            setSpinners();
+        }
     }
 
     @Override
@@ -107,28 +106,46 @@ public class TripOverviewActivity extends AppCompatActivity {
             case R.id.action_refresh:
                 String origin = getAbbreviation((Cursor) mOrigSpinner.getSelectedItem());
                 String destination = getAbbreviation((Cursor) mDestSpinner.getSelectedItem());
-                new QuickPlannerAsyncTask(new AsyncTaskResponse() {
-                    @Override
-                    public void processFinish(Object result) {
-                        trips = (List<Trip>) result;
-                        for (Trip t : trips) {
-                            t.setOrigFullName(getName((Cursor) mOrigSpinner.getSelectedItem()));
-                            t.setDestFullName(getName((Cursor) mDestSpinner.getSelectedItem()));
+                if (!origin.equals(destination)) {
+                    new QuickPlannerAsyncTask(new AsyncTaskResponse() {
+                        @Override
+                        public void processFinish(Object result) {
+                            trips = (List<Trip>) result;
+                            for (Trip t : trips) {
+                                t.setOrigFullName(getName((Cursor) mOrigSpinner.getSelectedItem()));
+                                t.setDestFullName(getName((Cursor) mDestSpinner.getSelectedItem()));
+                            }
+                            TripAdapter adapter = new TripAdapter(TripOverviewActivity.this, trips);
+                            mListView.setAdapter(adapter);
                         }
-                        TripAdapter adapter = new TripAdapter(TripOverviewActivity.this, trips);
-                        mListView.setAdapter(adapter);
-                    }
-                }).execute(origin, destination);
+                    }).execute(origin, destination);
+                }
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    public String getName(Cursor c) {
+    private void setSpinners() {
+        // Populate the spinners with stations
+        String[] projection = {StationContract.Column.ID, StationContract.Column.NAME, StationContract.Column.ABBREVIATION};
+
+        Cursor c = getContentResolver().query(StationContract.CONTENT_URI, projection,
+                null, null, StationContract.DEFAULT_SORT);
+
+        Log.d(TAG, DatabaseUtils.dumpCursorToString(c));
+
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(TripOverviewActivity.this,
+                android.R.layout.simple_spinner_item, c, FROM, TO, 0);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mOrigSpinner.setAdapter(adapter);
+        mDestSpinner.setAdapter(adapter);
+    }
+
+    private String getName(Cursor c) {
         return c.getString(c.getColumnIndex(StationContract.Column.NAME));
     }
 
-    public String getAbbreviation(Cursor c) {
+    private String getAbbreviation(Cursor c) {
         return c.getString(c.getColumnIndex(StationContract.Column.ABBREVIATION));
     }
 }

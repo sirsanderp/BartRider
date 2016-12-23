@@ -22,6 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/trip_orig"
         android:layout_centerHorizontal="true"
+        android:includeFontPadding="false"
         android:text="-"
         android:textSize="24sp" />
 
@@ -33,18 +34,19 @@
         android:layout_centerHorizontal="true"
         android:textSize="24sp" />
 
-    <TextView
-        android:id="@+id/trip_co2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/trip_dest"
-        android:layout_centerHorizontal="true"
-        android:textSize="24sp" />
-
     <ListView
         android:id="@+id/trip_detail_list_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/trip_co2" />
+        android:layout_above="@+id/trip_co2"
+        android:layout_below="@+id/trip_dest" />
+
+    <TextView
+        android:id="@+id/trip_co2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textSize="12sp"
+        android:layout_alignParentBottom="true" />
 
 </RelativeLayout>

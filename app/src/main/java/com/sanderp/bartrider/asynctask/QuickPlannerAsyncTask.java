@@ -99,15 +99,24 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, String> {
             int tripMinutes = t.getTripTime();
 
             try {
-                Date origTimeMin = df.parse(t.getOrigTimeMin());
+                Date origTime = df.parse(t.getOrigTimeMin());
                 Date origEstArrival = new Date(date.getTime() + minutesUntilTrain * 60 * 1000L);
                 Date destEstArrival = new Date(origEstArrival.getTime() + tripMinutes * 60 * 1000L);
-                long diff = origEstArrival.getTime() - origTimeMin.getTime();
+                long diff = origEstArrival.getTime() - origTime.getTime();
                 long diffMinutes = diff / (60 * 1000) % 60;
-                Log.d(TAG, "Planned: " + origTimeMin + " | " + diffMinutes + "min");
+                Log.d(TAG, "Planned: " + origTime + " | " + diffMinutes + "min");
                 if (diffMinutes >= 1) {
                     t.setOrigTimeMin(df.format(origEstArrival));
                     t.setDestTimeMin(df.format(destEstArrival));
+//                    // I don't know if parts of the leg are delayed...
+//                    for (Trip.TripLeg l : t.getTripLegs()) {
+//                        Date legOrigTime = df.parse(l.getOrigTimeMin());
+//                        Date newLegOrigTime = new Date(legOrigTime.getTime() + diffMinutes * 60 * 1000L);
+//                        Date legDestTime = df.parse(l.getDestTimeMin());
+//                        Date newLegDestTime = new Date(legDestTime.getTime() + diffMinutes * 60 * 1000L);
+//                        l.setOrigTimeMin(df.format(newLegOrigTime));
+//                        l.setDestTimeMin(df.format(newLegDestTime));
+//                    }
                 }
                 Log.d(TAG, "Origin: " + minutesUntilTrain + "min | " + df.format(origEstArrival));
                 Log.d(TAG, "Destination: " + minutesUntilTrain + "min | " + df.format(destEstArrival));
