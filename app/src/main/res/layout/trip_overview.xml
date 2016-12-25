@@ -9,22 +9,17 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".TripOverviewActivity">
 
-    <Spinner
-        android:id="@+id/orig_spinner"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
-
-    <Spinner
-        android:id="@+id/dest_spinner"
-        android:layout_width="fill_parent"
+    <fragment
+        android:name="com.sanderp.bartrider.TripPlannerFragment"
+        android:id="@+id/trip_planner_fragment"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/orig_spinner" />
-
+        android:layout_centerInParent="true" />
+    
     <ListView
         android:id="@+id/trip_list_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/dest_spinner" />
+        android:layout_height="wrap_content" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
