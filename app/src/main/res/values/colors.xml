@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bart_primary1">#006699</color>
+    <color name="bart_primary2">#cccc00</color>
+    <color name="material_light">#fafafa</color>
+    <!--Routes-->
+    <color name="route1">#ffff33</color>
+    <color name="route2">#ffff33</color>
+    <color name="route3">#ff9933</color>
+    <color name="route4">#ff9933</color>
+    <color name="route5">#339933</color>
+    <color name="route6">#339933</color>
+    <color name="route7">#ff0000</color>
+    <color name="route8">#ff0000</color>
+    <color name="route9">#ffff33</color>
+    <color name="route10">#ffff33</color>
+    <color name="route11">#0099cc</color>
+    <color name="route12">#0099cc</color>
+    <color name="route19">#d5cfa3</color>
+    <color name="route20">#d5cfa3</color>
+</resources>

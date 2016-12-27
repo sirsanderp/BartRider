@@ -1,8 +1,11 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+    <style name="BartTheme" parent="Theme.AppCompat.Light.DarkActionBar" >
+        <item name="android:colorBackground">@color/material_light</item>
+        <item name="colorPrimary">@color/bart_primary1</item>
+        <item name="colorPrimaryDark">@color/bart_primary1</item>
+        <item name="colorAccent">@color/bart_primary2</item>
     </style>
 
 </resources>

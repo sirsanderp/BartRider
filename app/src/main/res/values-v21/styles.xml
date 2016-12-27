@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="BartTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:colorBackground">@color/material_light</item>
+        <item name="colorPrimary">@color/bart_primary1</item>
+        <item name="android:navigationBarColor">@android:color/background_dark</item>
+        <item name="colorPrimaryDark">@color/bart_primary1</item>
+        <item name="colorAccent">@color/bart_primary2</item>
+        <item name="android:statusBarColor">@android:color/background_dark</item>
+    </style>
+</resources>
