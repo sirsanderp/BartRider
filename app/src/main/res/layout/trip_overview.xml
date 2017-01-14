@@ -28,6 +28,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="false"
         android:layout_alignParentRight="true"
-        android:src="@android:drawable/ic_input_add" />
+        android:layout_margin="15dp"
+        android:src="@drawable/ic_add_white" />
 
 </RelativeLayout>
