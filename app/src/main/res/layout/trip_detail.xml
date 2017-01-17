@@ -23,7 +23,7 @@
         android:layout_below="@+id/trip_orig"
         android:layout_centerHorizontal="true"
         android:includeFontPadding="false"
-        android:text="-"
+        android:text="to"
         android:textSize="24sp" />
 
     <TextView

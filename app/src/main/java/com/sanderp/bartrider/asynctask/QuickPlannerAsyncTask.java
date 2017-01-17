@@ -8,7 +8,7 @@ import com.sanderp.bartrider.structure.Trip;
 import com.sanderp.bartrider.structure.TripEstimate;
 import com.sanderp.bartrider.utility.ApiConnection;
 import com.sanderp.bartrider.xmlparser.QuickPlannerParser;
-import com.sanderp.bartrider.xmlparser.RealTimeEstimateParser;
+import com.sanderp.bartrider.xmlparser.RealTimeParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -38,7 +38,7 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... params) {
         try {
             getTrips(params);
-            getTripEstimates(params);
+//            getTripEstimates(params);
             return null;
         } catch (IOException e) {
             return "Failed to refresh";
@@ -73,13 +73,13 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, String> {
 
     private void getTripEstimates(String... params) throws XmlPullParserException, IOException {
         InputStream stream = null;
-        RealTimeEstimateParser estimates = new RealTimeEstimateParser();
+        RealTimeParser estimates = new RealTimeParser();
         String estimatesUrl = ApiContract.API_URL + "etd.aspx?cmd=etd&orig=" + params[0] +
                 "&key=" + ApiContract.API_KEY;
         try {
             Log.i(TAG, "Refreshing estimates info...");
             stream = ApiConnection.downloadData(estimatesUrl);
-            tripEstimates = estimates.parse(stream, trips.get(0).getTripLegs().get(0).getTrainHeadStation());
+            tripEstimates = estimates.parse(stream, trips.get(0).getTripLegs().get(0).getTrainHeadStation()); // There can be different head stations...
             if (tripEstimates == null) Log.i(TAG, "Using quick planner time table");
             else updateTrips();
         } finally {
@@ -97,14 +97,13 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, String> {
             Trip t = trips.get(i);
             int minutesUntilTrain = tripEstimates.get(i).getMinutes();
             int tripMinutes = t.getTripTime();
-
             try {
                 Date origTime = df.parse(t.getOrigTimeMin());
                 Date origEstArrival = new Date(date.getTime() + minutesUntilTrain * 60 * 1000L);
                 Date destEstArrival = new Date(origEstArrival.getTime() + tripMinutes * 60 * 1000L);
                 long diff = origEstArrival.getTime() - origTime.getTime();
                 long diffMinutes = diff / (60 * 1000) % 60;
-                Log.d(TAG, "Planned: " + origTime + " | " + diffMinutes + "min");
+                Log.d(TAG, "Planned: " + df.format(origTime) + " | " + diffMinutes + " min");
                 if (diffMinutes >= 1) {
                     t.setOrigTimeMin(df.format(origEstArrival));
                     t.setDestTimeMin(df.format(destEstArrival));
@@ -118,8 +117,8 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, String> {
 //                        l.setDestTimeMin(df.format(newLegDestTime));
 //                    }
                 }
-                Log.d(TAG, "Origin: " + minutesUntilTrain + "min | " + df.format(origEstArrival));
-                Log.d(TAG, "Destination: " + minutesUntilTrain + "min | " + df.format(destEstArrival));
+                Log.d(TAG, "Origin: " + minutesUntilTrain + " min | " + df.format(origEstArrival));
+                Log.d(TAG, "Destination: " + minutesUntilTrain + " min | " + df.format(destEstArrival));
             } catch (ParseException e) {
                 Log.e(TAG, "Invalid date was entered");
             }

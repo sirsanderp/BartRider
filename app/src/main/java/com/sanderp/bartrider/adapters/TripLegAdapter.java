@@ -47,8 +47,6 @@ public class TripLegAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View rowView = mInflater.inflate(R.layout.trip_detail_list_item, parent, false);
-
-        // Initialize text fields
         TextView mOrigName = (TextView) rowView.findViewById(R.id.trip_leg_orig_name);
         TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_leg_orig_time);
         TextView mDestName = (TextView) rowView.findViewById(R.id.trip_leg_dest_name);

@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.sanderp.bartrider.database.ApiContract;
 import com.sanderp.bartrider.utility.ApiConnection;
-import com.sanderp.bartrider.xmlparser.RealTimeEstimateParser;
+import com.sanderp.bartrider.xmlparser.RealTimeParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -46,7 +46,7 @@ public class RealTimeAsyncTask extends AsyncTask<String, Void, String> {
      */
     private String getRealTimeEstimates(String... params) throws XmlPullParserException, IOException {
         InputStream stream = null;
-        RealTimeEstimateParser estimates = new RealTimeEstimateParser();
+        RealTimeParser estimates = new RealTimeParser();
 
         Log.i(TAG, "Getting estimates info...");
         String url = ApiContract.API_URL + "etd.aspx?cmd=etd&orig=" + params[0] +

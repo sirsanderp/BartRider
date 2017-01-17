@@ -18,8 +18,10 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.sanderp.bartrider.adapters.TripAdapter;
+import com.sanderp.bartrider.asynctask.AdvisoryAsyncTask;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.QuickPlannerAsyncTask;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
@@ -45,6 +47,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private FloatingActionButton mFab;
     private ListView mListView;
+    private TextView mTextView;
 
     public TripOverviewActivity() {
         super();
@@ -62,10 +65,12 @@ public class TripOverviewActivity extends AppCompatActivity
         mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
              @Override
              public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                 Trip selectedTrip = trips.get(position);
-                 Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class);
-                 tripDetailIntent.putExtra("trip", selectedTrip);
-                 startActivity(tripDetailIntent);
+                 if (position != 0) {
+                     Trip selectedTrip = trips.get(position);
+                     Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class);
+                     tripDetailIntent.putExtra("trip", selectedTrip);
+                     startActivity(tripDetailIntent);
+                 }
              }
          });
 
@@ -79,10 +84,6 @@ public class TripOverviewActivity extends AppCompatActivity
             }, this).execute();
         }
 
-        fragmentManager = getSupportFragmentManager();
-        fragment = (TripPlannerFragment) fragmentManager.findFragmentById(R.id.trip_planner_fragment);
-        hideFragment();
-
         mFab = (FloatingActionButton) findViewById(R.id.fab);
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,6 +91,12 @@ public class TripOverviewActivity extends AppCompatActivity
                 showFragment();
             }
         });
+
+        mTextView = (TextView) findViewById(R.id.advisory);
+
+        fragmentManager = getSupportFragmentManager();
+        fragment = (TripPlannerFragment) fragmentManager.findFragmentById(R.id.trip_planner_fragment);
+        hideFragment();
     }
 
     @Override
@@ -118,6 +125,8 @@ public class TripOverviewActivity extends AppCompatActivity
     private void updateListItems() {
         final Spinner o = (Spinner) fragment.getView().findViewById(R.id.orig_spinner);
         final Spinner d = (Spinner) fragment.getView().findViewById(R.id.dest_spinner);
+        final String originFull = getName((Cursor) o.getSelectedItem());
+        final String destinationFull = getName((Cursor) d.getSelectedItem());
         String origin = getAbbreviation((Cursor) o.getSelectedItem());
         String destination = getAbbreviation((Cursor) d.getSelectedItem());
         if (!origin.equals(destination)) {
@@ -126,13 +135,31 @@ public class TripOverviewActivity extends AppCompatActivity
                 public void processFinish(Object result) {
                     trips = (List<Trip>) result;
                     for (Trip t : trips) {
-                        t.setOrigFullName(getName((Cursor) o.getSelectedItem()));
-                        t.setDestFullName(getName((Cursor) d.getSelectedItem()));
+                        t.setOrigFullName(originFull);
+                        t.setDestFullName(destinationFull);
                     }
+
+                    Trip header = new Trip();
+                    header.setOrigFullName(originFull);
+                    header.setDestFullName(destinationFull);
+                    trips.add(0, header);
+
                     TripAdapter adapter = new TripAdapter(TripOverviewActivity.this, trips);
                     mListView.setAdapter(adapter);
                 }
             }).execute(origin, destination);
+
+            new AdvisoryAsyncTask(new AsyncTaskResponse() {
+                @Override
+                public void processFinish(Object result) {
+                    if (result == null) {
+                        mTextView.setText("No delays reported.");
+                    } else {
+                        String advisory_text = (String) result;
+                        mTextView.setText(advisory_text);
+                    }
+                }
+            }, this).execute();
         }
     }
 

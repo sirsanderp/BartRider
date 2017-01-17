@@ -16,8 +16,8 @@ import java.util.List;
 /**
  * Created by Sander Peerna on 8/30/2015.
  */
-public class RealTimeEstimateParser {
-    private static final String TAG = "RealTimeEstimateParser";
+public class RealTimeParser {
+    private static final String TAG = "RealTimeParser";
 
     // Important XML field names
     private static final String STATION = "station";
