@@ -3,20 +3,17 @@ package com.sanderp.bartrider;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -34,7 +31,7 @@ import java.util.List;
  * Created by Sander Peerna on 8/23/2015.
  */
 public class TripOverviewActivity extends AppCompatActivity
-        implements TripPlannerFragment.OnConfirmListener {
+        implements TripPlannerFragment.OnFragmentListener {
     private static final String TAG = "TripOverviewActivity";
 
     private static final String PREFS_NAME = "BartRiderPrefs";
@@ -47,6 +44,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private FloatingActionButton mFab;
     private ListView mListView;
+    private RelativeLayout mRelativeLayout;
     private TextView mTextView;
 
     public TripOverviewActivity() {
@@ -60,22 +58,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
         prefs = getSharedPreferences(PREFS_NAME, 0);
 
-        // Initialize list view
-        mListView = (ListView) findViewById(R.id.trip_list_view);
-        mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
-             @Override
-             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                 if (position != 0) {
-                     Trip selectedTrip = trips.get(position);
-                     Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class);
-                     tripDetailIntent.putExtra("trip", selectedTrip);
-                     startActivity(tripDetailIntent);
-                 }
-             }
-         });
-
         if (prefs.getBoolean(FIRST_RUN, true)) {
-            // Populate the database with station info
             new StationListAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object output) {
@@ -83,6 +66,24 @@ public class TripOverviewActivity extends AppCompatActivity
                 }
             }, this).execute();
         }
+
+        mListView = (ListView) findViewById(R.id.trip_list_view);
+        mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position != 0) {
+                    Trip selectedTrip = trips.get(position);
+                    Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class);
+                    tripDetailIntent.putExtra("trip", selectedTrip);
+                    startActivity(tripDetailIntent);
+                }
+            }
+        });
+
+        mTextView = (TextView) findViewById(R.id.advisory);
+
+        fragmentManager = getSupportFragmentManager();
+        fragment = (TripPlannerFragment) fragmentManager.findFragmentById(R.id.trip_planner_fragment);
 
         mFab = (FloatingActionButton) findViewById(R.id.fab);
         mFab.setOnClickListener(new View.OnClickListener() {
@@ -92,10 +93,14 @@ public class TripOverviewActivity extends AppCompatActivity
             }
         });
 
-        mTextView = (TextView) findViewById(R.id.advisory);
+        mRelativeLayout = (RelativeLayout) findViewById(R.id.trip_overview);
+        mRelativeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                hideFragment();
+            }
+        });
 
-        fragmentManager = getSupportFragmentManager();
-        fragment = (TripPlannerFragment) fragmentManager.findFragmentById(R.id.trip_planner_fragment);
         hideFragment();
     }
 
@@ -149,30 +154,36 @@ public class TripOverviewActivity extends AppCompatActivity
                 }
             }).execute(origin, destination);
 
-            new AdvisoryAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object result) {
-                    if (result == null) {
-                        mTextView.setText("No delays reported.");
-                    } else {
-                        String advisory_text = (String) result;
-                        mTextView.setText(advisory_text);
-                    }
-                }
-            }, this).execute();
+            updateAdvisory();
         }
+    }
+
+    private void updateAdvisory() {
+        new AdvisoryAsyncTask(new AsyncTaskResponse() {
+            @Override
+            public void processFinish(Object result) {
+                if (result == null) {
+                    mTextView.setText("No delays reported.");
+                } else {
+                    String advisory_text = (String) result;
+                    mTextView.setText(advisory_text);
+                }
+            }
+        }, this).execute();
     }
 
     private void hideFragment() {
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.hide(fragment);
         transaction.commit();
+        mFab.show();
     }
 
     private void showFragment() {
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.show(fragment);
         transaction.commit();
+        mFab.hide();
     }
 
     private String getName(Cursor c) {
@@ -185,6 +196,12 @@ public class TripOverviewActivity extends AppCompatActivity
 
     @Override
     public void onConfirm() {
+        hideFragment();
         updateListItems();
+    }
+
+    @Override
+    public void onCancel() {
+        hideFragment();
     }
 }

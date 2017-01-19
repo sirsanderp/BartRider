@@ -3,11 +3,9 @@ package com.sanderp.bartrider;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,14 +13,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import com.sanderp.bartrider.database.StationContract;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link TripPlannerFragment.OnConfirmListener} interface
+ * {@link OnFragmentListener} interface
  * to handle interaction events.
  */
 public class TripPlannerFragment extends Fragment {
@@ -39,7 +36,7 @@ public class TripPlannerFragment extends Fragment {
     private Spinner mOrigSpinner;
     private Spinner mDestSpinner;
 
-    private OnConfirmListener mListener;
+    private OnFragmentListener mFragmentListener;
 
     /**
      * This interface must be implemented by activities that contain this
@@ -51,8 +48,9 @@ public class TripPlannerFragment extends Fragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnConfirmListener {
+    public interface OnFragmentListener {
         void onConfirm();
+        void onCancel();
     }
 
     @Override
@@ -73,15 +71,14 @@ public class TripPlannerFragment extends Fragment {
         mConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mListener.onConfirm();
-                hideFragment();
+                mFragmentListener.onConfirm();
             }
         });
         mCancel = (Button) view.findViewById(R.id.cancel);
         mCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                hideFragment();
+                mFragmentListener.onCancel();
             }
         });
 
@@ -109,8 +106,8 @@ public class TripPlannerFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnConfirmListener) {
-            mListener = (OnConfirmListener) context;
+        if (context instanceof OnFragmentListener) {
+            mFragmentListener = (OnFragmentListener) context;
         } else {
             throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
         }
@@ -119,12 +116,6 @@ public class TripPlannerFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
-    }
-
-    private void hideFragment() {
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.hide(fragment);
-        transaction.commit();
+        mFragmentListener = null;
     }
 }
