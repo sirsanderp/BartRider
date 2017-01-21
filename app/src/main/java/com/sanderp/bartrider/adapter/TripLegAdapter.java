@@ -1,4 +1,4 @@
-package com.sanderp.bartrider.adapters;
+package com.sanderp.bartrider.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;

@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.sanderp.bartrider.adapters.TripLegAdapter;
+import com.sanderp.bartrider.adapter.TripLegAdapter;
 import com.sanderp.bartrider.structure.Trip;
 
 public class TripDetailActivity extends AppCompatActivity {
