@@ -8,6 +8,8 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by sande on 1/16/2017.
@@ -22,7 +24,9 @@ public class AdvisoryParser {
 
     private static final String ns = null;
 
-    public String parse(InputStream in) throws XmlPullParserException, IOException {
+    public List<String> parse(InputStream in) throws XmlPullParserException, IOException {
+        List<String> advisories = new ArrayList();
+
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -30,9 +34,9 @@ public class AdvisoryParser {
 
             while (parser.next() != XmlPullParser.END_DOCUMENT) {
                 if (parser.getEventType() != XmlPullParser.START_TAG) continue;
-                if (parser.getName().equals(BSA)) break;
+                if (parser.getName().equals(BSA)) advisories.add(readDescription(parser));
             }
-            return readDescription(parser);
+            return advisories;
         } finally {
             in.close();
         }

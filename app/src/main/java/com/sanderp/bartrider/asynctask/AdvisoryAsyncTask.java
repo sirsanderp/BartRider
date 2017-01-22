@@ -28,7 +28,7 @@ public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
 
     private AsyncTaskResponse delegate;
     private Context context;
-    private String advisories;
+    private List<String> advisories;
 
     public AdvisoryAsyncTask(AsyncTaskResponse delegate, Context context) {
         this.context = context;

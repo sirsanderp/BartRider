@@ -11,6 +11,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -158,7 +159,6 @@ public class TripOverviewActivity extends AppCompatActivity
                         mListView.setAdapter(adapter);
                     }
                 }).execute(origin, destination);
-
                 updateAdvisories();
             }
         }
@@ -169,12 +169,12 @@ public class TripOverviewActivity extends AppCompatActivity
             new AdvisoryAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
-                    if (result == null) {
-                        mTextView.setText("No delays reported.");
-                    } else {
-                        String advisory_text = (String) result;
-                        mTextView.setText(advisory_text);
+                    String advisory_text = "";
+                    for (String s : (List<String>) result) {
+                        advisory_text = advisory_text + "\n\n" + s;
                     }
+                    Log.d(TAG, advisory_text);
+                    mTextView.setText(advisory_text.trim());
                 }
             }, this).execute();
         }
