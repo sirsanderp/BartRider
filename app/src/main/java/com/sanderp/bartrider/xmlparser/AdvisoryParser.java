@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by sande on 1/16/2017.
+ * Created by Sander Peerna on 1/16/2017.
  */
 
 public class AdvisoryParser {

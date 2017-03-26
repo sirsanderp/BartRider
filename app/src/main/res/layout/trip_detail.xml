@@ -14,7 +14,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:textSize="24sp" />
+        android:textSize="24sp"
+        tools:text="@string/sample_orig" />
 
     <TextView
         android:id="@+id/dash"
@@ -32,14 +33,16 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/dash"
         android:layout_centerHorizontal="true"
-        android:textSize="24sp" />
+        android:textSize="24sp"
+        tools:text="@string/sample_dest" />
 
     <ListView
         android:id="@+id/trip_detail_list_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/trip_co2"
-        android:layout_below="@+id/trip_dest" />
+        android:layout_below="@+id/trip_dest"
+        tools:listitem="@layout/trip_detail_list_item" />
 
     <TextView
         android:id="@+id/trip_co2"
@@ -47,6 +50,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:textSize="12sp"
-        android:layout_alignParentBottom="true" />
+        android:layout_alignParentBottom="true"
+        tools:text="@string/sample_co2" />
 
 </RelativeLayout>

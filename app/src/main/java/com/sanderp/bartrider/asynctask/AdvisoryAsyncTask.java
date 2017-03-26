@@ -1,26 +1,20 @@
 package com.sanderp.bartrider.asynctask;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
 import com.sanderp.bartrider.database.ApiContract;
-import com.sanderp.bartrider.database.StationContract;
-import com.sanderp.bartrider.structure.Station;
 import com.sanderp.bartrider.utility.ApiConnection;
 import com.sanderp.bartrider.xmlparser.AdvisoryParser;
-import com.sanderp.bartrider.xmlparser.StationListParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 /**
- * Created by sande on 1/16/2017.
+ * Created by Sander Peerna on 1/16/2017.
  */
 
 public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
