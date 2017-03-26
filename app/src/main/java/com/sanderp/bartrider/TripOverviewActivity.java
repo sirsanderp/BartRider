@@ -40,7 +40,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private static final String TAG = "TripOverviewActivity";
 
     private static final String PREFS_NAME = "BartRiderPrefs";
-    private static final String FIRST_RUN = "first_Run";
+    private static final String FIRST_RUN = "FIRST_RUN";
 
     private FragmentManager fragmentManager;
     private TripPlannerFragment fragment;
