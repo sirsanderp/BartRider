@@ -27,8 +27,8 @@ public class TripDetailActivity extends AppCompatActivity {
         mListView = (ListView) findViewById(R.id.trip_detail_list_view);
 
         Trip trip = (Trip) this.getIntent().getSerializableExtra("trip");
-        mOrig.setText(trip.getOrigFullName());
-        mDest.setText(trip.getDestFullName());
+        mOrig.setText(trip.getOrigFull());
+        mDest.setText(trip.getDestFull());
         mCo2.setText("CO2 Saved: " + trip.getCo2());
 
         TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getTripLegs());
