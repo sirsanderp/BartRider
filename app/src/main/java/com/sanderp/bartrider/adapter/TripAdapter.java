@@ -53,7 +53,7 @@ public class TripAdapter extends BaseAdapter {
             rowView = mInflater.inflate(R.layout.trip_overview_list_item_separator, parent, false);
             TextView mTripSeparator = (TextView) rowView.findViewById(R.id.trip_separator);
 
-            mTripSeparator.setText(trip.getOrigFullName() + " - " + trip.getDestFullName());
+            mTripSeparator.setText(trip.getOrigFull() + " - " + trip.getDestFull());
         } else {
             rowView = mInflater.inflate(R.layout.trip_overview_list_item, parent, false);
             TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_orig_time);
