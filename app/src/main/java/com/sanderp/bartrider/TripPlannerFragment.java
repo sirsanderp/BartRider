@@ -5,7 +5,9 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +16,7 @@ import android.widget.Button;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
-import com.sanderp.bartrider.database.StationContract;
+import com.sanderp.bartrider.database.BartRiderContract;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -22,17 +24,22 @@ import com.sanderp.bartrider.database.StationContract;
  * {@link OnFragmentListener} interface
  * to handle interaction events.
  */
-public class TripPlannerFragment extends Fragment {
+public class TripPlannerFragment extends Fragment implements
+        LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = "TripPlannerFragment";
 
-    private static final String[] FROM = {StationContract.Column.NAME};
+    public static final int LOADER_ID = 0;
+    private static final String[] PROJECTION = {
+            BartRiderContract.Stations.Column.ID,
+            BartRiderContract.Stations.Column.NAME,
+            BartRiderContract.Stations.Column.ABBREVIATION
+    };
+    private static final String[] FROM = {BartRiderContract.Stations.Column.NAME};
     private static final int [] TO = {android.R.id.text1};
-
-    private FragmentManager fragmentManager;
-    private TripPlannerFragment fragment;
 
     private Button mConfirm;
     private Button mCancel;
+    private SimpleCursorAdapter mAdapter;
     private Spinner mOrigSpinner;
     private Spinner mDestSpinner;
 
@@ -49,7 +56,7 @@ public class TripPlannerFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentListener {
-        void onConfirm();
+        void onConfirm(String origFull, String origAbbr, String destFull, String destAbbr);
         void onCancel();
     }
 
@@ -63,15 +70,18 @@ public class TripPlannerFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.trip_planner_fragment, container, false);
 
-        fragmentManager = getFragmentManager();
-        fragment = (TripPlannerFragment) fragmentManager.findFragmentById(R.id.trip_planner_fragment);
-
         // Initialize buttons
         mConfirm = (Button) view.findViewById(R.id.confirm);
         mConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mFragmentListener.onConfirm();
+                mFragmentListener.onConfirm(
+                        getOrigAbbr(),
+                        getOrigFull(),
+                        getDestAbbr(),
+                        getDestFull()
+                );
+                resetSpinners();
             }
         });
         mCancel = (Button) view.findViewById(R.id.cancel);
@@ -79,26 +89,20 @@ public class TripPlannerFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 mFragmentListener.onCancel();
+                resetSpinners();
             }
         });
 
         // Initialize spinners
+        mAdapter = new SimpleCursorAdapter(getActivity(),
+                android.R.layout.simple_spinner_item, null, FROM, TO, 0);
+        mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
         mOrigSpinner = (Spinner) view.findViewById(R.id.orig_spinner);
+        mOrigSpinner.setAdapter(mAdapter);
         mDestSpinner = (Spinner) view.findViewById(R.id.dest_spinner);
-
-        // Populate the spinners with stations
-        String[] projection = {StationContract.Column.ID, StationContract.Column.NAME, StationContract.Column.ABBREVIATION};
-
-        Cursor c = getActivity().getContentResolver().query(StationContract.CONTENT_URI, projection,
-                null, null, StationContract.DEFAULT_SORT);
-
-        Log.d(TAG, DatabaseUtils.dumpCursorToString(c));
-
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(getActivity(),
-                android.R.layout.simple_spinner_item, c, FROM, TO, 0);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mOrigSpinner.setAdapter(adapter);
-        mDestSpinner.setAdapter(adapter);
+        mDestSpinner.setAdapter(mAdapter);
+        getLoaderManager().initLoader(LOADER_ID, null, this);
 
         return view;
     }
@@ -109,7 +113,7 @@ public class TripPlannerFragment extends Fragment {
         if (context instanceof OnFragmentListener) {
             mFragmentListener = (OnFragmentListener) context;
         } else {
-            throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
+            throw new RuntimeException(context.toString() + " must implement OnFragmentListener");
         }
     }
 
@@ -117,5 +121,52 @@ public class TripPlannerFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mFragmentListener = null;
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (id == LOADER_ID) {
+            return new CursorLoader(getActivity(), BartRiderContract.Stations.CONTENT_URI,
+                    PROJECTION, null, null, BartRiderContract.Stations.DEFAULT_SORT);
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (loader.getId() == LOADER_ID && data != null && data.getCount() > 0) {
+            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
+            mAdapter.swapCursor(data);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        if (loader.getId() == LOADER_ID) mAdapter.swapCursor(null);
+    }
+
+    private String getOrigAbbr() {
+        Cursor c = (Cursor) mOrigSpinner.getSelectedItem();
+        return c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.ABBREVIATION));
+    }
+
+    private String getOrigFull() {
+        Cursor c = (Cursor) mOrigSpinner.getSelectedItem();
+        return c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.NAME));
+    }
+
+    private String getDestAbbr() {
+        Cursor c = (Cursor) mDestSpinner.getSelectedItem();
+        return c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.ABBREVIATION));
+    }
+
+    private String getDestFull() {
+        Cursor c = (Cursor) mDestSpinner.getSelectedItem();
+        return c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.NAME));
+    }
+
+    private void resetSpinners() {
+        mOrigSpinner.setSelection(0);
+        mDestSpinner.setSelection(0);
     }
 }
