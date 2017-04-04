@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bart_primary1">#006699</color>
+    <color name="bart_primary1">#0277bd</color>
     <color name="bart_primary2">#cccc00</color>
-    <color name="material_light">#fafafa</color>
+    <color name="bart_status_bar">#0288af</color>
+    <color name="material_light">#fffafafa</color>
     <!--Routes-->
-    <color name="route1">#ffff33</color>
-    <color name="route2">#ffff33</color>
-    <color name="route3">#ff9933</color>
-    <color name="route4">#ff9933</color>
-    <color name="route5">#339933</color>
-    <color name="route6">#339933</color>
-    <color name="route7">#ff0000</color>
-    <color name="route8">#ff0000</color>
-    <color name="route9">#ffff33</color>
-    <color name="route10">#ffff33</color>
-    <color name="route11">#0099cc</color>
-    <color name="route12">#0099cc</color>
-    <color name="route19">#d5cfa3</color>
-    <color name="route20">#d5cfa3</color>
+    <color name="route1">#ffffff33</color>
+    <color name="route2">#ffffff33</color>
+    <color name="route3">#ffff9933</color>
+    <color name="route4">#ffff9933</color>
+    <color name="route5">#ff339933</color>
+    <color name="route6">#ff339933</color>
+    <color name="route7">#ffff0000</color>
+    <color name="route8">#ffff0000</color>
+    <color name="route9">#ffffff33</color>
+    <color name="route10">#ffffff33</color>
+    <color name="route11">#ff0099cc</color>
+    <color name="route12">#ff0099cc</color>
+    <color name="route19">#ffd5cfa3</color>
+    <color name="route20">#ffd5cfa3</color>
 </resources>
