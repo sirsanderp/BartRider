@@ -1,11 +1,22 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="BartTheme" parent="Theme.AppCompat.Light.DarkActionBar" >
-        <item name="android:colorBackground">@color/material_light</item>
+    <style name="BartTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/bart_primary1</item>
         <item name="colorPrimaryDark">@color/bart_primary1</item>
         <item name="colorAccent">@color/bart_primary2</item>
+        <item name="android:colorBackground">@color/material_light</item>
+        <item name="android:textColorSecondary">@color/material_light</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="drawerArrowStyle">@style/ToolbarIconTheme</item>
+    </style>
+
+    <style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:textColorPrimary">@color/material_light</item>
+    </style>
+
+    <style name="ToolbarIconTheme" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="color">@color/material_light</item>
     </style>
 
 </resources>
