@@ -1,4 +1,4 @@
-package com.sanderp.bartrider.com.sanderp.bartrider.view;
+package com.sanderp.bartrider.view;
 
 import android.annotation.TargetApi;
 import android.content.Context;
