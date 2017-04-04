@@ -7,7 +7,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.sanderp.bartrider.database.ApiContract;
-import com.sanderp.bartrider.database.StationContract;
+import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.structure.Station;
 import com.sanderp.bartrider.utility.ApiConnection;
 import com.sanderp.bartrider.xmlparser.StationListParser;
@@ -65,18 +65,18 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
             ContentValues values = new ContentValues();
             for (Station station : stations) {
                 values.clear();
-                values.put(StationContract.Column.ID, station.getId());
-                values.put(StationContract.Column.NAME, station.getName());
-                values.put(StationContract.Column.ABBREVIATION, station.getAbbr());
-                values.put(StationContract.Column.LATITUDE, station.getLatitude());
-                values.put(StationContract.Column.LONGITUDE, station.getLongitude());
-                values.put(StationContract.Column.ADDRESS, station.getAddress());
-                values.put(StationContract.Column.CITY, station.getCity());
-                values.put(StationContract.Column.COUNTY, station.getCounty());
-                values.put(StationContract.Column.STATE, station.getState());
-                values.put(StationContract.Column.ZIPCODE, station.getZipcode());
+                values.put(BartRiderContract.Stations.Column.ID, station.getId());
+                values.put(BartRiderContract.Stations.Column.NAME, station.getName());
+                values.put(BartRiderContract.Stations.Column.ABBREVIATION, station.getAbbr());
+                values.put(BartRiderContract.Stations.Column.LATITUDE, station.getLatitude());
+                values.put(BartRiderContract.Stations.Column.LONGITUDE, station.getLongitude());
+                values.put(BartRiderContract.Stations.Column.ADDRESS, station.getAddress());
+                values.put(BartRiderContract.Stations.Column.CITY, station.getCity());
+                values.put(BartRiderContract.Stations.Column.COUNTY, station.getCounty());
+                values.put(BartRiderContract.Stations.Column.STATE, station.getState());
+                values.put(BartRiderContract.Stations.Column.ZIPCODE, station.getZipcode());
 
-                Uri uri = context.getContentResolver().insert(StationContract.CONTENT_URI, values);
+                Uri uri = context.getContentResolver().insert(BartRiderContract.Stations.CONTENT_URI, values);
                 if (uri != null) {
                     Log.d(TAG, String.format("%s: %s", station.getId(), station.getAbbr()));
                 }
