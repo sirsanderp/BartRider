@@ -91,6 +91,8 @@ public class TripOverviewActivity extends AppCompatActivity
         // MAIN ACTIVITY
         // Open the TripDetailActivity based on the list item that was clicked
         mListView = (ListView) findViewById(R.id.trip_list_view);
+//        TextView emptyListItem = (TextView) findViewById(R.id.empty_list_item);
+        mListView.setEmptyView(findViewById(R.id.empty_list_item));
         mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -166,6 +168,8 @@ public class TripOverviewActivity extends AppCompatActivity
                     sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
             );
+            updateTripResults();
+            updateAdvisories();
             Log.i(TAG, "Retrieved last trip information!");
         }
     }
@@ -181,7 +185,7 @@ public class TripOverviewActivity extends AppCompatActivity
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_bart_main, menu);
         mDrawable = menu.getItem(0).getIcon();
-        int id = sharedPrefs.getInt(PrefContract.LAST_ID, 0);
+        int id = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
         if (id != 0) updateFavoriteIcon(id);
         return true;
     }
@@ -201,6 +205,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 return true;
             case R.id.action_refresh:
                 updateTripResults();
+                updateAdvisories();
                 return true;
             case R.id.action_settings:
                 return true;
@@ -212,6 +217,8 @@ public class TripOverviewActivity extends AppCompatActivity
     public void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull) {
         updateTrip(origAbbr, origFull, destAbbr, destFull);
         updateFavoriteIcon(-1);
+        updateTripResults();
+        updateAdvisories();
         hidePlannerFragment();
     }
 
@@ -224,6 +231,8 @@ public class TripOverviewActivity extends AppCompatActivity
     public void onFavoriteClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
         updateTrip(origAbbr, origFull, destAbbr, destFull);
         updateFavoriteIcon(id);
+        updateTripResults();
+        updateAdvisories();
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
@@ -256,7 +265,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private void updateFavoriteIcon(int id) {
         favoriteTrip = ((id == -1) ? favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr) : id);
 
-        if (favoriteTrip == 0) mDrawable.clearColorFilter();
+        if (favoriteTrip == 0) mDrawable.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
         else mDrawable.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
     }
 
@@ -266,7 +275,6 @@ public class TripOverviewActivity extends AppCompatActivity
             this.origFull = origFull;
             this.destAbbr = destAbbr;
             this.destFull = destFull;
-            updateTripResults();
         }
     }
 
@@ -290,7 +298,6 @@ public class TripOverviewActivity extends AppCompatActivity
                     mListView.setAdapter(adapter);
                 }
             }).execute(origAbbr, destAbbr);
-            updateAdvisories();
         }
     }
 

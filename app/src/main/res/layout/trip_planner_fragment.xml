@@ -13,7 +13,8 @@
         android:layout_marginTop="15dp"
         android:layout_marginLeft="@dimen/spinner_margin"
         android:layout_marginRight="@dimen/spinner_margin"
-        android:background="@color/material_light" />
+        android:background="@drawable/rounded_corners"
+        android:backgroundTint="@color/material_light" />
 
     <Spinner
         android:id="@+id/dest_spinner"
@@ -23,28 +24,30 @@
         android:layout_marginLeft="@dimen/spinner_margin"
         android:layout_marginRight="@dimen/spinner_margin"
         android:layout_below="@+id/orig_spinner"
-        android:background="@color/material_light"/>
+        android:background="@drawable/rounded_corners"
+        android:backgroundTint="@color/material_light" />
 
     <Button
         android:id="@+id/confirm"
         android:text="Confirm"
         android:layout_width="@dimen/button_width"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="60dp"
-        android:layout_marginStart="60dp"
+        android:layout_marginStart="64dp"
         android:layout_below="@+id/dest_spinner"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="15dp" />
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/rounded_corners"
+        android:backgroundTint="@color/material_light" />
 
     <Button
         android:id="@+id/cancel"
         android:text="Cancel"
         android:layout_width="@dimen/button_width"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="60dp"
-        android:layout_marginStart="60dp"
-        android:layout_alignBaseline="@+id/confirm"
+        android:layout_marginEnd="64dp"
+        android:layout_alignParentEnd="true"
         android:layout_alignBottom="@+id/confirm"
-        android:layout_toRightOf="@+id/confirm" />
+        android:background="@drawable/rounded_corners"
+        android:backgroundTint="@color/material_light" />
 
 </RelativeLayout>
