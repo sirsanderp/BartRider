@@ -1,6 +1,7 @@
 package com.sanderp.bartrider;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
@@ -16,7 +17,11 @@ import android.widget.Button;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
+import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
+import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
+import com.sanderp.bartrider.utility.PrefContract;
+import com.sanderp.bartrider.utility.Tools;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -44,6 +49,7 @@ public class TripPlannerFragment extends Fragment implements
     private Spinner mDestSpinner;
 
     private OnFragmentListener mFragmentListener;
+    private SharedPreferences sharedPrefs;
 
     /**
      * This interface must be implemented by activities that contain this
@@ -69,6 +75,16 @@ public class TripPlannerFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.trip_planner_fragment, container, false);
+
+        sharedPrefs = getActivity().getSharedPreferences(PrefContract.PREFS_NAME, 0);
+        if (sharedPrefs.getBoolean(PrefContract.FIRST_RUN, true) && Tools.isNetworkConnected(getActivity())) {
+            new StationListAsyncTask(new AsyncTaskResponse() {
+                @Override
+                public void processFinish(Object output) {
+                    sharedPrefs.edit().putBoolean(PrefContract.FIRST_RUN, false).apply();
+                }
+            }, getActivity()).execute();
+        }
 
         // Initialize buttons
         mConfirm = (Button) view.findViewById(R.id.confirm);
@@ -134,7 +150,7 @@ public class TripPlannerFragment extends Fragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (loader.getId() == LOADER_ID && data != null && data.getCount() > 0) {
+        if (loader.getId() == LOADER_ID && data != null) {
             Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
             mAdapter.swapCursor(data);
         }
