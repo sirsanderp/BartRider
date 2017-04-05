@@ -138,7 +138,7 @@ public class TripDrawerFragment extends Fragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (loader.getId() == LOADER_ID && data != null && data.getCount() > 0) {
+        if (loader.getId() == LOADER_ID && data != null) {
             Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
             favoritesTable = data;
             mAdapter.swapCursor(data);
