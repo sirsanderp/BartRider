@@ -1,13 +1,10 @@
 package com.sanderp.bartrider;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -34,9 +31,10 @@ import com.sanderp.bartrider.adapter.TripAdapter;
 import com.sanderp.bartrider.asynctask.AdvisoryAsyncTask;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.QuickPlannerAsyncTask;
-import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.structure.Trip;
+import com.sanderp.bartrider.utility.PrefContract;
+import com.sanderp.bartrider.utility.Tools;
 
 import java.util.List;
 
@@ -47,14 +45,10 @@ public class TripOverviewActivity extends AppCompatActivity
         implements TripPlannerFragment.OnFragmentListener, TripDrawerFragment.OnFragmentListener {
     private static final String TAG = "TripOverviewActivity";
 
-    private static final String PREFS_NAME = "BartRiderPrefs";
-    private static final String FIRST_RUN = "FIRST_RUN";
-
     private FragmentManager fragmentManager;
     private TripPlannerFragment plannerFragment;
     private TripDrawerFragment drawerFragment;
-    private List<Trip> trips;
-    private SharedPreferences prefs;
+    private SharedPreferences sharedPrefs;
 
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
@@ -65,6 +59,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private TextView mTextView;
     private Toolbar mToolbar;
 
+    private List<Trip> trips;
     private int favoriteTrip;
     private String origAbbr;
     private String origFull;
@@ -80,6 +75,8 @@ public class TripOverviewActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.trip_overview);
 
+        sharedPrefs = getSharedPreferences(PrefContract.PREFS_NAME, 0);
+
         // Set the toolbar to replace the ActionBar.
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
@@ -92,16 +89,6 @@ public class TripOverviewActivity extends AppCompatActivity
         plannerFragment = (TripPlannerFragment) fragmentManager.findFragmentById(R.id.trip_planner_fragment);
 
         // MAIN ACTIVITY
-        prefs = getSharedPreferences(PREFS_NAME, 0);
-        if (prefs.getBoolean(FIRST_RUN, true) && isNetworkConnected()) {
-            new StationListAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object output) {
-                    prefs.edit().putBoolean(FIRST_RUN, false).commit();
-                }
-            }, this).execute();
-        }
-
         // Open the TripDetailActivity based on the list item that was clicked
         mListView = (ListView) findViewById(R.id.trip_list_view);
         mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
@@ -152,6 +139,38 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (isTripSet()) {
+            SharedPreferences.Editor editor = sharedPrefs.edit();
+            editor.putBoolean(PrefContract.LAST_TRIP, true);
+            editor.putInt(PrefContract.LAST_ID, favoriteTrip);
+            editor.putString(PrefContract.LAST_ORIG_ABBR, origAbbr);
+            editor.putString(PrefContract.LAST_ORIG_FULL, origFull);
+            editor.putString(PrefContract.LAST_DEST_ABBR, destAbbr);
+            editor.putString(PrefContract.LAST_DEST_FULL, destFull);
+            editor.apply();
+            Log.i(TAG, "Saved last trip information!");
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
+            updateTrip(
+                    sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
+                    sharedPrefs.getString(PrefContract.LAST_ORIG_FULL, null),
+                    sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
+                    sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
+            );
+            Log.i(TAG, "Retrieved last trip information!");
+        }
+    }
+
+    @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         mDrawerToggle.syncState();
@@ -162,6 +181,8 @@ public class TripOverviewActivity extends AppCompatActivity
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_bart_main, menu);
         mDrawable = menu.getItem(0).getIcon();
+        int id = sharedPrefs.getInt(PrefContract.LAST_ID, 0);
+        if (id != 0) updateFavoriteIcon(id);
         return true;
     }
 
@@ -188,9 +209,9 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     @Override
-    public void onConfirm(String origFull, String origAbbr, String destFull, String destAbbr) {
-        updateTrip(origFull, origAbbr, destFull, destAbbr);
-        updateFavoriteIcon(0);
+    public void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull) {
+        updateTrip(origAbbr, origFull, destAbbr, destFull);
+        updateFavoriteIcon(-1);
         hidePlannerFragment();
     }
 
@@ -228,14 +249,14 @@ public class TripOverviewActivity extends AppCompatActivity
             if (count > 0) {
                 Log.d(TAG, String.format("Removed from favorites: %s - %s", origAbbr, destAbbr));
             }
-            updateFavoriteIcon(-1);
+            updateFavoriteIcon(0);
         }
     }
 
     private void updateFavoriteIcon(int id) {
-        favoriteTrip = ((id == 0) ? favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr) : id);
+        favoriteTrip = ((id == -1) ? favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr) : id);
 
-        if (favoriteTrip <= 0) mDrawable.clearColorFilter();
+        if (favoriteTrip == 0) mDrawable.clearColorFilter();
         else mDrawable.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
     }
 
@@ -250,7 +271,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void updateTripResults() {
-        if (isTripSet() && isNetworkConnected()) {
+        if (isTripSet() && Tools.isNetworkConnected(this)) {
             new QuickPlannerAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
@@ -274,7 +295,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void updateAdvisories() {
-        if (isNetworkConnected()) {
+        if (Tools.isNetworkConnected(this)) {
             new AdvisoryAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
@@ -289,18 +310,6 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private boolean isNetworkConnected() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-
-        if (networkInfo != null && networkInfo.isConnected()) {
-            return true;
-        } else {
-            Toast.makeText(getApplicationContext(), "No network connection.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-    }
-
     private boolean isTripSet() {
         if (origAbbr == null || destAbbr == null) {
             Toast.makeText(getApplicationContext(), "Please select stations in the trip planner.", Toast.LENGTH_SHORT).show();
@@ -309,8 +318,8 @@ public class TripOverviewActivity extends AppCompatActivity
         return true;
     }
 
-    private boolean isValidTrip(String origStation, String destStation) {
-        if (origStation.equals(destStation)) {
+    private boolean isValidTrip(String origAbbr, String destAbbr) {
+        if (origAbbr.equals(destAbbr)) {
             Toast.makeText(getApplicationContext(), "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
             return false;
         }
