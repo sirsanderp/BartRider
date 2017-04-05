@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sanderp.bartrider.database.ApiContract;
+import com.sanderp.bartrider.utility.ApiContract;
 import com.sanderp.bartrider.utility.ApiConnection;
 import com.sanderp.bartrider.xmlparser.AdvisoryParser;
 

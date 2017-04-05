@@ -1,4 +1,4 @@
-package com.sanderp.bartrider.database;
+package com.sanderp.bartrider.utility;
 
 /**
  * Created by Sander Peerna on 11/10/2016.

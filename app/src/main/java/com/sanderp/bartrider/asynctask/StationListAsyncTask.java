@@ -6,7 +6,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sanderp.bartrider.database.ApiContract;
+import com.sanderp.bartrider.utility.ApiContract;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.structure.Station;
 import com.sanderp.bartrider.utility.ApiConnection;
