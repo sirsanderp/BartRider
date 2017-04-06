@@ -31,6 +31,7 @@ import com.sanderp.bartrider.adapter.TripAdapter;
 import com.sanderp.bartrider.asynctask.AdvisoryAsyncTask;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.QuickPlannerAsyncTask;
+import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.structure.Trip;
 import com.sanderp.bartrider.utility.PrefContract;
@@ -76,13 +77,23 @@ public class TripOverviewActivity extends AppCompatActivity
         setContentView(R.layout.trip_overview);
 
         sharedPrefs = getSharedPreferences(PrefContract.PREFS_NAME, 0);
+        if (sharedPrefs.getBoolean(PrefContract.FIRST_RUN, true)) {
+            Log.i(TAG, "First run setup...");
+            sendBroadcast(new Intent("com.sanderp.bartrider.action.START_ADVISORY_SERVICE"));
+            new StationListAsyncTask(new AsyncTaskResponse() {
+                @Override
+                public void processFinish(Object output) {
+                    sharedPrefs.edit().putBoolean(PrefContract.FIRST_RUN, false).apply();
+                }
+            }, this).execute();
+        }
 
         // Set the toolbar to replace the ActionBar.
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        //getSupportActionBar().setHomeButtonEnabled(true);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        getSupportActionBar().setHomeButtonEnabled(true);
 
         fragmentManager = getSupportFragmentManager();
         drawerFragment = (TripDrawerFragment) fragmentManager.findFragmentById(R.id.trip_planner_drawer_fragment);
@@ -91,7 +102,6 @@ public class TripOverviewActivity extends AppCompatActivity
         // MAIN ACTIVITY
         // Open the TripDetailActivity based on the list item that was clicked
         mListView = (ListView) findViewById(R.id.trip_list_view);
-//        TextView emptyListItem = (TextView) findViewById(R.id.empty_list_item);
         mListView.setEmptyView(findViewById(R.id.empty_list_item));
         mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override

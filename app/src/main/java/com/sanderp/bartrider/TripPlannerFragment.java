@@ -49,7 +49,6 @@ public class TripPlannerFragment extends Fragment implements
     private Spinner mDestSpinner;
 
     private OnFragmentListener mFragmentListener;
-    private SharedPreferences sharedPrefs;
 
     /**
      * This interface must be implemented by activities that contain this
@@ -75,16 +74,6 @@ public class TripPlannerFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.trip_planner_fragment, container, false);
-
-        sharedPrefs = getActivity().getSharedPreferences(PrefContract.PREFS_NAME, 0);
-        if (sharedPrefs.getBoolean(PrefContract.FIRST_RUN, true) && Tools.isNetworkConnected(getActivity())) {
-            new StationListAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object output) {
-                    sharedPrefs.edit().putBoolean(PrefContract.FIRST_RUN, false).apply();
-                }
-            }, getActivity()).execute();
-        }
 
         // Initialize buttons
         mConfirm = (Button) view.findViewById(R.id.confirm);

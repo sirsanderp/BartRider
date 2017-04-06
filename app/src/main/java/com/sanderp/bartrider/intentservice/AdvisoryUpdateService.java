@@ -76,12 +76,13 @@ public class AdvisoryUpdateService extends IntentService {
     }
 
     private void postAdvisoryNotification(String advisory) {
-        Notification notification = new NotificationCompat.Builder(this)
-                .setContentTitle("Bart Advisory Alert")
-                .setContentText(advisory)
-                .setSmallIcon(R.drawable.ic_bart_rider_24dp)
-                .build();
-
-        mNotificationManager.notify(NOTIFICATION_ID, notification);
+        if (!advisory.equals("No delays reported.")) {
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setContentTitle("BART Advisory")
+                    .setContentText(advisory)
+                    .setSmallIcon(R.drawable.ic_bart_rider_24dp)
+                    .build();
+            mNotificationManager.notify(NOTIFICATION_ID, notification);
+        }
     }
 }

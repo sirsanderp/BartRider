@@ -11,16 +11,14 @@ import android.util.Log;
 public class BootReceiver extends BroadcastReceiver {
     private static final String TAG = "BootReceiver";
 
-    public static final long DEFAULT_INTERVAL = 5;
+    public static final long DEFAULT_INTERVAL = 10;
 
     @Override
     public void onReceive(Context context, Intent intent) {
-//        Log.d(TAG, "onReceive()");
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent advisoryIntent = new Intent(context, AdvisoryUpdateService.class);
         PendingIntent advisoryUpdate = PendingIntent.getService(context, -1, advisoryIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-//        Log.i(TAG, "Starting advisory update repeating alarm...");
-        alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime(), DEFAULT_INTERVAL * 1000, advisoryUpdate);
+        alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime(), DEFAULT_INTERVAL * 60 * 1000, advisoryUpdate);
     }
 }
