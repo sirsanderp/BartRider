@@ -1,14 +1,15 @@
 package com.sanderp.bartrider;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,11 +18,7 @@ import android.widget.Button;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
-import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
-import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
-import com.sanderp.bartrider.utility.PrefContract;
-import com.sanderp.bartrider.utility.Tools;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -29,7 +26,7 @@ import com.sanderp.bartrider.utility.Tools;
  * {@link OnFragmentListener} interface
  * to handle interaction events.
  */
-public class TripPlannerFragment extends Fragment implements
+public class TripPlannerFragment extends DialogFragment implements
         LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = "TripPlannerFragment";
 
@@ -50,19 +47,15 @@ public class TripPlannerFragment extends Fragment implements
 
     private OnFragmentListener mFragmentListener;
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnFragmentListener {
         void onConfirm(String origFull, String origAbbr, String destFull, String destAbbr);
-        void onCancel();
+    }
+
+    public TripPlannerFragment() {}
+
+    public static TripPlannerFragment newInstance() {
+        TripPlannerFragment fragment = new TripPlannerFragment();
+        return fragment;
     }
 
     @Override
@@ -73,7 +66,7 @@ public class TripPlannerFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.trip_planner_fragment, container, false);
+        View view = getActivity().getLayoutInflater().inflate(R.layout.trip_planner_fragment, container, false);
 
         // Initialize buttons
         mConfirm = (Button) view.findViewById(R.id.confirm);
@@ -87,14 +80,15 @@ public class TripPlannerFragment extends Fragment implements
                         getDestFull()
                 );
                 resetSpinners();
+                dismiss();
             }
         });
         mCancel = (Button) view.findViewById(R.id.cancel);
         mCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mFragmentListener.onCancel();
                 resetSpinners();
+                dismiss();
             }
         });
 
@@ -110,6 +104,16 @@ public class TripPlannerFragment extends Fragment implements
         getLoaderManager().initLoader(LOADER_ID, null, this);
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+//        getDialog().getWindow().setBackgroundDrawableResource(R.drawable.rounded_corners);
+        getDialog().getWindow().setLayout((int) (displayMetrics.widthPixels * 0.9), ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        super.onResume();
     }
 
     @Override

@@ -11,7 +11,7 @@ import android.util.Log;
 public class BootReceiver extends BroadcastReceiver {
     private static final String TAG = "BootReceiver";
 
-    public static final long DEFAULT_INTERVAL = 10;
+    public static final long DEFAULT_INTERVAL = 5;
 
     @Override
     public void onReceive(Context context, Intent intent) {

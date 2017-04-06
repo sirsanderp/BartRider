@@ -53,16 +53,6 @@
                 tools:text="@string/sample_advisory" />
         </RelativeLayout>
 
-        <fragment
-            android:name="com.sanderp.bartrider.TripPlannerFragment"
-            android:id="@+id/trip_planner_fragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:layout_marginTop="64dp"
-            android:layout_margin="16dp"
-            tools:layout="@layout/trip_planner_fragment" />
-
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="wrap_content"
@@ -78,7 +68,7 @@
 
     <fragment
         android:name="com.sanderp.bartrider.TripDrawerFragment"
-        android:id="@+id/trip_planner_drawer_fragment"
+        android:id="@+id/trip_drawer_fragment"
         android:layout_width="280dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"

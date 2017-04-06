@@ -47,8 +47,8 @@ public class TripOverviewActivity extends AppCompatActivity
     private static final String TAG = "TripOverviewActivity";
 
     private FragmentManager fragmentManager;
-    private TripPlannerFragment plannerFragment;
     private TripDrawerFragment drawerFragment;
+    private TripPlannerFragment plannerFragment;
     private SharedPreferences sharedPrefs;
 
     private ActionBarDrawerToggle mDrawerToggle;
@@ -96,8 +96,8 @@ public class TripOverviewActivity extends AppCompatActivity
 //        getSupportActionBar().setHomeButtonEnabled(true);
 
         fragmentManager = getSupportFragmentManager();
-        drawerFragment = (TripDrawerFragment) fragmentManager.findFragmentById(R.id.trip_planner_drawer_fragment);
-        plannerFragment = (TripPlannerFragment) fragmentManager.findFragmentById(R.id.trip_planner_fragment);
+        drawerFragment = (TripDrawerFragment) fragmentManager.findFragmentById(R.id.trip_drawer_fragment);
+        plannerFragment = TripPlannerFragment.newInstance();
 
         // MAIN ACTIVITY
         // Open the TripDetailActivity based on the list item that was clicked
@@ -138,16 +138,6 @@ public class TripOverviewActivity extends AppCompatActivity
                 showPlannerFragment();
             }
         });
-
-        mRelativeLayout = (RelativeLayout) findViewById(R.id.trip_overview_layout);
-        mRelativeLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hidePlannerFragment();
-            }
-        });
-
-        hidePlannerFragment();
     }
 
     @Override
@@ -229,12 +219,6 @@ public class TripOverviewActivity extends AppCompatActivity
         updateFavoriteIcon(-1);
         updateTripResults();
         updateAdvisories();
-        hidePlannerFragment();
-    }
-
-    @Override
-    public void onCancel() {
-        hidePlannerFragment();
     }
 
     @Override
@@ -312,7 +296,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void updateAdvisories() {
-        if (Tools.isNetworkConnected(this)) {
+        if (isTripSet() && Tools.isNetworkConnected(this)) {
             new AdvisoryAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
@@ -325,6 +309,10 @@ public class TripOverviewActivity extends AppCompatActivity
                 }
             }, this).execute();
         }
+    }
+
+    private void showPlannerFragment() {
+        plannerFragment.show(fragmentManager, "Trip Planner Fragment");
     }
 
     private boolean isTripSet() {
@@ -341,19 +329,5 @@ public class TripOverviewActivity extends AppCompatActivity
             return false;
         }
         return true;
-    }
-
-    private void hidePlannerFragment() {
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.hide(plannerFragment);
-        transaction.commit();
-        mFab.show();
-    }
-
-    private void showPlannerFragment() {
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.show(plannerFragment);
-        transaction.commit();
-        mFab.hide();
     }
 }

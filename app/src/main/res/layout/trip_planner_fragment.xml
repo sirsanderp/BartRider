@@ -1,53 +1,49 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/trip_planner_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/rounded_corners">
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:background="@color/bart_primary1">
 
     <Spinner
         android:id="@+id/orig_spinner"
         android:layout_width="fill_parent"
         android:layout_height="@dimen/spinner_height"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="16dp"
         android:layout_marginLeft="@dimen/spinner_margin"
         android:layout_marginRight="@dimen/spinner_margin"
-        android:background="@drawable/rounded_corners"
-        android:backgroundTint="@color/material_light" />
+        android:background="@drawable/rounded_buttons" />
 
     <Spinner
         android:id="@+id/dest_spinner"
         android:layout_width="fill_parent"
         android:layout_height="@dimen/spinner_height"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="8dp"
         android:layout_marginLeft="@dimen/spinner_margin"
         android:layout_marginRight="@dimen/spinner_margin"
         android:layout_below="@+id/orig_spinner"
-        android:background="@drawable/rounded_corners"
-        android:backgroundTint="@color/material_light" />
+        android:background="@drawable/rounded_buttons" />
 
     <Button
         android:id="@+id/confirm"
         android:text="Confirm"
         android:layout_width="@dimen/button_width"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/button_height"
         android:layout_marginStart="64dp"
         android:layout_below="@+id/dest_spinner"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        android:background="@drawable/rounded_corners"
-        android:backgroundTint="@color/material_light" />
+        android:background="@drawable/rounded_buttons" />
 
     <Button
         android:id="@+id/cancel"
         android:text="Cancel"
         android:layout_width="@dimen/button_width"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/button_height"
         android:layout_marginEnd="64dp"
         android:layout_alignParentEnd="true"
         android:layout_alignBottom="@+id/confirm"
-        android:background="@drawable/rounded_corners"
-        android:backgroundTint="@color/material_light" />
+        android:background="@drawable/rounded_buttons" />
 
 </RelativeLayout>

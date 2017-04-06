@@ -4,10 +4,10 @@
         <shape android:shape="rectangle">
             <!-- solid background -->
             <solid
-                android:color="@color/bart_primary1" />
+                android:color="@color/material_light" />
             <!-- border-->
             <stroke
-                android:color="@color/bart_primary1"
+                android:color="@color/material_light"
                 android:width="2dp" />
             <corners
                 android:radius="5dp" />
@@ -19,8 +19,8 @@
                 android:bottomRightRadius="20dp"
                 /-->
             <!--<bitmap-->
-                <!--android:gravity="center_vertical|right"-->
-                <!--android:src="@drawable/ic_arrow_drop_down_24dp" />-->
+            <!--android:gravity="center_vertical|right"-->
+            <!--android:src="@drawable/ic_arrow_drop_down_24dp" />-->
         </shape>
     </item>
 </selector>
