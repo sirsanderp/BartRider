@@ -306,12 +306,12 @@ public class TripOverviewActivity extends AppCompatActivity
             new AdvisoryAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
-                    String advisory_text = "";
+                    StringBuilder advisory = new StringBuilder();
                     for (String s : (List<String>) result) {
-                        advisory_text = advisory_text + "\n\n" + s;
+                        advisory.append(s + "\n\n");
                     }
-                    Log.d(TAG, advisory_text);
-                    mTextView.setText(advisory_text.trim());
+                    Log.d(TAG, advisory.toString());
+                    mTextView.setText(advisory.toString().trim());
                 }
             }, this).execute();
         }

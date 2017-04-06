@@ -54,7 +54,6 @@ public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
         InputStream stream = null;
         AdvisoryParser parser = new AdvisoryParser();
         String url = ApiContract.API_URL + "bsa.aspx?cmd=bsa&key=" + ApiContract.API_KEY;
-        Log.d(TAG, url);
         try {
             Log.i(TAG, "Parsing advisories...");
             stream = ApiConnection.downloadData(url);
