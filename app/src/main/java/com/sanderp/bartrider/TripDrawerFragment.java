@@ -47,7 +47,6 @@ public class TripDrawerFragment extends Fragment implements
     };
 
     private Cursor favoritesTable;
-
     private SimpleCursorAdapter mAdapter;
     private ListView mListView;
 
@@ -67,8 +66,6 @@ public class TripDrawerFragment extends Fragment implements
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.trip_drawer_fragment, container, false);
 
-//        favoritesTable = getActivity().getContentResolver().query(BartRiderContract.Favorites.CONTENT_URI,
-//                PROJECTION, null, null, BartRiderContract.Favorites.DEFAULT_SORT);
         mAdapter = new SimpleCursorAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, null, FROM, TO, 0);
         mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {

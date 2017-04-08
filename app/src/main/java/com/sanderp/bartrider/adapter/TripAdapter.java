@@ -49,21 +49,14 @@ public class TripAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         Trip trip = (Trip) getItem(position);
         View rowView;
-        if (position == 0) {
-            rowView = mInflater.inflate(R.layout.trip_overview_list_item_separator, parent, false);
-            TextView mTripSeparator = (TextView) rowView.findViewById(R.id.trip_separator);
+        rowView = mInflater.inflate(R.layout.trip_overview_list_item, parent, false);
+        TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_orig_time);
+        TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_dest_time);
+        TextView mFare = (TextView) rowView.findViewById(R.id.trip_fare);
 
-            mTripSeparator.setText(trip.getOrigFull() + " - " + trip.getDestFull());
-        } else {
-            rowView = mInflater.inflate(R.layout.trip_overview_list_item, parent, false);
-            TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_orig_time);
-            TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_dest_time);
-            TextView mFare = (TextView) rowView.findViewById(R.id.trip_fare);
-
-            mOrigTime.setText(trip.getOrigTimeMin());
-            mDestTime.setText(trip.getDestTimeMin());
-            mFare.setText("$" + new DecimalFormat("#.00").format(trip.getFare()));
-        }
+        mOrigTime.setText(trip.getOrigTimeMin());
+        mDestTime.setText(trip.getDestTimeMin());
+        mFare.setText("$" + new DecimalFormat("#.00").format(trip.getFare()));
 
         return rowView;
     }

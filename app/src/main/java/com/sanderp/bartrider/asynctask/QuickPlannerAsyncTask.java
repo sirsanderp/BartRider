@@ -58,7 +58,7 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
         String plannerUrl = ApiContract.API_URL + "sched.aspx?cmd=depart&orig=" + params[0] +
                 "&dest=" + params[1] + "&a=3&b=0&key=" + ApiContract.API_KEY;
         try {
-            Log.i(TAG, "Refreshing departure info...");
+            Log.i(TAG, "Parsing departures...");
             stream = ApiConnection.downloadData(plannerUrl);
             return planner.parse(stream);
         } finally {

@@ -26,13 +26,21 @@
             android:paddingRight="@dimen/activity_horizontal_margin"
             android:paddingTop="@dimen/activity_vertical_margin">
 
+            <com.sanderp.bartrider.view.AutoResizeTextView
+                android:id="@+id/trip_header"
+                android:layout_width="match_parent"
+                android:layout_height="25dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textSize="18dp"
+                tools:text="@string/sample_trip" />
+
             <ListView
                 android:id="@+id/trip_list_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentStart="true"
                 android:choiceMode="singleChoice"
+                android:layout_below="@+id/trip_header"
                 tools:listitem="@layout/trip_overview_list_item" />
 
             <TextView
@@ -67,8 +75,8 @@
     </RelativeLayout>
 
     <fragment
-        android:name="com.sanderp.bartrider.TripDrawerFragment"
         android:id="@+id/trip_drawer_fragment"
+        android:name="com.sanderp.bartrider.TripDrawerFragment"
         android:layout_width="280dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"

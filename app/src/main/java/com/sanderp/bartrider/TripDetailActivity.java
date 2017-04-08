@@ -1,5 +1,6 @@
 package com.sanderp.bartrider;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ListView;
@@ -26,9 +27,10 @@ public class TripDetailActivity extends AppCompatActivity {
         mCo2 = (TextView) findViewById(R.id.trip_co2);
         mListView = (ListView) findViewById(R.id.trip_detail_list_view);
 
-        Trip trip = (Trip) this.getIntent().getSerializableExtra("trip");
-        mOrig.setText(trip.getOrigFull());
-        mDest.setText(trip.getDestFull());
+        Intent data= this.getIntent();
+        Trip trip = (Trip) data.getSerializableExtra("trip");
+        mOrig.setText(data.getStringExtra("origin"));
+        mDest.setText(data.getStringExtra("destination"));
         mCo2.setText("CO2 Saved: " + trip.getCo2());
 
         TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getTripLegs());

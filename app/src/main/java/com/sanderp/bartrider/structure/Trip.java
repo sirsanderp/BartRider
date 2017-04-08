@@ -8,10 +8,6 @@ import java.util.List;
  * Created by Sander Peerna on 3/13/2016.
  */
 public class Trip implements Serializable {
-    // Extra attributes
-    private String origFull;
-    private String destFull;
-
     // Matches attributes in the <trip> tag.
     private String origin;
     private String destination;
@@ -27,22 +23,6 @@ public class Trip implements Serializable {
 
     public Trip() {
         tripLegs = new ArrayList<>();
-    }
-
-    public String getOrigFull() {
-        return origFull;
-    }
-    
-    public void setOrigFull(String origFull) {
-        this.origFull = origFull;
-    }
-
-    public String getDestFull() {
-        return destFull;
-    }
-
-    public void setDestFull(String destFull) {
-        this.destFull = destFull;
     }
 
     public String getOrigin() {

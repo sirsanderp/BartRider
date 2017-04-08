@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -23,7 +22,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +29,7 @@ import com.sanderp.bartrider.adapter.TripAdapter;
 import com.sanderp.bartrider.asynctask.AdvisoryAsyncTask;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.QuickPlannerAsyncTask;
+import com.sanderp.bartrider.asynctask.RealTimeAsyncTask;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.structure.Trip;
@@ -54,10 +53,10 @@ public class TripOverviewActivity extends AppCompatActivity
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private FloatingActionButton mFab;
-    private Drawable mDrawable;
-    private ListView mListView;
-    private RelativeLayout mRelativeLayout;
-    private TextView mTextView;
+    private Drawable mFavoriteIcon;
+    private ListView mTripSchedules;
+    private TextView mTripHeader;
+    private TextView mAdvisory;
     private Toolbar mToolbar;
 
     private List<Trip> trips;
@@ -101,20 +100,21 @@ public class TripOverviewActivity extends AppCompatActivity
 
         // MAIN ACTIVITY
         // Open the TripDetailActivity based on the list item that was clicked
-        mListView = (ListView) findViewById(R.id.trip_list_view);
-        mListView.setEmptyView(findViewById(R.id.empty_list_item));
-        mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
+        mTripHeader = (TextView) findViewById(R.id.trip_header);
+        mTripSchedules = (ListView) findViewById(R.id.trip_list_view);
+        mTripSchedules.setEmptyView(findViewById(R.id.empty_list_item));
+        mTripSchedules.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (position != 0) {
-                    Trip selectedTrip = trips.get(position);
-                    Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class);
-                    tripDetailIntent.putExtra("trip", selectedTrip);
-                    startActivity(tripDetailIntent);
-                }
+                Trip selectedTrip = trips.get(position);
+                Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class);
+                tripDetailIntent.putExtra("origin", origFull);
+                tripDetailIntent.putExtra("destination", destFull);
+                tripDetailIntent.putExtra("trip", selectedTrip);
+                startActivity(tripDetailIntent);
             }
         });
-        mTextView = (TextView) findViewById(R.id.advisory);
+        mAdvisory = (TextView) findViewById(R.id.advisory);
 
         // Drawer portion of the main activity
         mDrawerLayout = (DrawerLayout) findViewById(R.id.trip_overview_drawer_layout);
@@ -168,8 +168,8 @@ public class TripOverviewActivity extends AppCompatActivity
                     sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
             );
-            updateTripResults();
-            updateAdvisories();
+            updateTripSchedules();
+            updateAdvisory();
             Log.i(TAG, "Retrieved last trip information!");
         }
     }
@@ -184,7 +184,7 @@ public class TripOverviewActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_bart_main, menu);
-        mDrawable = menu.getItem(0).getIcon();
+        mFavoriteIcon = menu.getItem(0).getIcon();
         int id = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
         if (id != 0) updateFavoriteIcon(id);
         return true;
@@ -204,8 +204,8 @@ public class TripOverviewActivity extends AppCompatActivity
                 toggleFavorite();
                 return true;
             case R.id.action_refresh:
-                updateTripResults();
-                updateAdvisories();
+                updateTripSchedules();
+                updateAdvisory();
                 return true;
             case R.id.action_settings:
                 return true;
@@ -217,16 +217,16 @@ public class TripOverviewActivity extends AppCompatActivity
     public void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull) {
         updateTrip(origAbbr, origFull, destAbbr, destFull);
         updateFavoriteIcon(-1);
-        updateTripResults();
-        updateAdvisories();
+        updateTripSchedules();
+        updateAdvisory();
     }
 
     @Override
     public void onFavoriteClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
         updateTrip(origAbbr, origFull, destAbbr, destFull);
         updateFavoriteIcon(id);
-        updateTripResults();
-        updateAdvisories();
+        updateTripSchedules();
+        updateAdvisory();
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
@@ -259,8 +259,8 @@ public class TripOverviewActivity extends AppCompatActivity
     private void updateFavoriteIcon(int id) {
         favoriteTrip = ((id == -1) ? favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr) : id);
 
-        if (favoriteTrip == 0) mDrawable.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
-        else mDrawable.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
+        if (favoriteTrip == 0) mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
+        else mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
     }
 
     private void updateTrip(String origAbbr, String origFull, String destAbbr, String destFull) {
@@ -272,35 +272,39 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private void updateTripResults() {
+    private void updateTripSchedules() {
         if (isTripSet() && Tools.isNetworkConnected(this)) {
             new QuickPlannerAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
+                    mTripHeader.setText(origFull + " - " + destFull);
+//                    updateTripRealTimeEstimates();
+
+                    // TODO: No longer need to include the full station names nor create a "header" trip.
                     trips = (List<Trip>) result;
-                    for (Trip t : trips) {
-                        t.setOrigFull(origFull);
-                        t.setDestFull(destFull);
-                    }
-
-                    Trip header = new Trip();
-                    header.setOrigFull(origFull);
-                    header.setDestFull(destFull);
-                    trips.add(0, header);
-
                     TripAdapter adapter = new TripAdapter(TripOverviewActivity.this, trips);
-                    mListView.setAdapter(adapter);
+                    mTripSchedules.setAdapter(adapter);
                 }
             }).execute(origAbbr, destAbbr);
         }
     }
 
-    private void updateAdvisories() {
+    private void updateTripRealTimeEstimates() {
+        new RealTimeAsyncTask(new AsyncTaskResponse() {
+            @Override
+            public void processFinish(Object output) {
+
+            }
+        }).execute(origAbbr);
+    }
+
+    private void updateAdvisory() {
         if (isTripSet() && Tools.isNetworkConnected(this)) {
             new AdvisoryAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
-                    mTextView.setText((String) result);
+                    Log.d(TAG, (String) result);
+                    mAdvisory.setText((String) result);
                 }
             }).execute();
         }
