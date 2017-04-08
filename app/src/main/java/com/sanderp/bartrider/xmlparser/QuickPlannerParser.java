@@ -65,23 +65,29 @@ public class QuickPlannerParser {
                 case "origin":
                     trip.setOrigin(value);
                     break;
-                case "origTimeMin":
-                    trip.setOrigTimeMin(value);
-                    break;
                 case "destination":
                     trip.setDestination(value);
-                    break;
-                case "destTimeMin":
-                    trip.setDestTimeMin(value);
-                    break;
-                case "tripTime":
-                    trip.setTripTime(Integer.parseInt(value));
                     break;
                 case "fare":
                     trip.setFare(Double.parseDouble(value));
                     break;
+                case "origTimeMin":
+                    trip.setOrigTimeMin(value);
+                    break;
+                case "origTimeDate":
+                    trip.setOrigTimeDate(value);
+                    break;
+                case "destTimeMin":
+                    trip.setDestTimeMin(value);
+                    break;
+                case "destTimeDate":
+                    trip.setDestTimeDate(value);
+                    break;
                 case "clipper":
                     trip.setClipper(Double.parseDouble(value));
+                    break;
+                case "tripTime":
+                    trip.setTripTime(Integer.parseInt(value));
                     break;
                 case "co2":
                     trip.setCo2(Double.parseDouble(value));
@@ -112,20 +118,29 @@ public class QuickPlannerParser {
             String value = parser.getAttributeValue(i);
             Log.d(TAG, attr + ": " + value);
             switch (attr) {
+                case "order":
+                    tripLeg.setOrder(Integer.parseInt(value));
+                    break;
                 case "transferCode":
                     tripLeg.setTransferCode(value);
                     break;
                 case "origin":
                     tripLeg.setOrigin(value);
                     break;
-                case "origTimeMin":
-                    tripLeg.setOrigTimeMin(value);
-                    break;
                 case "destination":
                     tripLeg.setDestination(value);
                     break;
+                case "origTimeMin":
+                    tripLeg.setOrigTimeMin(value);
+                    break;
+                case "origTimeDate":
+                    tripLeg.setOrigTimeDate(value);
+                    break;
                 case "destTimeMin":
                     tripLeg.setDestTimeMin(value);
+                    break;
+                case "destTimeDate":
+                    tripLeg.setOrigTimeDate(value);
                     break;
                 case "line":
                     tripLeg.setLine(value);

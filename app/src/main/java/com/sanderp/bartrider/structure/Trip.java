@@ -8,16 +8,20 @@ import java.util.List;
  * Created by Sander Peerna on 3/13/2016.
  */
 public class Trip implements Serializable {
-    // Trip attributes
+    // Extra attributes
     private String origFull;
     private String destFull;
-    private String origin;          // Abbreviated origin
-    private String destination;     // Abbreviated destination
-    private String origTimeMin;
-    private String destTimeMin;
-    private int tripTime;
+
+    // Matches attributes in the <trip> tag.
+    private String origin;
+    private String destination;
     private double fare;
+    private String origTimeMin;
+    private String origTimeDate;
+    private String destTimeMin;
+    private String destTimeDate;
     private double clipper;
+    private int tripTime;
     private double co2;
     private List<TripLeg> tripLegs;
 
@@ -57,12 +61,28 @@ public class Trip implements Serializable {
         this.destination = destination;
     }
 
+    public double getFare() {
+        return fare;
+    }
+
+    public void setFare(double fare) {
+        this.fare = fare;
+    }
+
     public String getOrigTimeMin() {
         return origTimeMin;
     }
 
     public void setOrigTimeMin(String origTimeMin) {
         this.origTimeMin = origTimeMin;
+    }
+
+    public String getOrigTimeDate() {
+        return origTimeDate;
+    }
+
+    public void setOrigTimeDate(String origTimeDate) {
+        this.origTimeDate = origTimeDate;
     }
 
     public String getDestTimeMin() {
@@ -73,20 +93,12 @@ public class Trip implements Serializable {
         this.destTimeMin = destTimeMin;
     }
 
-    public int getTripTime() {
-        return tripTime;
+    public String getDestTimeDate() {
+        return destTimeDate;
     }
 
-    public void setTripTime(int tripTime) {
-        this.tripTime = tripTime;
-    }
-
-    public double getFare() {
-        return fare;
-    }
-
-    public void setFare(double fare) {
-        this.fare = fare;
+    public void setDestTimeDate(String destTimeDate) {
+        this.destTimeDate = destTimeDate;
     }
 
     public double getClipper() {
@@ -95,6 +107,14 @@ public class Trip implements Serializable {
 
     public void setClipper(double clipper) {
         this.clipper = clipper;
+    }
+
+    public int getTripTime() {
+        return tripTime;
+    }
+
+    public void setTripTime(int tripTime) {
+        this.tripTime = tripTime;
     }
 
     public double getCo2() {
@@ -114,12 +134,15 @@ public class Trip implements Serializable {
     }
 
     public static class TripLeg implements Serializable {
-        // Trip leg attributes
+        // Match attributes in the <leg> tag.
+        private int order;
         private String transferCode;
         private String origin;
-        private String origTimeMin;
         private String destination;
+        private String origTimeMin;
+        private String origTimeDate;
         private String destTimeMin;
+        private String destTimeDate;
         private String line;
         private boolean bikeFlag;
         private String trainHeadStation;
@@ -128,6 +151,14 @@ public class Trip implements Serializable {
         private int trainIdx;
 
         public TripLeg() {}
+
+        public int getOrder() {
+            return order;
+        }
+
+        public void setOrder(int order) {
+            this.order = order;
+        }
 
         public String getTransferCode() {
             return transferCode;
@@ -153,6 +184,14 @@ public class Trip implements Serializable {
             this.origTimeMin = origTimeMin;
         }
 
+        public String getOrigTimeDate() {
+            return origTimeDate;
+        }
+
+        public void setOrigTimeDate(String origTimeDate) {
+            this.origTimeDate = origTimeDate;
+        }
+
         public String getDestination() {
             return destination;
         }
@@ -167,6 +206,14 @@ public class Trip implements Serializable {
 
         public void setDestTimeMin(String destTimeMin) {
             this.destTimeMin = destTimeMin;
+        }
+
+        public String getDestTimeDate() {
+            return destTimeDate;
+        }
+
+        public void setDestTimeDate(String destTimeDate) {
+            this.destTimeDate = destTimeDate;
         }
 
         public String getLine() {
