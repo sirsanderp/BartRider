@@ -6,7 +6,6 @@ package com.sanderp.bartrider.utility;
 
 public class PrefContract {
     public static final String PREFS_NAME = "BartRiderPrefs";
-
     public static final String FIRST_RUN = "firstRun";
 
     public static final String LAST_TRIP = "lastTrip";
@@ -15,4 +14,6 @@ public class PrefContract {
     public static final String LAST_ORIG_FULL = "lastOrigFull";
     public static final String LAST_DEST_ABBR = "lastDestAbbr";
     public static final String LAST_DEST_FULL = "lastDestFull";
+
+    public static final String PREV_ADVISORY = "prevAdvisory";
 }

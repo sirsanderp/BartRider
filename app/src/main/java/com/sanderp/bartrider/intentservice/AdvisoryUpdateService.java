@@ -4,12 +4,14 @@ import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.utility.ApiConnection;
 import com.sanderp.bartrider.utility.ApiContract;
+import com.sanderp.bartrider.utility.PrefContract;
 import com.sanderp.bartrider.xmlparser.AdvisoryParser;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -29,6 +31,7 @@ public class AdvisoryUpdateService extends IntentService {
     public static final int NOTIFICATION_ID = 101;
 
     private NotificationManager mNotificationManager;
+    private SharedPreferences sharedPrefs;
 
     public AdvisoryUpdateService() {
         super(TAG);
@@ -38,6 +41,7 @@ public class AdvisoryUpdateService extends IntentService {
     public void onCreate() {
         super.onCreate();
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        sharedPrefs = getSharedPreferences(PrefContract.PREFS_NAME, 0);
     }
 
     @Override
@@ -74,11 +78,12 @@ public class AdvisoryUpdateService extends IntentService {
         for (String s : advisories) {
             advisory.append(s + "\n\n");
         }
-        return advisory.toString();
+        return advisory.toString().trim();
     }
 
     private void postAdvisoryNotification(String advisory) {
-        if (!advisory.equals("No delays reported.")) {
+        Log.d(TAG, advisory + " | " + sharedPrefs.getString(PrefContract.PREV_ADVISORY, ""));
+        if (!advisory.equals(sharedPrefs.getString(PrefContract.PREV_ADVISORY, ""))) {
             Notification notification = new NotificationCompat.Builder(this)
                     .setContentTitle("BART Advisory")
                     .setContentText(advisory)
@@ -86,6 +91,7 @@ public class AdvisoryUpdateService extends IntentService {
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(advisory))
                     .build();
             mNotificationManager.notify(NOTIFICATION_ID, notification);
+            sharedPrefs.edit().putString(PrefContract.PREV_ADVISORY, advisory).apply();
         }
     }
 }

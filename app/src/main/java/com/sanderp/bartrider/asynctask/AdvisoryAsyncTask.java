@@ -65,6 +65,6 @@ public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
         for (String s : advisories) {
             advisory.append(s + "\n\n");
         }
-        return advisory.toString();
+        return advisory.toString().trim();
     }
 }
