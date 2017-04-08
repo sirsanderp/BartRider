@@ -21,41 +21,38 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Implementation of the AsyncTask to download data from the BART Schedule API.
+ * Implementation of the AsyncTask to download quick planner data from the BART Schedule API.
  */
-public class QuickPlannerAsyncTask extends AsyncTask<String, Void, String> {
+public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
     private static final String TAG = "QuickPlannerAsyncTask";
 
     private AsyncTaskResponse delegate;
-    private List<Trip> trips;
-    private List<TripEstimate> tripEstimates;
 
     public QuickPlannerAsyncTask(AsyncTaskResponse delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    protected String doInBackground(String... params) {
+    protected List<Trip> doInBackground(String... params) {
         try {
-            getTrips(params);
-//            getTripEstimates(params);
-            return null;
+            return getTrips(params);
         } catch (IOException e) {
-            return "Failed to refresh";
+            Log.d(TAG, "Failed to refresh");
         } catch (XmlPullParserException e) {
-            return "XML parser failed";
+            Log.d(TAG, "XML parser failed");
         }
+        return null;
     }
 
     @Override
-    protected void onPostExecute(String result) {
-        delegate.processFinish(trips);
+    protected void onPostExecute(List<Trip> result) {
+        delegate.processFinish(result);
     }
 
     /**
      * Creates the stream for AsyncTask
      */
-    private void getTrips(String... params) throws XmlPullParserException, IOException {
+    private List<Trip> getTrips(String... params) throws XmlPullParserException, IOException {
         InputStream stream = null;
         QuickPlannerParser planner = new QuickPlannerParser();
         String plannerUrl = ApiContract.API_URL + "sched.aspx?cmd=depart&orig=" + params[0] +
@@ -63,7 +60,7 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, String> {
         try {
             Log.i(TAG, "Refreshing departure info...");
             stream = ApiConnection.downloadData(plannerUrl);
-            trips = planner.parse(stream);
+            return planner.parse(stream);
         } finally {
             if (stream != null) {
                 stream.close();
@@ -71,25 +68,7 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, String> {
         }
     }
 
-    private void getTripEstimates(String... params) throws XmlPullParserException, IOException {
-        InputStream stream = null;
-        RealTimeParser estimates = new RealTimeParser();
-        String estimatesUrl = ApiContract.API_URL + "etd.aspx?cmd=etd&orig=" + params[0] +
-                "&key=" + ApiContract.API_KEY;
-        try {
-            Log.i(TAG, "Refreshing estimates info...");
-            stream = ApiConnection.downloadData(estimatesUrl);
-            tripEstimates = estimates.parse(stream, trips.get(0).getTripLegs().get(0).getTrainHeadStation()); // There can be different head stations...
-            if (tripEstimates == null) Log.i(TAG, "Using quick planner time table");
-            else updateTrips();
-        } finally {
-            if (stream != null) {
-                stream.close();
-            }
-        }
-    }
-
-    private void updateTrips() {
+    private void updateTrips(List<Trip> trips, List<TripEstimate> tripEstimates) {
         DateFormat df = new SimpleDateFormat("h:mm a");
         Date date = new Date();
         Log.d(TAG, df.format(date));

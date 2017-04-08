@@ -16,8 +16,8 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
-
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -28,7 +28,6 @@ public class AdvisoryUpdateService extends IntentService {
 
     public static final int NOTIFICATION_ID = 101;
 
-    private List<String> advisories;
     private NotificationManager mNotificationManager;
 
     public AdvisoryUpdateService() {
@@ -45,7 +44,8 @@ public class AdvisoryUpdateService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             try {
-                getAdvisories();
+                String result = advisoryText(getAdvisories());
+                postAdvisoryNotification(result);
             } catch (XmlPullParserException e) {
                 Log.d(TAG, "Failed to refresh");
             } catch (IOException e) {
@@ -54,25 +54,27 @@ public class AdvisoryUpdateService extends IntentService {
         }
     }
 
-    private void getAdvisories() throws XmlPullParserException, IOException {
+    private List<String> getAdvisories() throws XmlPullParserException, IOException {
         InputStream stream = null;
         AdvisoryParser parser = new AdvisoryParser();
         String url = ApiContract.API_URL + "bsa.aspx?cmd=bsa&key=" + ApiContract.API_KEY;
         try {
             Log.i(TAG, "Parsing advisories...");
             stream = ApiConnection.downloadData(url);
-            advisories = parser.parse(stream);
+            return parser.parse(stream);
         } finally {
             if (stream != null) {
                 stream.close();
             }
         }
+    }
 
+    private String advisoryText(List<String> advisories) {
         StringBuilder advisory = new StringBuilder();
         for (String s : advisories) {
             advisory.append(s + "\n\n");
         }
-        postAdvisoryNotification(advisory.toString().trim());
+        return advisory.toString();
     }
 
     private void postAdvisoryNotification(String advisory) {

@@ -19,7 +19,7 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * Implementation of the AsyncTask to download data from the BART Station API.
+ * Implementation of the AsyncTask to download station data from the BART Station API.
  */
 public class StationListAsyncTask extends AsyncTask<String, Void, String> {
     private static final String TAG = "StationListAsyncTask";
@@ -37,12 +37,12 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... params) {
         try {
             getStations();
-            return null;
         } catch (IOException e) {
-            return "Failed to refresh";
+            Log.d(TAG, "Failed to refresh");
         } catch (XmlPullParserException e) {
-            return "XML parser failed";
+            Log.d(TAG, "XML parser failed");
         }
+        return null;
     }
 
     @Override

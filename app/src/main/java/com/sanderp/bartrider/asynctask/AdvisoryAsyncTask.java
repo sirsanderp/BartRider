@@ -1,6 +1,5 @@
 package com.sanderp.bartrider.asynctask;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -12,48 +11,43 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Sander Peerna on 1/16/2017.
+ * Implementation of the AsyncTask to download advisory data from the BART Station API.
  */
-
 public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
     private static final String TAG = "AdvisoryAsyncTask";
 
     private AsyncTaskResponse delegate;
-    private Context context;
-    private List<String> advisories;
 
-    public AdvisoryAsyncTask(AsyncTaskResponse delegate, Context context) {
-        this.context = context;
+    public AdvisoryAsyncTask(AsyncTaskResponse delegate) {
         this.delegate = delegate;
     }
 
     @Override
     protected String doInBackground(String... params) {
         try {
-            getAdvisories();
-            return null;
+            return advisoryText(getAdvisories());
         } catch (IOException e) {
-            return "Failed to refresh";
+            Log.d(TAG, "Failed to refresh");
         } catch (XmlPullParserException e) {
-            return "XML parser failed";
+            Log.d(TAG, "XML parser failed");
         }
+        return null;
     }
 
     @Override
     protected void onPostExecute(String result) {
-        delegate.processFinish(advisories);
+        delegate.processFinish(result);
     }
 
-    /**
-     * Creates the stream for Stations AsyncTask
-     */
-    private void getAdvisories() throws XmlPullParserException, IOException {
+    private List<String> getAdvisories() throws XmlPullParserException, IOException {
         InputStream stream = null;
         AdvisoryParser parser = new AdvisoryParser();
         String url = ApiContract.API_URL + "bsa.aspx?cmd=bsa&key=" + ApiContract.API_KEY;
+        List<String> advisories = new ArrayList<>();
         try {
             Log.i(TAG, "Parsing advisories...");
             stream = ApiConnection.downloadData(url);
@@ -63,5 +57,14 @@ public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
                 stream.close();
             }
         }
+        return advisories;
+    }
+
+    private String advisoryText(List<String> advisories) {
+        StringBuilder advisory = new StringBuilder();
+        for (String s : advisories) {
+            advisory.append(s + "\n\n");
+        }
+        return advisory.toString();
     }
 }

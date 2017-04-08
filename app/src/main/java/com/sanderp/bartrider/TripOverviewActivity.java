@@ -300,14 +300,9 @@ public class TripOverviewActivity extends AppCompatActivity
             new AdvisoryAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
-                    StringBuilder advisory = new StringBuilder();
-                    for (String s : (List<String>) result) {
-                        advisory.append(s + "\n\n");
-                    }
-                    Log.d(TAG, advisory.toString());
-                    mTextView.setText(advisory.toString().trim());
+                    mTextView.setText((String) result);
                 }
-            }, this).execute();
+            }).execute();
         }
     }
 
