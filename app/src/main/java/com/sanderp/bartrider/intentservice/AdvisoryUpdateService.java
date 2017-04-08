@@ -83,6 +83,7 @@ public class AdvisoryUpdateService extends IntentService {
                     .setContentTitle("BART Advisory")
                     .setContentText(advisory)
                     .setSmallIcon(R.drawable.ic_bart_rider_24dp)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(advisory))
                     .build();
             mNotificationManager.notify(NOTIFICATION_ID, notification);
         }
