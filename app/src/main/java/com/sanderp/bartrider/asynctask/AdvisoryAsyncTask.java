@@ -31,9 +31,9 @@ public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
         try {
             return advisoryText(getAdvisories());
         } catch (IOException e) {
-            Log.d(TAG, "Failed to refresh");
+            Log.e(TAG, "Failed to refresh.");
         } catch (XmlPullParserException e) {
-            Log.d(TAG, "XML parser failed");
+            Log.e(TAG, "XML parser failed.");
         }
         return null;
     }

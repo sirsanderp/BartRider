@@ -34,11 +34,11 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
     @Override
     protected List<Trip> doInBackground(String... params) {
         try {
-            return getSchedule(params);
+            return getSchedule(params[0], params[1]);
         } catch (IOException e) {
-            Log.d(TAG, "Failed to refresh");
+            Log.e(TAG, "Failed to refresh.");
         } catch (XmlPullParserException e) {
-            Log.d(TAG, "XML parser failed");
+            Log.e(TAG, "XML parser failed.");
         }
         return null;
     }
@@ -48,57 +48,21 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
         delegate.processFinish(result);
     }
 
-    private List<Trip> getSchedule(String... params) throws XmlPullParserException, IOException {
+    private List<Trip> getSchedule(String origAbbr, String destAbbr) throws XmlPullParserException, IOException {
         InputStream stream = null;
         QuickPlannerParser planner = new QuickPlannerParser();
-        String plannerUrl = ApiContract.API_URL + "sched.aspx?cmd=depart"
-                + "&orig=" + params[0]
-                + "&dest=" + params[1]
+        String url = ApiContract.API_URL + "sched.aspx?cmd=depart"
+                + "&orig=" + origAbbr
+                + "&dest=" + destAbbr
                 + "&a=3&b=0"
                 + "&key=" + ApiContract.API_KEY;
         try {
             Log.i(TAG, "Parsing trip schedule...");
-            stream = ApiConnection.downloadData(plannerUrl);
+            stream = ApiConnection.downloadData(url);
             return planner.parse(stream);
         } finally {
             if (stream != null) {
                 stream.close();
-            }
-        }
-    }
-
-    private void updateTrips(List<Trip> trips, List<TripEstimate> tripEstimates) {
-        DateFormat df = new SimpleDateFormat("h:mm a");
-        Date date = new Date();
-        Log.d(TAG, df.format(date));
-        for (int i = 0; i < trips.size(); i++) {
-            Trip t = trips.get(i);
-            int minutesUntilTrain = tripEstimates.get(i).getMinutes();
-            int tripMinutes = t.getTripTime();
-            try {
-                Date origTime = df.parse(t.getOrigTimeMin());
-                Date origEstArrival = new Date(date.getTime() + minutesUntilTrain * 60 * 1000L);
-                Date destEstArrival = new Date(origEstArrival.getTime() + tripMinutes * 60 * 1000L);
-                long diff = origEstArrival.getTime() - origTime.getTime();
-                long diffMinutes = diff / (60 * 1000) % 60;
-                Log.d(TAG, "Planned: " + df.format(origTime) + " | " + diffMinutes + " min");
-                if (diffMinutes >= 1) {
-                    t.setOrigTimeMin(df.format(origEstArrival));
-                    t.setDestTimeMin(df.format(destEstArrival));
-//                    // I don't know if parts of the leg are delayed...
-//                    for (Trip.TripLeg l : t.getTripLegs()) {
-//                        Date legOrigTime = df.parse(l.getOrigTimeMin());
-//                        Date newLegOrigTime = new Date(legOrigTime.getTime() + diffMinutes * 60 * 1000L);
-//                        Date legDestTime = df.parse(l.getDestTimeMin());
-//                        Date newLegDestTime = new Date(legDestTime.getTime() + diffMinutes * 60 * 1000L);
-//                        l.setOrigTimeMin(df.format(newLegOrigTime));
-//                        l.setDestTimeMin(df.format(newLegDestTime));
-//                    }
-                }
-                Log.d(TAG, "Origin: " + minutesUntilTrain + " min | " + df.format(origEstArrival));
-                Log.d(TAG, "Destination: " + minutesUntilTrain + " min | " + df.format(destEstArrival));
-            } catch (ParseException e) {
-                Log.e(TAG, "Invalid date was entered");
             }
         }
     }

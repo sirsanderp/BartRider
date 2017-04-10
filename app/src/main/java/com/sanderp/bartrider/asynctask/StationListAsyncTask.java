@@ -38,9 +38,9 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
         try {
             getStations();
         } catch (IOException e) {
-            Log.d(TAG, "Failed to refresh");
+            Log.e(TAG, "Failed to refresh.");
         } catch (XmlPullParserException e) {
-            Log.d(TAG, "XML parser failed");
+            Log.e(TAG, "XML parser failed.");
         }
         return null;
     }

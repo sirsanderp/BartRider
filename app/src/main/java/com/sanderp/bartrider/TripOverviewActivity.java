@@ -33,9 +33,14 @@ import com.sanderp.bartrider.asynctask.RealTimeAsyncTask;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.structure.Trip;
+import com.sanderp.bartrider.structure.TripEstimate;
 import com.sanderp.bartrider.utility.PrefContract;
 import com.sanderp.bartrider.utility.Tools;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -60,6 +65,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private Toolbar mToolbar;
 
     private List<Trip> trips;
+    private List<TripEstimate> tripEstimates;
     private int favoriteTrip;
     private String origAbbr;
     private String origFull;
@@ -135,7 +141,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showPlannerFragment();
+                plannerFragment.show(fragmentManager, "Trip Planner Fragment");
             }
         });
     }
@@ -145,6 +151,7 @@ public class TripOverviewActivity extends AppCompatActivity
         super.onPause();
 
         if (isTripSet()) {
+            Log.i(TAG, "Saving last trip information...");
             SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.putBoolean(PrefContract.LAST_TRIP, true);
             editor.putInt(PrefContract.LAST_ID, favoriteTrip);
@@ -153,7 +160,6 @@ public class TripOverviewActivity extends AppCompatActivity
             editor.putString(PrefContract.LAST_DEST_ABBR, destAbbr);
             editor.putString(PrefContract.LAST_DEST_FULL, destFull);
             editor.apply();
-            Log.i(TAG, "Saved last trip information!");
         }
     }
 
@@ -162,15 +168,15 @@ public class TripOverviewActivity extends AppCompatActivity
         super.onResume();
 
         if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
-            updateTrip(
+            Log.i(TAG, "Retrieving last trip information...");
+            setTrip(
                     sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_ORIG_FULL, null),
                     sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
             );
-            updateTripSchedules();
+            updateTripSchedule();
             updateAdvisory();
-            Log.i(TAG, "Retrieved last trip information!");
         }
     }
 
@@ -204,7 +210,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 toggleFavorite();
                 return true;
             case R.id.action_refresh:
-                updateTripSchedules();
+                updateTripSchedule();
                 updateAdvisory();
                 return true;
             case R.id.action_settings:
@@ -215,19 +221,111 @@ public class TripOverviewActivity extends AppCompatActivity
 
     @Override
     public void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull) {
-        updateTrip(origAbbr, origFull, destAbbr, destFull);
+        setTrip(origAbbr, origFull, destAbbr, destFull);
         updateFavoriteIcon(-1);
-        updateTripSchedules();
+        updateTripSchedule();
         updateAdvisory();
     }
 
     @Override
     public void onFavoriteClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
-        updateTrip(origAbbr, origFull, destAbbr, destFull);
+        setTrip(origAbbr, origFull, destAbbr, destFull);
         updateFavoriteIcon(id);
-        updateTripSchedules();
+        updateTripSchedule();
         updateAdvisory();
         mDrawerLayout.closeDrawer(GravityCompat.START);
+    }
+
+    private void setTrip(String origAbbr, String origFull, String destAbbr, String destFull) {
+        if (isValidTrip(origAbbr, destAbbr)) {
+            this.origAbbr = origAbbr;
+            this.origFull = origFull;
+            this.destAbbr = destAbbr;
+            this.destFull = destFull;
+        }
+    }
+
+    private void updateFavoriteIcon(int id) {
+        favoriteTrip = ((id == -1) ? favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr) : id);
+
+        if (favoriteTrip == 0) mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
+        else mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
+    }
+
+    private void updateTripSchedule() {
+        if (isTripSet() && Tools.isNetworkConnected(this)) {
+            new QuickPlannerAsyncTask(new AsyncTaskResponse() {
+                @Override
+                public void processFinish(Object result) {
+                    trips = (List<Trip>) result;
+                    updateTripRealTimeEstimates();
+                }
+            }).execute(origAbbr, destAbbr);
+        }
+    }
+
+    private void updateTripRealTimeEstimates() {
+        if (isTripSet() && Tools.isNetworkConnected(this)) {
+            new RealTimeAsyncTask(new AsyncTaskResponse() {
+                @Override
+                public void processFinish(Object result) {
+                    // Get estimates for each leg of the trip, not just the first one...
+                    tripEstimates = (List<TripEstimate>) result;
+                    mergeTripDetails();
+                    mTripHeader.setText(origFull + " - " + destFull);
+                    mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, trips));
+                }
+            }).execute(origAbbr, trips.get(0).getTripLegs().get(0).getTrainHeadStation());
+        }
+    }
+
+    private void mergeTripDetails() {
+        Date now = new Date();
+        DateFormat df = new SimpleDateFormat("h:mm a");
+        Log.d(TAG, "Current Time: " + df.format(now));
+        for (int i = 0; i < trips.size(); i++) {
+            Trip trip = trips.get(i);
+            Trip.TripLeg tripLeg = trip.getTripLegs().get(0);
+            int minUntilDeparture = tripEstimates.get(i).getMinutes();
+            Log.d(TAG, "Until Departure: " + minUntilDeparture + " minutes");
+            try {
+                Date origDeparture = df.parse(trip.getOrigTimeMin());
+                Date destArrival = df.parse(trip.getDestTimeMin());
+                Date estOrigDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000L);
+                long diff = (estOrigDeparture.getTime() - origDeparture.getTime()) / (60 * 1000) % 60;
+                Date estDestArrival = new Date(destArrival.getTime() + diff * 60 * 1000L);
+                Log.d(TAG, "Trip (planned): " + df.format(origDeparture) + " | " + df.format(destArrival));
+                Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
+
+                Date legDeparture = df.parse(tripLeg.getOrigTimeMin());
+                Date legArrival = df.parse(tripLeg.getDestTimeMin());
+                Date estLegDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000L);
+                Date estLegArrival = new Date(legArrival.getTime() + diff * 60 * 1000L);
+                Log.d(TAG, "Trip Leg (planned): " + df.format(legDeparture) + " | " + df.format(legArrival));
+                Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegDeparture) + " | " + df.format(estLegArrival));
+                Log.d(TAG, "Difference: " + diff + " minutes");
+                if (diff >= 1) {
+                    Log.d(TAG, "Updating trip and trip leg estimated times...");
+                    trip.setEstOrigDeparture(df.format(estOrigDeparture));
+                    trip.setEstDestArrival(df.format(estDestArrival));
+                    tripLeg.setEstLegDeparture(df.format(estLegDeparture));
+                    tripLeg.setEstLegDeparture(df.format(estLegArrival));
+                }
+            } catch (ParseException e) {
+                Log.e(TAG, "Invalid date was entered.");
+            }
+        }
+    }
+
+    private void updateAdvisory() {
+        if (isTripSet() && Tools.isNetworkConnected(this)) {
+            new AdvisoryAsyncTask(new AsyncTaskResponse() {
+                @Override
+                public void processFinish(Object result) {
+                    mAdvisory.setText((String) result);
+                }
+            }).execute();
+        }
     }
 
     private void toggleFavorite() {
@@ -256,67 +354,9 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private void updateFavoriteIcon(int id) {
-        favoriteTrip = ((id == -1) ? favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr) : id);
-
-        if (favoriteTrip == 0) mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
-        else mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
-    }
-
-    private void updateTrip(String origAbbr, String origFull, String destAbbr, String destFull) {
-        if (isValidTrip(origAbbr, destAbbr)) {
-            this.origAbbr = origAbbr;
-            this.origFull = origFull;
-            this.destAbbr = destAbbr;
-            this.destFull = destFull;
-        }
-    }
-
-    private void updateTripSchedules() {
-        if (isTripSet() && Tools.isNetworkConnected(this)) {
-            new QuickPlannerAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object result) {
-                    mTripHeader.setText(origFull + " - " + destFull);
-//                    updateTripRealTimeEstimates();
-
-                    // TODO: No longer need to include the full station names nor create a "header" trip.
-                    trips = (List<Trip>) result;
-                    TripAdapter adapter = new TripAdapter(TripOverviewActivity.this, trips);
-                    mTripSchedules.setAdapter(adapter);
-                }
-            }).execute(origAbbr, destAbbr);
-        }
-    }
-
-    private void updateTripRealTimeEstimates() {
-        new RealTimeAsyncTask(new AsyncTaskResponse() {
-            @Override
-            public void processFinish(Object output) {
-
-            }
-        }).execute(origAbbr);
-    }
-
-    private void updateAdvisory() {
-        if (isTripSet() && Tools.isNetworkConnected(this)) {
-            new AdvisoryAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object result) {
-                    Log.d(TAG, (String) result);
-                    mAdvisory.setText((String) result);
-                }
-            }).execute();
-        }
-    }
-
-    private void showPlannerFragment() {
-        plannerFragment.show(fragmentManager, "Trip Planner Fragment");
-    }
-
     private boolean isTripSet() {
         if (origAbbr == null || destAbbr == null) {
-            Toast.makeText(getApplicationContext(), "Please select stations in the trip planner.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please select stations in the trip planner.", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;
@@ -324,7 +364,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private boolean isValidTrip(String origAbbr, String destAbbr) {
         if (origAbbr.equals(destAbbr)) {
-            Toast.makeText(getApplicationContext(), "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;

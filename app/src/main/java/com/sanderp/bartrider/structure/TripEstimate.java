@@ -1,10 +1,10 @@
 package com.sanderp.bartrider.structure;
 
 /**
- * Created by sande on 11/11/2016.
+ * Created by Sander Peerna on 11/11/2016.
  */
-
 public class TripEstimate {
+    // Matches tags within the <estimate> tag.
     private int minutes;
     private int platform;
     private String direction;

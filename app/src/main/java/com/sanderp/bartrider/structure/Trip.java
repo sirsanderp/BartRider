@@ -21,6 +21,10 @@ public class Trip implements Serializable {
     private double co2;
     private List<TripLeg> tripLegs;
 
+    // Added from real-time estimates.
+    private String estOrigDeparture;
+    private String estDestArrival;
+
     public Trip() {
         tripLegs = new ArrayList<>();
     }
@@ -113,8 +117,24 @@ public class Trip implements Serializable {
         return tripLegs;
     }
 
+    public String getEstOrigDeparture() {
+        return estOrigDeparture;
+    }
+
+    public void setEstOrigDeparture(String estOrigDeparture) {
+        this.estOrigDeparture = estOrigDeparture;
+    }
+
+    public String getEstDestArrival() {
+        return estDestArrival;
+    }
+
+    public void setEstDestArrival(String estDestArrival) {
+        this.estDestArrival = estDestArrival;
+    }
+
     public static class TripLeg implements Serializable {
-        // Match attributes in the <leg> tag.
+        // Matches attributes in the <leg> tag.
         private int order;
         private String transferCode;
         private String origin;
@@ -129,6 +149,10 @@ public class Trip implements Serializable {
         private int load;
         private String trainId;
         private int trainIdx;
+
+        // Added from real-time estimates.
+        private String estLegDeparture;
+        private String estLegArrival;
 
         public TripLeg() {}
 
@@ -242,6 +266,22 @@ public class Trip implements Serializable {
 
         public void setTrainIdx(int trainIdx) {
             this.trainIdx = trainIdx;
+        }
+
+        public String getEstLegDeparture() {
+            return estLegDeparture;
+        }
+
+        public void setEstLegDeparture(String estLegDeparture) {
+            this.estLegDeparture = estLegDeparture;
+        }
+
+        public String getEstLegArrival() {
+            return estLegArrival;
+        }
+
+        public void setEstLegArrival(String estLegArrival) {
+            this.estLegArrival = estLegArrival;
         }
     }
 }

@@ -54,8 +54,8 @@ public class TripAdapter extends BaseAdapter {
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_dest_time);
         TextView mFare = (TextView) rowView.findViewById(R.id.trip_fare);
 
-        mOrigTime.setText(trip.getOrigTimeMin());
-        mDestTime.setText(trip.getDestTimeMin());
+        mOrigTime.setText(trip.getEstOrigDeparture());
+        mDestTime.setText(trip.getEstDestArrival());
         mFare.setText("$" + new DecimalFormat("#.00").format(trip.getFare()));
 
         return rowView;
