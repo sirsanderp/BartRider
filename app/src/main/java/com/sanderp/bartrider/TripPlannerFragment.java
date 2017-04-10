@@ -79,7 +79,7 @@ public class TripPlannerFragment extends DialogFragment implements
                         getDestAbbr(),
                         getDestFull()
                 );
-                resetSpinners();
+//                resetSpinners();
                 dismiss();
             }
         });
@@ -87,14 +87,14 @@ public class TripPlannerFragment extends DialogFragment implements
         mCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                resetSpinners();
+//                resetSpinners();
                 dismiss();
             }
         });
 
         // Initialize spinners
         mAdapter = new SimpleCursorAdapter(getActivity(),
-                android.R.layout.simple_spinner_item, null, FROM, TO, 0);
+                R.layout.simple_spinner_item, null, FROM, TO, 0);
         mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         mOrigSpinner = (Spinner) view.findViewById(R.id.orig_spinner);
@@ -111,7 +111,7 @@ public class TripPlannerFragment extends DialogFragment implements
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 //        getDialog().getWindow().setBackgroundDrawableResource(R.drawable.rounded_corners);
-        getDialog().getWindow().setLayout((int) (displayMetrics.widthPixels * 0.9), ViewGroup.LayoutParams.WRAP_CONTENT);
+        getDialog().getWindow().setLayout((int) (displayMetrics.widthPixels * 0.95), ViewGroup.LayoutParams.WRAP_CONTENT);
 
         super.onResume();
     }

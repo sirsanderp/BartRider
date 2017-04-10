@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Sander Peerna on 10/12/2015.
+ * Returns schedule information based on specified depart time.
  */
 public class QuickPlannerParser {
     private static final String TAG = "QuickPlannerParser";
@@ -27,6 +27,7 @@ public class QuickPlannerParser {
     private static final String ns = null;
 
     public List<Trip> parse(InputStream in) throws XmlPullParserException, IOException {
+        Log.i(TAG, "Parsing QuickPlanner (Depart) API...");
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -42,9 +43,10 @@ public class QuickPlannerParser {
         }
     }
 
-    public List<Trip> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
-        List<Trip> trips = new ArrayList();
+    private List<Trip> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
+        List<Trip> trips = new ArrayList<>();
 
+        Log.i(TAG, "Parsing <schedule> tag...");
         parser.require(XmlPullParser.START_TAG, ns, SCHEDULE);
         while (parser.next() !=  XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() != XmlPullParser.START_TAG) continue;
@@ -53,9 +55,10 @@ public class QuickPlannerParser {
         return trips;
     }
 
-    public Trip readTrip(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private Trip readTrip(XmlPullParser parser) throws XmlPullParserException, IOException {
         Trip trip = new Trip();
 
+        Log.i(TAG, "Parsing <trip> tag...");
         parser.require(XmlPullParser.START_TAG, ns, TRIP);
         int attr_count = parser.getAttributeCount();
         for (int i = 0; i < attr_count; i++){
@@ -107,10 +110,10 @@ public class QuickPlannerParser {
         return trip;
     }
 
-    public Trip.TripLeg readTripLeg(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private Trip.TripLeg readTripLeg(XmlPullParser parser) throws XmlPullParserException, IOException {
         Trip.TripLeg tripLeg = new Trip.TripLeg();
 
-        Log.i(TAG, "Getting trip leg information...");
+        Log.i(TAG, "Parsing <leg> tag...");
         parser.require(XmlPullParser.START_TAG, ns, LEG);
         int attr_count = parser.getAttributeCount();
         for (int i = 0; i < attr_count; i++){

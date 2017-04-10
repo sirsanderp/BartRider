@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -72,7 +73,10 @@ public class TripDrawerFragment extends Fragment implements
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
                 if (view.getId() == android.R.id.text1) {
-                    ((TextView) view).setText(getOrigAbbr(cursor) + " - " + getDestAbbr(cursor));
+                    TextView mTextView = (TextView) view;
+                    mTextView.setEllipsize(TextUtils.TruncateAt.END);
+                    mTextView.setMaxLines(1);
+                    mTextView.setText(getOrigFull(cursor) + " - " + getDestFull(cursor));
                     return true;
                 }
                 return false;

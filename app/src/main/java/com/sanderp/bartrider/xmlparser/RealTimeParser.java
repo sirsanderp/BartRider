@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Sander Peerna on 8/30/2015.
+ * Returns the Estimated Time of Departure (ETD) for the specified station.
  */
 public class RealTimeParser {
     private static final String TAG = "RealTimeParser";
@@ -29,11 +29,11 @@ public class RealTimeParser {
     private static final String ns = null;
 
     // Other variables
-    private static String expectedDestination;
+    private static String trainHeadStation;
 
-    public List<TripEstimate> parse(InputStream in, String destination) throws XmlPullParserException, IOException {
-        Log.i(TAG, "Reading stream...");
-        expectedDestination = destination;
+    public List<TripEstimate> parse(InputStream in, String trainHeadStation) throws XmlPullParserException, IOException {
+        Log.i(TAG, "Parsing Real-Time Estimates API...");
+        this.trainHeadStation = trainHeadStation;
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -49,8 +49,8 @@ public class RealTimeParser {
         }
     }
 
-    public List<TripEstimate> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
-        Log.i(TAG, "Reading station...");
+    private List<TripEstimate> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
+        Log.i(TAG, "Parsing <station> tag...");
         parser.require(XmlPullParser.START_TAG, ns, STATION);
         while (parser.next() !=  XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() != XmlPullParser.START_TAG) continue;
@@ -69,21 +69,20 @@ public class RealTimeParser {
         return null;
     }
 
-    public List<TripEstimate> readEstimatedDepartures(XmlPullParser parser) throws XmlPullParserException, IOException {
-        List<TripEstimate> estimates = new ArrayList();
-        boolean correctDestination = false;
+    private List<TripEstimate> readEstimatedDepartures(XmlPullParser parser) throws XmlPullParserException, IOException {
+        List<TripEstimate> estimates = new ArrayList<>();
+        boolean isTrainHeadStation = false;
 
-        Log.i(TAG, "Reading etd...");
+        Log.i(TAG, "Parsing <etd> tag...");
         parser.require(XmlPullParser.START_TAG, ns, ESTIMATE_TIME_TO_DEPARTURE);
-        while (!correctDestination && parser.next() != XmlPullParser.END_DOCUMENT) {
+        while (!isTrainHeadStation && parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() != XmlPullParser.START_TAG) continue;
 
             String name = parser.getName();
             if (name.equals(ABBREVIATION)) {
                 parser.next();
-                if (parser.getText().equals(expectedDestination)) {
-                    correctDestination = true;
-                    Log.i(TAG, "Found the correct destination...");
+                if (parser.getText().equals(trainHeadStation)) {
+                    isTrainHeadStation = true;
                 }
             }
         }
@@ -96,10 +95,10 @@ public class RealTimeParser {
         return estimates;
     }
 
-    public TripEstimate readEstimate(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private TripEstimate readEstimate(XmlPullParser parser) throws XmlPullParserException, IOException {
         TripEstimate estimate = new TripEstimate();
 
-        Log.i(TAG, "Reading estimate...");
+        Log.i(TAG, "Parsing <estimate> tag...");
         parser.require(XmlPullParser.START_TAG, ns, ESTIMATE);
         while (parser.next() !=  XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(ESTIMATE)) break;
