@@ -12,9 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Sander Peerna on 1/16/2017.
+ * Returns the current BART Service Advisories (BSA).
  */
-
 public class AdvisoryParser {
     private static final String TAG = "AdvisoryParser";
 
@@ -25,8 +24,9 @@ public class AdvisoryParser {
     private static final String ns = null;
 
     public List<String> parse(InputStream in) throws XmlPullParserException, IOException {
-        List<String> advisories = new ArrayList();
+        List<String> advisories = new ArrayList<>();
 
+        Log.i(TAG, "Parsing Advisories API...");
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -42,7 +42,8 @@ public class AdvisoryParser {
         }
     }
 
-    public String readDescription(XmlPullParser parser) throws IOException, XmlPullParserException {
+    private String readDescription(XmlPullParser parser) throws IOException, XmlPullParserException {
+        Log.i(TAG, "Parsing <description> tag...");
         parser.require(XmlPullParser.START_TAG, ns, BSA);
         while (parser.next() !=  XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() != XmlPullParser.START_TAG) continue;

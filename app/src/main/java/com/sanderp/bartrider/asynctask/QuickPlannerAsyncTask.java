@@ -8,7 +8,6 @@ import com.sanderp.bartrider.structure.Trip;
 import com.sanderp.bartrider.structure.TripEstimate;
 import com.sanderp.bartrider.utility.ApiConnection;
 import com.sanderp.bartrider.xmlparser.QuickPlannerParser;
-import com.sanderp.bartrider.xmlparser.RealTimeParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -35,7 +34,7 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
     @Override
     protected List<Trip> doInBackground(String... params) {
         try {
-            return getTrips(params);
+            return getSchedule(params);
         } catch (IOException e) {
             Log.d(TAG, "Failed to refresh");
         } catch (XmlPullParserException e) {
@@ -49,16 +48,16 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
         delegate.processFinish(result);
     }
 
-    /**
-     * Creates the stream for AsyncTask
-     */
-    private List<Trip> getTrips(String... params) throws XmlPullParserException, IOException {
+    private List<Trip> getSchedule(String... params) throws XmlPullParserException, IOException {
         InputStream stream = null;
         QuickPlannerParser planner = new QuickPlannerParser();
-        String plannerUrl = ApiContract.API_URL + "sched.aspx?cmd=depart&orig=" + params[0] +
-                "&dest=" + params[1] + "&a=3&b=0&key=" + ApiContract.API_KEY;
+        String plannerUrl = ApiContract.API_URL + "sched.aspx?cmd=depart"
+                + "&orig=" + params[0]
+                + "&dest=" + params[1]
+                + "&a=3&b=0"
+                + "&key=" + ApiContract.API_KEY;
         try {
-            Log.i(TAG, "Parsing departures...");
+            Log.i(TAG, "Parsing trip schedule...");
             stream = ApiConnection.downloadData(plannerUrl);
             return planner.parse(stream);
         } finally {

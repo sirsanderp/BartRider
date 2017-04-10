@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Sander on 3/8/2016.
+ * Returns a list of all BART stations.
  */
 public class StationListParser {
     private static final String TAG = "StationListParser";
@@ -26,6 +26,7 @@ public class StationListParser {
     private static final String ns = null;
 
     public List<Station> parse(InputStream in) throws XmlPullParserException, IOException {
+        Log.i(TAG, "Parsing Station List API...");
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -41,9 +42,10 @@ public class StationListParser {
         }
     }
 
-    public List<Station> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
-        List<Station> stations = new ArrayList();
+    private List<Station> readAPI(XmlPullParser parser) throws XmlPullParserException, IOException {
+        List<Station> stations = new ArrayList<>();
 
+        Log.i(TAG, "Parsing <stations> tag...");
         parser.require(XmlPullParser.START_TAG, ns, STATIONS);
         while (parser.next() !=  XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() != XmlPullParser.START_TAG) continue;
@@ -52,9 +54,10 @@ public class StationListParser {
         return stations;
     }
 
-    public Station readStation(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private Station readStation(XmlPullParser parser) throws XmlPullParserException, IOException {
         Station station = new Station();
 
+        Log.i(TAG, "Parsing <station> tag...");
         parser.require(XmlPullParser.START_TAG, ns, STATION);
         while(parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(STATION)) break;

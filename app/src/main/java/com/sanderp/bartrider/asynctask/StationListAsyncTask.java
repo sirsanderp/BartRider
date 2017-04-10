@@ -50,13 +50,11 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
         delegate.processFinish(result);
     }
 
-    /**
-     * Creates the stream for Stations AsyncTask
-     */
     private void getStations() throws XmlPullParserException, IOException {
         InputStream stream = null;
         StationListParser stationList = new StationListParser();
-        String url = ApiContract.API_URL + "stn.aspx?cmd=stns&key=" + ApiContract.API_KEY;
+        String url = ApiContract.API_URL + "stn.aspx?cmd=stns"
+                + "&key=" + ApiContract.API_KEY;
         try {
             Log.i(TAG, "Parsing stations...");
             stream = ApiConnection.downloadData(url);

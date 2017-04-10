@@ -46,7 +46,8 @@ public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
     private List<String> getAdvisories() throws XmlPullParserException, IOException {
         InputStream stream = null;
         AdvisoryParser parser = new AdvisoryParser();
-        String url = ApiContract.API_URL + "bsa.aspx?cmd=bsa&key=" + ApiContract.API_KEY;
+        String url = ApiContract.API_URL + "bsa.aspx?cmd=bsa"
+                + "&key=" + ApiContract.API_KEY;
         List<String> advisories = new ArrayList<>();
         try {
             Log.i(TAG, "Parsing advisories...");
