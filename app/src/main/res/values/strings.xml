@@ -8,6 +8,7 @@
     <string name="hello_world">"Hello world!"</string>
     <string name="drawer_open">Drawer Opened</string>
     <string name="drawer_close">Drawer Closed</string>
+    <string name="empty_field">N/A</string>
     <string name="empty_list_view">Please select stations in the trip planner.</string>
     <string name="favorite_trips">Favorite Trips</string>
     <string name="sample_fare">"$5.00"</string>
@@ -18,5 +19,6 @@
     <string name="sample_co2">7.39</string>
     <string name="sample_dest">Destination Station</string>
     <string name="sample_advisory">No delays reported.</string>
+    <string name="sample_time_until_departures">12 min</string>
     <string name="sample_trip">Origin Station - Destination Station</string>
 </resources>

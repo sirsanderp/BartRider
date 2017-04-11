@@ -151,8 +151,8 @@ public class Trip implements Serializable {
         private int trainIdx;
 
         // Added from real-time estimates.
-        private String estLegDeparture;
-        private String estLegArrival;
+        private String estLegOrigDeparture;
+        private String estLegDestArrival;
 
         public TripLeg() {}
 
@@ -268,20 +268,20 @@ public class Trip implements Serializable {
             this.trainIdx = trainIdx;
         }
 
-        public String getEstLegDeparture() {
-            return estLegDeparture;
+        public String getEstLegOrigDeparture() {
+            return estLegOrigDeparture;
         }
 
-        public void setEstLegDeparture(String estLegDeparture) {
-            this.estLegDeparture = estLegDeparture;
+        public void setEstLegOrigDeparture(String estLegOrigDeparture) {
+            this.estLegOrigDeparture = estLegOrigDeparture;
         }
 
-        public String getEstLegArrival() {
-            return estLegArrival;
+        public String getEstLegDestArrival() {
+            return estLegDestArrival;
         }
 
-        public void setEstLegArrival(String estLegArrival) {
-            this.estLegArrival = estLegArrival;
+        public void setEstLegDestArrival(String estLegDestArrival) {
+            this.estLegDestArrival = estLegDestArrival;
         }
     }
 }

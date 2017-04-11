@@ -137,14 +137,14 @@ public class QuickPlannerParser {
                     break;
                 case "origTimeMin":
                     tripLeg.setOrigTimeMin(value);
-                    tripLeg.setEstLegDeparture(value);
+                    tripLeg.setEstLegOrigDeparture(value);
                     break;
                 case "origTimeDate":
                     tripLeg.setOrigTimeDate(value);
                     break;
                 case "destTimeMin":
                     tripLeg.setDestTimeMin(value);
-                    tripLeg.setEstLegArrival(value);
+                    tripLeg.setEstLegDestArrival(value);
                     break;
                 case "destTimeDate":
                     tripLeg.setOrigTimeDate(value);

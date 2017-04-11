@@ -54,9 +54,9 @@ public class TripLegAdapter extends BaseAdapter {
 
         Trip.TripLeg tripLeg = (Trip.TripLeg) getItem(position);
         mOrigName.setText(tripLeg.getOrigin());
-        mOrigTime.setText(tripLeg.getOrigTimeMin());
         mDestName.setText(tripLeg.getDestination());
-        mDestTime.setText(tripLeg.getDestTimeMin());
+        mOrigTime.setText(tripLeg.getEstLegOrigDeparture());
+        mDestTime.setText(tripLeg.getEstLegDestArrival());
 
         return rowView;
     }

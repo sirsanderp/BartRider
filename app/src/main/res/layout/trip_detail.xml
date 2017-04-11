@@ -43,6 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/trip_co2"
         android:layout_below="@+id/trip_dest"
+        android:layout_marginTop="16dp"
         android:choiceMode="singleChoice"
         tools:listitem="@layout/trip_detail_list_item" />
 

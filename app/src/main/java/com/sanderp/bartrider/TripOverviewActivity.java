@@ -1,5 +1,6 @@
 package com.sanderp.bartrider;
 
+import android.animation.ObjectAnimator;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -7,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
@@ -20,8 +22,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,8 +64,10 @@ public class TripOverviewActivity extends AppCompatActivity
     private FloatingActionButton mFab;
     private Drawable mFavoriteIcon;
     private ListView mTripSchedules;
-    private TextView mTripHeader;
+    private ProgressBar mNextDepartureProgress;
     private TextView mAdvisory;
+    private TextView mNextDeparture;
+    private TextView mTripHeader;
     private Toolbar mToolbar;
 
     private List<Trip> trips;
@@ -71,6 +77,8 @@ public class TripOverviewActivity extends AppCompatActivity
     private String origFull;
     private String destAbbr;
     private String destFull;
+
+    private CountDownTimer nextDepartureCountdown;
 
     public TripOverviewActivity() {
         super();
@@ -120,6 +128,8 @@ public class TripOverviewActivity extends AppCompatActivity
                 startActivity(tripDetailIntent);
             }
         });
+        mNextDepartureProgress = (ProgressBar) findViewById(R.id.next_train_progress);
+        mNextDeparture = (TextView) findViewById(R.id.next_train);
         mAdvisory = (TextView) findViewById(R.id.advisory);
 
         // Drawer portion of the main activity
@@ -274,6 +284,28 @@ public class TripOverviewActivity extends AppCompatActivity
                     mergeTripDetails();
                     mTripHeader.setText(origFull + " - " + destFull);
                     mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, trips));
+                    if (tripEstimates.size() > 0) {
+                        int nextTrain = tripEstimates.get(0).getMinutes();
+                        mNextDepartureProgress.clearAnimation();
+                        ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgress, "progress", nextTrain * 60, 0);
+                        animator.setDuration(nextTrain * 60 * 1000);
+                        animator.setInterpolator(new LinearInterpolator());
+                        animator.start();
+
+                        mNextDeparture.setTextSize(42);
+                        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
+                        nextDepartureCountdown = new CountDownTimer(nextTrain * 60 * 1000, 1000) {
+                            public void onTick(long millisUntilFinished) {
+                                String timeLeft = String.format("%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
+                                mNextDeparture.setText(timeLeft);
+                            }
+
+                            public void onFinish() {
+                                mNextDeparture.setTextSize(30);
+                                mNextDeparture.setText("Leaving...");
+                            }
+                        }.start();
+                    }
                 }
             }).execute(origAbbr, trips.get(0).getTripLegs().get(0).getTrainHeadStation());
         }
@@ -283,7 +315,7 @@ public class TripOverviewActivity extends AppCompatActivity
         Date now = new Date();
         DateFormat df = new SimpleDateFormat("h:mm a");
         Log.d(TAG, "Current Time: " + df.format(now));
-        for (int i = 0; i < trips.size(); i++) {
+        for (int i = 3 - tripEstimates.size(); i < trips.size(); i++) {
             Trip trip = trips.get(i);
             Trip.TripLeg tripLeg = trip.getTripLegs().get(0);
             int minUntilDeparture = tripEstimates.get(i).getMinutes();
@@ -291,7 +323,7 @@ public class TripOverviewActivity extends AppCompatActivity
             try {
                 Date origDeparture = df.parse(trip.getOrigTimeMin());
                 Date destArrival = df.parse(trip.getDestTimeMin());
-                Date estOrigDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000L);
+                Date estOrigDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000);
                 long diff = (estOrigDeparture.getTime() - origDeparture.getTime()) / (60 * 1000) % 60;
                 Date estDestArrival = new Date(destArrival.getTime() + diff * 60 * 1000L);
                 Log.d(TAG, "Trip (planned): " + df.format(origDeparture) + " | " + df.format(destArrival));
@@ -299,17 +331,18 @@ public class TripOverviewActivity extends AppCompatActivity
 
                 Date legDeparture = df.parse(tripLeg.getOrigTimeMin());
                 Date legArrival = df.parse(tripLeg.getDestTimeMin());
-                Date estLegDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000L);
-                Date estLegArrival = new Date(legArrival.getTime() + diff * 60 * 1000L);
+                Date estLegOrigDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000);
+                Date estLegDestArrival = new Date(legArrival.getTime() + diff * 60 * 1000);
                 Log.d(TAG, "Trip Leg (planned): " + df.format(legDeparture) + " | " + df.format(legArrival));
-                Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegDeparture) + " | " + df.format(estLegArrival));
+                Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
+
                 Log.d(TAG, "Difference: " + diff + " minutes");
                 if (diff >= 1) {
                     Log.d(TAG, "Updating trip and trip leg estimated times...");
                     trip.setEstOrigDeparture(df.format(estOrigDeparture));
                     trip.setEstDestArrival(df.format(estDestArrival));
-                    tripLeg.setEstLegDeparture(df.format(estLegDeparture));
-                    tripLeg.setEstLegDeparture(df.format(estLegArrival));
+                    tripLeg.setEstLegOrigDeparture(df.format(estLegOrigDeparture));
+                    tripLeg.setEstLegDestArrival(df.format(estLegDestArrival));
                 }
             } catch (ParseException e) {
                 Log.e(TAG, "Invalid date was entered.");

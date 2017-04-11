@@ -32,16 +32,25 @@
                 android:layout_height="25dp"
                 android:gravity="center"
                 android:maxLines="1"
+                android:text="@string/empty_field"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 tools:text="@string/sample_trip" />
+
+            <!--<ImageView-->
+                <!--android:id="@+id/trip_leg_drawable"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="25dp"-->
+                <!--android:layout_below="@id/trip_header"-->
+                <!--android:layout_marginTop="8dp"-->
+                <!--android:src="@drawable/station_segment" />-->
 
             <ListView
                 android:id="@+id/trip_list_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:choiceMode="singleChoice"
                 android:layout_below="@+id/trip_header"
+                android:choiceMode="singleChoice"
                 tools:listitem="@layout/trip_overview_list_item" />
 
             <TextView
@@ -52,13 +61,41 @@
                 android:text="@string/empty_list_view"
                 android:textSize="18sp" />
 
+            <ProgressBar
+                android:id="@+id/next_train_progress"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_below="@+id/trip_list_view"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="16dp"
+                android:max="1200"
+                android:progress="1200"
+                android:progressDrawable="@drawable/circular_progress"
+                android:progressBackgroundTint="#ffa7a7a7"
+                style="?android:attr/progressBarStyleHorizontal" />
+
+            <TextView
+                android:id="@+id/next_train"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_alignLeft="@id/next_train_progress"
+                android:layout_alignTop="@id/next_train_progress"
+                android:layout_alignRight="@id/next_train_progress"
+                android:layout_alignBottom="@id/next_train_progress"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:text="@string/empty_field"
+                android:textSize="42sp"
+                tools:text="@string/sample_time_until_departures" />
+
             <TextView
                 android:id="@+id/advisory"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/trip_list_view"
+                android:layout_below="@id/next_train_progress"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="16dp"
+                android:text="@string/empty_field"
                 tools:text="@string/sample_advisory" />
 
         </RelativeLayout>

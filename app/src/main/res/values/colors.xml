@@ -4,6 +4,7 @@
     <color name="bart_primary2">#cccc00</color>
     <color name="bart_status_bar">#0288af</color>
     <color name="material_light">#fffafafa</color>
+    <color name="progress_background">#ffa7a7a7</color>
     <!--Routes-->
     <color name="route1">#ffffff33</color>
     <color name="route2">#ffffff33</color>

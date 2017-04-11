@@ -47,13 +47,12 @@ public class TripAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Trip trip = (Trip) getItem(position);
-        View rowView;
-        rowView = mInflater.inflate(R.layout.trip_overview_list_item, parent, false);
+        View rowView = mInflater.inflate(R.layout.trip_overview_list_item, parent, false);
         TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_orig_time);
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_dest_time);
         TextView mFare = (TextView) rowView.findViewById(R.id.trip_fare);
 
+        Trip trip = (Trip) getItem(position);
         mOrigTime.setText(trip.getEstOrigDeparture());
         mDestTime.setText(trip.getEstDestArrival());
         mFare.setText("$" + new DecimalFormat("#.00").format(trip.getFare()));
