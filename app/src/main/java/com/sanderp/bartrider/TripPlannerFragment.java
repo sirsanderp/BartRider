@@ -48,7 +48,7 @@ public class TripPlannerFragment extends DialogFragment implements
     private OnFragmentListener mFragmentListener;
 
     public interface OnFragmentListener {
-        void onConfirm(String origFull, String origAbbr, String destFull, String destAbbr);
+        void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull);
     }
 
     public TripPlannerFragment() {}

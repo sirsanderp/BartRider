@@ -10,7 +10,7 @@ import android.widget.Toast;
  * Created by Sander Peerna on 4/4/2017.
  */
 
-public class Tools {
+public class Utils {
     public static boolean isNetworkConnected(Activity activity) {
         ConnectivityManager connectivityManager = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();

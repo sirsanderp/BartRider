@@ -39,7 +39,7 @@ import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.structure.Trip;
 import com.sanderp.bartrider.structure.TripEstimate;
 import com.sanderp.bartrider.utility.PrefContract;
-import com.sanderp.bartrider.utility.Tools;
+import com.sanderp.bartrider.utility.Utils;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -116,7 +116,6 @@ public class TripOverviewActivity extends AppCompatActivity
         // Open the TripDetailActivity based on the list item that was clicked
         mTripHeader = (TextView) findViewById(R.id.trip_header);
         mTripSchedules = (ListView) findViewById(R.id.trip_list_view);
-        mTripSchedules.setEmptyView(findViewById(R.id.empty_list_item));
         mTripSchedules.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -131,6 +130,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mNextDepartureProgress = (ProgressBar) findViewById(R.id.next_train_progress);
         mNextDeparture = (TextView) findViewById(R.id.next_train);
         mAdvisory = (TextView) findViewById(R.id.advisory);
+        setViewsInvisible();
 
         // Drawer portion of the main activity
         mDrawerLayout = (DrawerLayout) findViewById(R.id.trip_overview_drawer_layout);
@@ -179,6 +179,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
         if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
             Log.i(TAG, "Retrieving last trip information...");
+            findViewById(R.id.empty_list_item).setVisibility(View.GONE);
             setTrip(
                     sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_ORIG_FULL, null),
@@ -187,6 +188,8 @@ public class TripOverviewActivity extends AppCompatActivity
             );
             updateTripSchedule();
             updateAdvisory();
+        } else {
+            mTripSchedules.setEmptyView(findViewById(R.id.empty_list_item));
         }
     }
 
@@ -194,6 +197,14 @@ public class TripOverviewActivity extends AppCompatActivity
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         mDrawerToggle.syncState();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putBoolean(PrefContract.FIRST_RUN, false);
+        editor.apply();
     }
 
     @Override
@@ -263,7 +274,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void updateTripSchedule() {
-        if (isTripSet() && Tools.isNetworkConnected(this)) {
+        if (isTripSet() && Utils.isNetworkConnected(this)) {
             new QuickPlannerAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
@@ -275,7 +286,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void updateTripRealTimeEstimates() {
-        if (isTripSet() && Tools.isNetworkConnected(this)) {
+        if (isTripSet() && Utils.isNetworkConnected(this)) {
             new RealTimeAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object result) {
@@ -285,16 +296,16 @@ public class TripOverviewActivity extends AppCompatActivity
                     mTripHeader.setText(origFull + " - " + destFull);
                     mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, trips));
                     if (tripEstimates.size() > 0) {
-                        int nextTrain = tripEstimates.get(0).getMinutes();
+                        int nextTrain = estimateNextTrain(tripEstimates.get(0).getMinutes());
                         mNextDepartureProgress.clearAnimation();
-                        ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgress, "progress", nextTrain * 60, 0);
-                        animator.setDuration(nextTrain * 60 * 1000);
+                        ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgress, "progress", nextTrain, 0);
+                        animator.setDuration(nextTrain * 1000);
                         animator.setInterpolator(new LinearInterpolator());
                         animator.start();
 
                         mNextDeparture.setTextSize(42);
                         if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
-                        nextDepartureCountdown = new CountDownTimer(nextTrain * 60 * 1000, 1000) {
+                        nextDepartureCountdown = new CountDownTimer(nextTrain * 1000, 1000) {
                             public void onTick(long millisUntilFinished) {
                                 String timeLeft = String.format("%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
                                 mNextDeparture.setText(timeLeft);
@@ -306,8 +317,20 @@ public class TripOverviewActivity extends AppCompatActivity
                             }
                         }.start();
                     }
+                    setViewsVisible();
                 }
             }).execute(origAbbr, trips.get(0).getTripLegs().get(0).getTrainHeadStation());
+        }
+    }
+
+    private void updateAdvisory() {
+        if (isTripSet() && Utils.isNetworkConnected(this)) {
+            new AdvisoryAsyncTask(new AsyncTaskResponse() {
+                @Override
+                public void processFinish(Object result) {
+                    mAdvisory.setText((String) result);
+                }
+            }).execute();
         }
     }
 
@@ -350,14 +373,23 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private void updateAdvisory() {
-        if (isTripSet() && Tools.isNetworkConnected(this)) {
-            new AdvisoryAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object result) {
-                    mAdvisory.setText((String) result);
-                }
-            }).execute();
+    private int estimateNextTrain(int minutes) {
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        if (sharedPrefs.getBoolean(PrefContract.FIRST_QUERY, true)) {
+            editor.putBoolean(PrefContract.FIRST_RUN, false);
+            editor.putInt(PrefContract.ESTIMATE, minutes);
+            editor.putInt(PrefContract.ESTIMATE_COUNT, 1);
+            editor.apply();
+            return (minutes * 60) - 45;
+        } else {
+            int prevMinutes = sharedPrefs.getInt(PrefContract.ESTIMATE, -1);
+            int count = ((minutes == prevMinutes) ? sharedPrefs.getInt(PrefContract.ESTIMATE_COUNT, -1) : 0);
+            editor.putInt(PrefContract.ESTIMATE, minutes);
+            editor.putInt(PrefContract.ESTIMATE_COUNT, count + 1);
+            editor.apply();
+
+            if (count < 4) return (minutes * 60) - (count * 15);
+            else return (minutes * 60) - 45;
         }
     }
 
@@ -385,6 +417,20 @@ public class TripOverviewActivity extends AppCompatActivity
             }
             updateFavoriteIcon(0);
         }
+    }
+
+    private void setViewsInvisible() {
+        mTripHeader.setVisibility(View.GONE);
+        mNextDepartureProgress.setVisibility(View.GONE);
+        mNextDeparture.setVisibility(View.GONE);
+        mAdvisory.setVisibility(View.GONE);
+    }
+
+    private void setViewsVisible() {
+        mTripHeader.setVisibility(View.VISIBLE);
+        mNextDepartureProgress.setVisibility(View.VISIBLE);
+        mNextDeparture.setVisibility(View.VISIBLE);
+        mAdvisory.setVisibility(View.VISIBLE);
     }
 
     private boolean isTripSet() {
