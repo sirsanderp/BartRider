@@ -67,6 +67,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private ProgressBar mNextDepartureProgress;
     private TextView mAdvisory;
     private TextView mNextDeparture;
+    private TextView mTimeWindow;
     private TextView mTripHeader;
     private Toolbar mToolbar;
 
@@ -129,6 +130,7 @@ public class TripOverviewActivity extends AppCompatActivity
         });
         mNextDepartureProgress = (ProgressBar) findViewById(R.id.next_train_progress);
         mNextDeparture = (TextView) findViewById(R.id.next_train);
+        mTimeWindow = (TextView) findViewById(R.id.next_train_window);
         mAdvisory = (TextView) findViewById(R.id.advisory);
         setViewsInvisible();
 
@@ -202,8 +204,9 @@ public class TripOverviewActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d(TAG, "Resetting first query parameter since app is stopping...");
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putBoolean(PrefContract.FIRST_RUN, false);
+        editor.putBoolean(PrefContract.FIRST_QUERY, false);
         editor.apply();
     }
 
@@ -292,32 +295,34 @@ public class TripOverviewActivity extends AppCompatActivity
                 public void processFinish(Object result) {
                     // Get estimates for each leg of the trip, not just the first one...
                     tripEstimates = (List<TripEstimate>) result;
-                    mergeTripDetails();
-                    mTripHeader.setText(origFull + " - " + destFull);
-                    mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, trips));
-                    if (tripEstimates.size() > 0) {
-                        int nextTrain = estimateNextTrain(tripEstimates.get(0).getMinutes());
-                        mNextDepartureProgress.clearAnimation();
-                        ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgress, "progress", nextTrain, 0);
-                        animator.setDuration(nextTrain * 1000);
-                        animator.setInterpolator(new LinearInterpolator());
-                        animator.start();
+                    if (tripEstimates != null) {
+                        mergeTripDetails();
+                        mTripHeader.setText(origFull + " - " + destFull);
+                        mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, trips));
+                        if (tripEstimates.size() > 0) {
+                            int nextTrain = estimateNextTrain(tripEstimates.get(0).getMinutes());
+                            mNextDepartureProgress.clearAnimation();
+                            ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgress, "progress", nextTrain, 0);
+                            animator.setDuration(nextTrain * 1000);
+                            animator.setInterpolator(new LinearInterpolator());
+                            animator.start();
 
-                        mNextDeparture.setTextSize(42);
-                        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
-                        nextDepartureCountdown = new CountDownTimer(nextTrain * 1000, 1000) {
-                            public void onTick(long millisUntilFinished) {
-                                String timeLeft = String.format("%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
-                                mNextDeparture.setText(timeLeft);
-                            }
+                            mNextDeparture.setTextSize(42);
+                            if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
+                            nextDepartureCountdown = new CountDownTimer(nextTrain * 1000, 1000) {
+                                public void onTick(long millisUntilFinished) {
+                                    String timeLeft = String.format("%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
+                                    mNextDeparture.setText(timeLeft);
+                                }
 
-                            public void onFinish() {
-                                mNextDeparture.setTextSize(30);
-                                mNextDeparture.setText("Leaving...");
-                            }
-                        }.start();
+                                public void onFinish() {
+                                    mNextDeparture.setTextSize(30);
+                                    mNextDeparture.setText("Leaving...");
+                                }
+                            }.start();
+                        }
+                        setViewsVisible();
                     }
-                    setViewsVisible();
                 }
             }).execute(origAbbr, trips.get(0).getTripLegs().get(0).getTrainHeadStation());
         }
@@ -376,12 +381,14 @@ public class TripOverviewActivity extends AppCompatActivity
     private int estimateNextTrain(int minutes) {
         SharedPreferences.Editor editor = sharedPrefs.edit();
         if (sharedPrefs.getBoolean(PrefContract.FIRST_QUERY, true)) {
-            editor.putBoolean(PrefContract.FIRST_RUN, false);
+            Log.d(TAG, "First query since opening application...");
+            editor.putBoolean(PrefContract.FIRST_QUERY, false);
             editor.putInt(PrefContract.ESTIMATE, minutes);
             editor.putInt(PrefContract.ESTIMATE_COUNT, 1);
             editor.apply();
-            return (minutes * 60) - 45;
+            return (minutes * 60) - 30;
         } else {
+            Log.d(TAG, "Doing time math...");
             int prevMinutes = sharedPrefs.getInt(PrefContract.ESTIMATE, -1);
             int count = ((minutes == prevMinutes) ? sharedPrefs.getInt(PrefContract.ESTIMATE_COUNT, -1) : 0);
             editor.putInt(PrefContract.ESTIMATE, minutes);
@@ -423,6 +430,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mTripHeader.setVisibility(View.GONE);
         mNextDepartureProgress.setVisibility(View.GONE);
         mNextDeparture.setVisibility(View.GONE);
+        mTimeWindow.setVisibility(View.GONE);
         mAdvisory.setVisibility(View.GONE);
     }
 
@@ -430,6 +438,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mTripHeader.setVisibility(View.VISIBLE);
         mNextDepartureProgress.setVisibility(View.VISIBLE);
         mNextDeparture.setVisibility(View.VISIBLE);
+        mTimeWindow.setVisibility(View.VISIBLE);
         mAdvisory.setVisibility(View.VISIBLE);
     }
 

@@ -71,22 +71,36 @@
                 android:max="1200"
                 android:progress="1200"
                 android:progressDrawable="@drawable/circular_progress"
-                android:progressBackgroundTint="#ffa7a7a7"
                 style="?android:attr/progressBarStyleHorizontal" />
 
             <TextView
                 android:id="@+id/next_train"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
-                android:layout_alignLeft="@id/next_train_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@id/next_train_progress"
                 android:layout_alignTop="@id/next_train_progress"
-                android:layout_alignRight="@id/next_train_progress"
+                android:layout_alignEnd="@id/next_train_progress"
                 android:layout_alignBottom="@id/next_train_progress"
                 android:background="@android:color/transparent"
                 android:gravity="center"
                 android:text="@string/empty_field"
                 android:textSize="42sp"
                 tools:text="@string/sample_time_until_departures" />
+
+            <TextView
+                android:id="@+id/next_train_window"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@id/next_train_progress"
+                android:layout_alignTop="@id/next_train_progress"
+                android:layout_alignEnd="@id/next_train_progress"
+                android:layout_alignBottom="@id/next_train_progress"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:layout_marginTop="52dp"
+                android:text="@string/time_window"
+                android:textSize="16sp"
+                tools:text="@string/time_window" />
 
             <TextView
                 android:id="@+id/advisory"

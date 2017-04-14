@@ -19,6 +19,7 @@
     <string name="sample_co2">7.39</string>
     <string name="sample_dest">Destination Station</string>
     <string name="sample_advisory">No delays reported.</string>
-    <string name="sample_time_until_departures">12 min</string>
+    <string name="sample_time_until_departures">12:39</string>
     <string name="sample_trip">Origin Station - Destination Station</string>
+    <string name="time_window">±30 sec</string>
 </resources>
