@@ -144,7 +144,7 @@ public class TripPlannerFragment extends DialogFragment implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == LOADER_ID && data != null) {
-            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
+//            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
             mAdapter.swapCursor(data);
         }
     }

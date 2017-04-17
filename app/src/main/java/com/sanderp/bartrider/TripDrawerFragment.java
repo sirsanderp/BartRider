@@ -76,7 +76,7 @@ public class TripDrawerFragment extends Fragment implements
                     TextView mTextView = (TextView) view;
                     mTextView.setEllipsize(TextUtils.TruncateAt.END);
                     mTextView.setMaxLines(1);
-                    mTextView.setText(getOrigFull(cursor) + " - " + getDestFull(cursor));
+                    mTextView.setText(normalizeText(getOrigFull(cursor)) + " - " + normalizeText(getDestFull(cursor)));
                     return true;
                 }
                 return false;
@@ -130,7 +130,7 @@ public class TripDrawerFragment extends Fragment implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == LOADER_ID && data != null) {
-            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
+//            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
             favoritesTable = data;
             mAdapter.swapCursor(data);
         }
@@ -154,6 +154,12 @@ public class TripDrawerFragment extends Fragment implements
             favoritesTable.moveToNext();
         }
         return 0;
+    }
+
+    private String normalizeText(String text) {
+        int maxLength = 14;
+        if (text.length() <= maxLength) return text;
+        else return text.substring(0, maxLength) + "...";
     }
 
     private int getColumnId(Cursor c) {
