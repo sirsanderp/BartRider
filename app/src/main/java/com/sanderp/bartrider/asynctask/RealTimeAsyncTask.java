@@ -3,13 +3,9 @@ package com.sanderp.bartrider.asynctask;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sanderp.bartrider.TripOverviewActivity;
-import com.sanderp.bartrider.adapter.TripAdapter;
-import com.sanderp.bartrider.structure.Trip;
 import com.sanderp.bartrider.structure.TripEstimate;
-import com.sanderp.bartrider.utility.ApiContract;
-import com.sanderp.bartrider.utility.ApiConnection;
-import com.sanderp.bartrider.xmlparser.QuickPlannerParser;
+import com.sanderp.bartrider.utility.Constants;
+import com.sanderp.bartrider.utility.Utils;
 import com.sanderp.bartrider.xmlparser.RealTimeParser;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -19,7 +15,7 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * Implementation of the AsyncTask to download real-time data from the BART Station API.
+ * Implementation of the AsyncTask to download real-time data from the BART Station Api.
  */
 public class RealTimeAsyncTask extends AsyncTask<String, Void, List<TripEstimate>> {
     private static final String TAG = "RealTimeAsyncTask";
@@ -52,11 +48,11 @@ public class RealTimeAsyncTask extends AsyncTask<String, Void, List<TripEstimate
         RealTimeParser estimates = new RealTimeParser();
 
         Log.i(TAG, "Parsing real-time estimates...");
-        String url = ApiContract.API_URL + "etd.aspx?cmd=etd"
+        String url = Constants.Api.URL + "etd.aspx?cmd=etd"
                 + "&orig=" + origAbbr
-                + "&key=" + ApiContract.API_KEY;
+                + "&key=" + Constants.Api.KEY;
         try {
-            stream = ApiConnection.downloadData(url);
+            stream = Utils.getUrlStream(url);
             return estimates.parse(stream, trainHeadStation);
         } finally {
             if (stream != null) {
