@@ -4,26 +4,31 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_bart_rider"
         android:label="@string/app_name"
         android:theme="@style/BartTheme">
+
         <activity
             android:name=".TripOverviewActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".TripDetailActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".TripOverviewActivity" >
+        </activity>
 
         <provider
             android:name=".database.BartRiderProvider"
@@ -31,21 +36,28 @@
             android:enabled="true"
             android:exported="false" />
 
+        <service
+            android:name=".intentservice.AdvisoryService"
+            android:exported="false" />
+
+        <service
+            android:name=".intentservice.RealTimeService"
+            android:exported="false" />
+
+        <service
+            android:name=".intentservice.QuickPlannerService"
+            android:exported="false" />
+
         <receiver
-            android:name=".intentservice.BootReceiver"
+            android:name=".intentservice.AdvisoryReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
             <intent-filter>
-                <action android:name="com.sanderp.bartrider.action.START_ADVISORY_SERVICE"></action>
+                <action android:name="com.sanderp.bartrider.ADVISORY_SERVICE" />
             </intent-filter>
         </receiver>
-
-        <service
-            android:name=".intentservice.AdvisoryUpdateService"
-            android:exported="false" />
     </application>
-
 </manifest>

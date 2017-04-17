@@ -1,9 +1,11 @@
 package com.sanderp.bartrider.structure;
 
+import java.io.Serializable;
+
 /**
  * Created by Sander Peerna on 11/11/2016.
  */
-public class TripEstimate {
+public class TripEstimate implements Serializable {
     // Matches tags within the <estimate> tag.
     private int minutes;
     private int platform;

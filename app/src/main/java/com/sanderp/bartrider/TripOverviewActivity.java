@@ -1,8 +1,13 @@
 package com.sanderp.bartrider;
 
 import android.animation.ObjectAnimator;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -13,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -30,14 +36,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sanderp.bartrider.adapter.TripAdapter;
-import com.sanderp.bartrider.asynctask.AdvisoryAsyncTask;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.QuickPlannerAsyncTask;
-import com.sanderp.bartrider.asynctask.RealTimeAsyncTask;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
+import com.sanderp.bartrider.intentservice.QuickPlannerService;
+import com.sanderp.bartrider.intentservice.RealTimeService;
 import com.sanderp.bartrider.structure.Trip;
 import com.sanderp.bartrider.structure.TripEstimate;
+import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.PrefContract;
 import com.sanderp.bartrider.utility.Utils;
 
@@ -46,6 +53,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Sander Peerna on 8/23/2015.
@@ -64,14 +72,14 @@ public class TripOverviewActivity extends AppCompatActivity
     private FloatingActionButton mFab;
     private Drawable mFavoriteIcon;
     private ListView mTripSchedules;
-    private ProgressBar mNextDepartureProgress;
+    private ProgressBar mNextDepartureProgressBar;
     private TextView mAdvisory;
     private TextView mNextDeparture;
-    private TextView mTimeWindow;
+    private TextView mNextDepartureWindow;
     private TextView mTripHeader;
     private Toolbar mToolbar;
 
-    private List<Trip> trips;
+    private List<Trip> tripSchedules;
     private List<TripEstimate> tripEstimates;
     private int favoriteTrip;
     private String origAbbr;
@@ -79,7 +87,11 @@ public class TripOverviewActivity extends AppCompatActivity
     private String destAbbr;
     private String destFull;
 
+    private AlarmManager alarmManager;
+    private BroadcastReceiver broadcastReceiver;
     private CountDownTimer nextDepartureCountdown;
+    private PendingIntent realTimePendingIntent;
+    private PendingIntent quickPlannerPendingIntent;
 
     public TripOverviewActivity() {
         super();
@@ -90,10 +102,18 @@ public class TripOverviewActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.trip_overview);
 
+        // Set up Toolbar to replace ActionBar.
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+//        getSupportActionBar().setDisplayShowHomeEnabled(true);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        getSupportActionBar().setHomeButtonEnabled(true);
+
+        // Set up advisory notifications and station database on first run.
         sharedPrefs = getSharedPreferences(PrefContract.PREFS_NAME, 0);
         if (sharedPrefs.getBoolean(PrefContract.FIRST_RUN, true)) {
             Log.i(TAG, "First run setup...");
-            sendBroadcast(new Intent("com.sanderp.bartrider.action.START_ADVISORY_SERVICE"));
+            sendBroadcast(new Intent(Constants.Broadcast.ADVISORY_SERVICE));
             new StationListAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object output) {
@@ -102,12 +122,24 @@ public class TripOverviewActivity extends AppCompatActivity
             }, this).execute();
         }
 
-        // Set the toolbar to replace the ActionBar.
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setHomeButtonEnabled(true);
+        // Configurations for scheduling repeating jobs.
+        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d(TAG, "Received broadcast.");
+                if (intent.getAction().equals(Constants.Broadcast.REAL_TIME_SERVICE)) {
+                    Log.d(TAG, "onReceive(): delegate to onReceiveTripRealTimeEstimates()");
+                    onReceiveTripRealTimeEstimates(intent);
+                }
+                if (intent.getAction().equals(Constants.Broadcast.QUICK_PLANNER_SERVICE)) {
+                    Log.d(TAG, "onReceive(): delegate to onReceiveTripSchedules()");
+                    onReceiveTripSchedules(intent);
+                }
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_SERVICE));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.QUICK_PLANNER_SERVICE));
 
         fragmentManager = getSupportFragmentManager();
         drawerFragment = (TripDrawerFragment) fragmentManager.findFragmentById(R.id.trip_drawer_fragment);
@@ -120,19 +152,19 @@ public class TripOverviewActivity extends AppCompatActivity
         mTripSchedules.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Trip selectedTrip = trips.get(position);
-                Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class);
-                tripDetailIntent.putExtra("origin", origFull);
-                tripDetailIntent.putExtra("destination", destFull);
-                tripDetailIntent.putExtra("trip", selectedTrip);
+                Trip selectedTrip = tripSchedules.get(position);
+                Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class)
+                        .putExtra(TripDetailActivity.ORIG, origFull)
+                        .putExtra(TripDetailActivity.DEST, destFull)
+                        .putExtra(TripDetailActivity.TRIP, selectedTrip);
                 startActivity(tripDetailIntent);
             }
         });
-        mNextDepartureProgress = (ProgressBar) findViewById(R.id.next_train_progress);
-        mNextDeparture = (TextView) findViewById(R.id.next_train);
-        mTimeWindow = (TextView) findViewById(R.id.next_train_window);
+        mNextDepartureProgressBar = (ProgressBar) findViewById(R.id.next_departure_progress_bar);
+        mNextDeparture = (TextView) findViewById(R.id.next_departure);
+        mNextDepartureWindow = (TextView) findViewById(R.id.next_departure_window);
         mAdvisory = (TextView) findViewById(R.id.advisory);
-        setViewsInvisible();
+        setVisibility(View.GONE);
 
         // Drawer portion of the main activity
         mDrawerLayout = (DrawerLayout) findViewById(R.id.trip_overview_drawer_layout);
@@ -156,6 +188,19 @@ public class TripOverviewActivity extends AppCompatActivity
                 plannerFragment.show(fragmentManager, "Trip Planner Fragment");
             }
         });
+
+        if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
+            Log.i(TAG, "Retrieving last trip information...");
+            setTrip(
+                    sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
+                    sharedPrefs.getString(PrefContract.LAST_ORIG_FULL, null),
+                    sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
+                    sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
+            );
+            findViewById(R.id.empty_list_item).setVisibility(View.GONE);
+        } else {
+            mTripSchedules.setEmptyView(findViewById(R.id.empty_list_item));
+        }
     }
 
     @Override
@@ -165,33 +210,22 @@ public class TripOverviewActivity extends AppCompatActivity
         if (isTripSet()) {
             Log.i(TAG, "Saving last trip information...");
             SharedPreferences.Editor editor = sharedPrefs.edit();
-            editor.putBoolean(PrefContract.LAST_TRIP, true);
-            editor.putInt(PrefContract.LAST_ID, favoriteTrip);
-            editor.putString(PrefContract.LAST_ORIG_ABBR, origAbbr);
-            editor.putString(PrefContract.LAST_ORIG_FULL, origFull);
-            editor.putString(PrefContract.LAST_DEST_ABBR, destAbbr);
-            editor.putString(PrefContract.LAST_DEST_FULL, destFull);
-            editor.apply();
+            editor.putBoolean(PrefContract.LAST_TRIP, true)
+                    .putInt(PrefContract.LAST_ID, favoriteTrip)
+                    .putString(PrefContract.LAST_ORIG_ABBR, origAbbr)
+                    .putString(PrefContract.LAST_ORIG_FULL, origFull)
+                    .putString(PrefContract.LAST_DEST_ABBR, destAbbr)
+                    .putString(PrefContract.LAST_DEST_FULL, destFull)
+                    .apply();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
-            Log.i(TAG, "Retrieving last trip information...");
-            findViewById(R.id.empty_list_item).setVisibility(View.GONE);
-            setTrip(
-                    sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
-                    sharedPrefs.getString(PrefContract.LAST_ORIG_FULL, null),
-                    sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
-                    sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
-            );
-            updateTripSchedule();
-            updateAdvisory();
-        } else {
-            mTripSchedules.setEmptyView(findViewById(R.id.empty_list_item));
+        if (isTripSet()) {
+            getTripSchedules();
+            setAdvisory();
         }
     }
 
@@ -204,10 +238,28 @@ public class TripOverviewActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
+
+        Log.d(TAG, "Cancelling the realTimePendingIntent alarm.");
+        alarmManager.cancel(quickPlannerPendingIntent);
+        alarmManager.cancel(realTimePendingIntent);
+//        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+
         Log.d(TAG, "Resetting first query parameter since app is stopping...");
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putBoolean(PrefContract.FIRST_QUERY, false);
-        editor.apply();
+        editor.putBoolean(PrefContract.FIRST_QUERY, true).apply();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+//        Log.d(TAG, "Cancelling the realTimePendingIntent alarm.");
+//        alarmManager.cancel(realTimePendingIntent);
+//        LocalBroadcastManager.getInstance(this).unregisterReceiver(realTimeReceiver);
+//
+//        Log.d(TAG, "Resetting first query parameter since app is stopping...");
+//        SharedPreferences.Editor editor = sharedPrefs.edit();
+//        editor.putBoolean(PrefContract.FIRST_QUERY, true).apply();
     }
 
     @Override
@@ -216,7 +268,7 @@ public class TripOverviewActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.menu_bart_main, menu);
         mFavoriteIcon = menu.getItem(0).getIcon();
         int id = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
-        if (id != 0) updateFavoriteIcon(id);
+        if (id != 0) setFavoriteIcon(id);
         return true;
     }
 
@@ -234,8 +286,8 @@ public class TripOverviewActivity extends AppCompatActivity
                 toggleFavorite();
                 return true;
             case R.id.action_refresh:
-                updateTripSchedule();
-                updateAdvisory();
+                getTripSchedules();
+                setAdvisory();
                 return true;
             case R.id.action_settings:
                 return true;
@@ -245,18 +297,22 @@ public class TripOverviewActivity extends AppCompatActivity
 
     @Override
     public void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull) {
-        setTrip(origAbbr, origFull, destAbbr, destFull);
-        updateFavoriteIcon(-1);
-        updateTripSchedule();
-        updateAdvisory();
+        if (!isTripSame(origAbbr, destAbbr)) {
+            setTrip(origAbbr, origFull, destAbbr, destFull);
+            setFavoriteIcon(-1);
+            getTripSchedules();
+            setAdvisory();
+        }
     }
 
     @Override
     public void onFavoriteClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
-        setTrip(origAbbr, origFull, destAbbr, destFull);
-        updateFavoriteIcon(id);
-        updateTripSchedule();
-        updateAdvisory();
+        if (!isTripSame(origAbbr, destAbbr)) {
+            setTrip(origAbbr, origFull, destAbbr, destFull);
+            setFavoriteIcon(id);
+            getTripSchedules();
+            setAdvisory();
+        }
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
@@ -269,82 +325,64 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private void updateFavoriteIcon(int id) {
+    private void setFavoriteIcon(int id) {
         favoriteTrip = ((id == -1) ? favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr) : id);
 
         if (favoriteTrip == 0) mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
         else mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
     }
 
-    private void updateTripSchedule() {
+    private void getTripSchedules() {
         if (isTripSet() && Utils.isNetworkConnected(this)) {
-            new QuickPlannerAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object result) {
-                    trips = (List<Trip>) result;
-                    updateTripRealTimeEstimates();
-                }
-            }).execute(origAbbr, destAbbr);
+            Intent quickPlannerIntent = new Intent(TripOverviewActivity.this, QuickPlannerService.class);
+            quickPlannerIntent.putExtra(QuickPlannerService.ORIG, origAbbr)
+                    .putExtra(QuickPlannerService.DEST, destAbbr);
+            quickPlannerPendingIntent = PendingIntent.getService(this, -1, quickPlannerIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis(), quickPlannerPendingIntent);
+            startService(quickPlannerIntent);
         }
     }
 
-    private void updateTripRealTimeEstimates() {
+    private void onReceiveTripSchedules(Intent intent) {
+        Log.d(TAG, "onReceiveTripSchedules(): Received callback from broadcast.");
+        tripSchedules = (List<Trip>) intent.getSerializableExtra(QuickPlannerService.RESULT);
+        getTripRealTimeEstimates();
+    }
+
+    private void getTripRealTimeEstimates() {
         if (isTripSet() && Utils.isNetworkConnected(this)) {
-            new RealTimeAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object result) {
-                    // Get estimates for each leg of the trip, not just the first one...
-                    tripEstimates = (List<TripEstimate>) result;
-                    if (tripEstimates != null) {
-                        mergeTripDetails();
-                        mTripHeader.setText(origFull + " - " + destFull);
-                        mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, trips));
-                        if (tripEstimates.size() > 0) {
-                            int nextTrain = estimateNextTrain(tripEstimates.get(0).getMinutes());
-                            mNextDepartureProgress.clearAnimation();
-                            ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgress, "progress", nextTrain, 0);
-                            animator.setDuration(nextTrain * 1000);
-                            animator.setInterpolator(new LinearInterpolator());
-                            animator.start();
-
-                            mNextDeparture.setTextSize(42);
-                            if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
-                            nextDepartureCountdown = new CountDownTimer(nextTrain * 1000, 1000) {
-                                public void onTick(long millisUntilFinished) {
-                                    String timeLeft = String.format("%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
-                                    mNextDeparture.setText(timeLeft);
-                                }
-
-                                public void onFinish() {
-                                    mNextDeparture.setTextSize(30);
-                                    mNextDeparture.setText("Leaving...");
-                                }
-                            }.start();
-                        }
-                        setViewsVisible();
-                    }
-                }
-            }).execute(origAbbr, trips.get(0).getTripLegs().get(0).getTrainHeadStation());
+            Intent realTimeIntent = new Intent(TripOverviewActivity.this, RealTimeService.class);
+            realTimeIntent.putExtra(RealTimeService.ORIG, origAbbr)
+                    .putExtra(RealTimeService.HEAD, tripSchedules.get(0).getTripLegs().get(0).getTrainHeadStation());
+            realTimePendingIntent = PendingIntent.getService(this, -1, realTimeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis(), realTimePendingIntent);
+            startService(realTimeIntent);
         }
     }
 
-    private void updateAdvisory() {
-        if (isTripSet() && Utils.isNetworkConnected(this)) {
-            new AdvisoryAsyncTask(new AsyncTaskResponse() {
-                @Override
-                public void processFinish(Object result) {
-                    mAdvisory.setText((String) result);
-                }
-            }).execute();
+    public void onReceiveTripRealTimeEstimates(Intent intent) {
+        Log.d(TAG, "onReceiveTripRealTimeEstimates(): Received callback from broadcast.");
+        tripEstimates = (List<TripEstimate>) intent.getSerializableExtra(RealTimeService.RESULT);
+        if (tripEstimates != null) {
+            mergeSchedulesAndEstimates();
+            mTripHeader.setText(origFull + " - " + destFull);
+            mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
+            int nextDeparture = estimateNextDeparture(tripEstimates.get(0).getMinutes());
+            updateNextDepartureProgressBar(nextDeparture);
+            setVisibility(View.VISIBLE);
+
+            if (nextDeparture == 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
+            else alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimePendingIntent);
         }
+        // else trains have stopped running for the night...
     }
 
-    private void mergeTripDetails() {
+    private void mergeSchedulesAndEstimates() {
         Date now = new Date();
-        DateFormat df = new SimpleDateFormat("h:mm a");
+        DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
         Log.d(TAG, "Current Time: " + df.format(now));
-        for (int i = 3 - tripEstimates.size(); i < trips.size(); i++) {
-            Trip trip = trips.get(i);
+        for (int i = 0; i < tripEstimates.size(); i++) {
+            Trip trip = tripSchedules.get(i);
             Trip.TripLeg tripLeg = trip.getTripLegs().get(0);
             int minUntilDeparture = tripEstimates.get(i).getMinutes();
             Log.d(TAG, "Until Departure: " + minUntilDeparture + " minutes");
@@ -378,26 +416,54 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private int estimateNextTrain(int minutes) {
+    private int estimateNextDeparture(int minutes) {
+        if (minutes == 0) return 0;
+
         SharedPreferences.Editor editor = sharedPrefs.edit();
         if (sharedPrefs.getBoolean(PrefContract.FIRST_QUERY, true)) {
             Log.d(TAG, "First query since opening application...");
-            editor.putBoolean(PrefContract.FIRST_QUERY, false);
-            editor.putInt(PrefContract.ESTIMATE, minutes);
-            editor.putInt(PrefContract.ESTIMATE_COUNT, 1);
-            editor.apply();
+            editor.putBoolean(PrefContract.FIRST_QUERY, false)
+                    .putInt(PrefContract.ESTIMATE, minutes)
+                    .putInt(PrefContract.ESTIMATE_COUNT, 1)
+                    .apply();
             return (minutes * 60) - 30;
         } else {
             Log.d(TAG, "Doing time math...");
             int prevMinutes = sharedPrefs.getInt(PrefContract.ESTIMATE, -1);
             int count = ((minutes == prevMinutes) ? sharedPrefs.getInt(PrefContract.ESTIMATE_COUNT, -1) : 0);
-            editor.putInt(PrefContract.ESTIMATE, minutes);
-            editor.putInt(PrefContract.ESTIMATE_COUNT, count + 1);
-            editor.apply();
+            editor.putInt(PrefContract.ESTIMATE, minutes)
+                    .putInt(PrefContract.ESTIMATE_COUNT, count + 1)
+                    .apply();
 
             if (count < 4) return (minutes * 60) - (count * 15);
             else return (minutes * 60) - 45;
         }
+    }
+
+    private void updateNextDepartureProgressBar(int seconds) {
+        mNextDepartureProgressBar.clearAnimation();
+        ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
+        animator.setDuration(seconds * 1000);
+        animator.setInterpolator(new LinearInterpolator());
+        animator.start();
+
+        mNextDeparture.setTextSize(42);
+        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
+        nextDepartureCountdown = new CountDownTimer(seconds * 1000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                String timeLeft = String.format(Locale.US, "%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
+                mNextDeparture.setText(timeLeft);
+            }
+
+            public void onFinish() {
+                mNextDeparture.setTextSize(30);
+                mNextDeparture.setText(R.string.status_leaving);
+            }
+        }.start();
+    }
+
+    private void setAdvisory() {
+        mAdvisory.setText(sharedPrefs.getString(PrefContract.PREV_ADVISORY, getResources().getString(R.string.default_advisory)));
     }
 
     private void toggleFavorite() {
@@ -415,31 +481,28 @@ public class TripOverviewActivity extends AppCompatActivity
             if (uri != null) {
                 Log.d(TAG, String.format("Added to favorites: %s - %s", origAbbr, destAbbr));
             }
-            updateFavoriteIcon(Integer.parseInt(uri.getLastPathSegment()));
+            setFavoriteIcon(Integer.parseInt(uri.getLastPathSegment()));
         } else {
             Uri uri = Uri.parse(BartRiderContract.Favorites.CONTENT_URI + "/" + favoriteTrip);
             int count = this.getContentResolver().delete(uri, null, null);
             if (count > 0) {
                 Log.d(TAG, String.format("Removed from favorites: %s - %s", origAbbr, destAbbr));
             }
-            updateFavoriteIcon(0);
+            setFavoriteIcon(0);
         }
     }
 
-    private void setViewsInvisible() {
-        mTripHeader.setVisibility(View.GONE);
-        mNextDepartureProgress.setVisibility(View.GONE);
-        mNextDeparture.setVisibility(View.GONE);
-        mTimeWindow.setVisibility(View.GONE);
-        mAdvisory.setVisibility(View.GONE);
+    private void setVisibility(int visibility) {
+        mTripHeader.setVisibility(visibility);
+        mNextDepartureProgressBar.setVisibility(visibility);
+        mNextDeparture.setVisibility(visibility);
+        mNextDepartureWindow.setVisibility(visibility);
+        mAdvisory.setVisibility(visibility);
     }
 
-    private void setViewsVisible() {
-        mTripHeader.setVisibility(View.VISIBLE);
-        mNextDepartureProgress.setVisibility(View.VISIBLE);
-        mNextDeparture.setVisibility(View.VISIBLE);
-        mTimeWindow.setVisibility(View.VISIBLE);
-        mAdvisory.setVisibility(View.VISIBLE);
+    private boolean isTripSame(String origAbbr, String destAbbr) {
+        if (this.origAbbr.equals(origAbbr) && this.destAbbr.equals(destAbbr)) return true;
+        return false;
     }
 
     private boolean isTripSet() {
