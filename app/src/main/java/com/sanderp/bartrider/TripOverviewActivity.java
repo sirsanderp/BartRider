@@ -500,21 +500,18 @@ public class TripOverviewActivity extends AppCompatActivity
         mAdvisory.setVisibility(visibility);
     }
 
-    private boolean isTripSame(String origAbbr, String destAbbr) {
-        if (this.origAbbr.equals(origAbbr) && this.destAbbr.equals(destAbbr)) return true;
+    private boolean isTripSame(String orig, String dest) {
+        if (isTripSet() && orig.equals(origAbbr) && dest.equals(destAbbr)) return true;
         return false;
     }
 
     private boolean isTripSet() {
-        if (origAbbr == null || destAbbr == null) {
-            Toast.makeText(this, "Please select stations in the trip planner.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
+        if (origAbbr == null || destAbbr == null) return false;
         return true;
     }
 
-    private boolean isValidTrip(String origAbbr, String destAbbr) {
-        if (origAbbr.equals(destAbbr)) {
+    private boolean isValidTrip(String orig, String dest) {
+        if (orig.equals(dest)) {
             Toast.makeText(this, "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
             return false;
         }
