@@ -9,31 +9,30 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.sanderp.bartrider.R;
-import com.sanderp.bartrider.utility.ApiConnection;
-import com.sanderp.bartrider.utility.ApiContract;
+import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.PrefContract;
+import com.sanderp.bartrider.utility.Utils;
 import com.sanderp.bartrider.xmlparser.AdvisoryParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  */
-public class AdvisoryUpdateService extends IntentService {
-    private static final String TAG = "AdvisoryUpdateService";
+public class AdvisoryService extends IntentService {
+    private static final String TAG = "AdvisoryService";
 
     public static final int NOTIFICATION_ID = 101;
 
     private NotificationManager mNotificationManager;
     private SharedPreferences sharedPrefs;
 
-    public AdvisoryUpdateService() {
+    public AdvisoryService() {
         super(TAG);
     }
 
@@ -61,10 +60,10 @@ public class AdvisoryUpdateService extends IntentService {
     private List<String> getAdvisories() throws XmlPullParserException, IOException {
         InputStream stream = null;
         AdvisoryParser parser = new AdvisoryParser();
-        String url = ApiContract.API_URL + "bsa.aspx?cmd=bsa&key=" + ApiContract.API_KEY;
+        String url = Constants.Api.URL + "bsa.aspx?cmd=bsa&key=" + Constants.Api.KEY;
         try {
             Log.i(TAG, "Parsing advisories...");
-            stream = ApiConnection.downloadData(url);
+            stream = Utils.getUrlStream(url);
             return parser.parse(stream);
         } finally {
             if (stream != null) {
@@ -82,13 +81,17 @@ public class AdvisoryUpdateService extends IntentService {
     }
 
     private void postAdvisoryNotification(String advisory) {
-        Log.d(TAG, advisory + " | " + sharedPrefs.getString(PrefContract.PREV_ADVISORY, ""));
-        if (!advisory.equals(sharedPrefs.getString(PrefContract.PREV_ADVISORY, ""))) {
+        String defaultAdvisory = getResources().getString(R.string.default_advisory);
+        String prevAdvisory = sharedPrefs.getString(PrefContract.PREV_ADVISORY, defaultAdvisory);
+        Log.d(TAG, advisory + " | " + prevAdvisory);
+        if (!advisory.equals(prevAdvisory)) {
+            String alertText = advisory;
+            if (advisory.equals(defaultAdvisory)) alertText = "Delays have ended. Trains are running as scheduled.";
             Notification notification = new NotificationCompat.Builder(this)
                     .setContentTitle("BART Advisory")
-                    .setContentText(advisory)
+                    .setContentText(alertText)
                     .setSmallIcon(R.drawable.ic_bart_rider_24dp)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(advisory))
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(alertText))
                     .build();
             mNotificationManager.notify(NOTIFICATION_ID, notification);
             sharedPrefs.edit().putString(PrefContract.PREV_ADVISORY, advisory).apply();
