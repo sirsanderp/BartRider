@@ -28,16 +28,17 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sanderp.bartrider.adapter.TripAdapter;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
-import com.sanderp.bartrider.asynctask.QuickPlannerAsyncTask;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.intentservice.QuickPlannerService;
@@ -51,6 +52,7 @@ import com.sanderp.bartrider.utility.Utils;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -239,7 +241,7 @@ public class TripOverviewActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
 
-        Log.d(TAG, "Cancelling the realTimePendingIntent alarm.");
+        Log.d(TAG, "Cancelling all alarms.");
         alarmManager.cancel(quickPlannerPendingIntent);
         alarmManager.cancel(realTimePendingIntent);
 //        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
@@ -362,19 +364,33 @@ public class TripOverviewActivity extends AppCompatActivity
 
     public void onReceiveTripRealTimeEstimates(Intent intent) {
         Log.d(TAG, "onReceiveTripRealTimeEstimates(): Received callback from broadcast.");
+        mTripHeader.setText(origFull + " - " + destFull);
+        mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
+        setVisibility(View.VISIBLE);
         tripEstimates = (List<TripEstimate>) intent.getSerializableExtra(RealTimeService.RESULT);
-        if (tripEstimates != null) {
+        if (tripEstimates != null && !tripEstimates.isEmpty()) {
             mergeSchedulesAndEstimates();
-            mTripHeader.setText(origFull + " - " + destFull);
-            mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
             int nextDeparture = estimateNextDeparture(tripEstimates.get(0).getMinutes());
             updateNextDepartureProgressBar(nextDeparture);
-            setVisibility(View.VISIBLE);
-
             if (nextDeparture == 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
             else alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimePendingIntent);
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date());
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+            String offlineStatus;
+            if (dayOfWeek == Calendar.SUNDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "8:00");
+            else if (dayOfWeek == Calendar.SATURDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "6:00");
+            else offlineStatus = String.format(getResources().getString(R.string.offline_status), "4:00");
+            RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+            setVisibility(View.GONE);
+            mTripSchedules.setVisibility(View.GONE);
+            mNextDeparture.setLayoutParams(layout);
+            mNextDeparture.setText(offlineStatus);
+            mNextDeparture.setTextSize(18);
+            mNextDeparture.setVisibility(View.VISIBLE);
         }
-        // else trains have stopped running for the night...
     }
 
     private void mergeSchedulesAndEstimates() {
