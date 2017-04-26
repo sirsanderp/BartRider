@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * Returns schedule information based on specified depart time.
  */
+@Deprecated
 public class QuickPlannerParser {
     private static final String TAG = "QuickPlannerParser";
 

@@ -17,6 +17,7 @@ import java.util.List;
 /**
  * Implementation of the AsyncTask to download advisory data from the BART Station Api.
  */
+@Deprecated
 public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
     private static final String TAG = "AdvisoryAsyncTask";
 

@@ -6,9 +6,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.structure.Station;
+import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
 import com.sanderp.bartrider.xmlparser.StationListParser;
 

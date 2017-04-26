@@ -1,15 +1,14 @@
 package com.sanderp.bartrider;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.sanderp.bartrider.adapter.TripLegAdapter;
-import com.sanderp.bartrider.structure.Trip;
+import com.sanderp.bartrider.pojo.quickplanner.Trip;
 
 public class TripDetailActivity extends AppCompatActivity {
     private static final String TAG = "TripDetailActivity";
@@ -49,7 +48,7 @@ public class TripDetailActivity extends AppCompatActivity {
         mDest.setText(data.getStringExtra(DEST));
         mCo2.setText("CO2 Saved: " + trip.getCo2());
 
-        TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getTripLegs());
+        TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getLeg());
         mListView.setAdapter(adapter);
     }
 }

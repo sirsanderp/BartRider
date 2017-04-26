@@ -8,9 +8,8 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.sanderp.bartrider.R;
-import com.sanderp.bartrider.structure.Trip;
+import com.sanderp.bartrider.pojo.quickplanner.Trip;
 
-import java.text.DecimalFormat;
 import java.util.List;
 
 /**
@@ -52,10 +51,10 @@ public class TripAdapter extends BaseAdapter {
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_dest_time);
         TextView mFare = (TextView) rowView.findViewById(R.id.trip_fare);
 
-        Trip trip = (Trip) getItem(position);
-        mOrigTime.setText(trip.getEstOrigDeparture());
-        mDestTime.setText(trip.getEstDestArrival());
-        mFare.setText("$" + new DecimalFormat("#.00").format(trip.getFare()));
+        com.sanderp.bartrider.pojo.quickplanner.Trip trip = (com.sanderp.bartrider.pojo.quickplanner.Trip) getItem(position);
+        mOrigTime.setText(trip.getOrigTimeMin());
+        mDestTime.setText(trip.getDestTimeMin());
+        mFare.setText("$" + trip.getFare());
 
         return rowView;
     }

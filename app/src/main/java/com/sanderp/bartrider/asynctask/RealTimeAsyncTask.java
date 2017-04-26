@@ -17,6 +17,7 @@ import java.util.List;
 /**
  * Implementation of the AsyncTask to download real-time data from the BART Station Api.
  */
+@Deprecated
 public class RealTimeAsyncTask extends AsyncTask<String, Void, List<TripEstimate>> {
     private static final String TAG = "RealTimeAsyncTask";
 

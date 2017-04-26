@@ -4,9 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Sander Peerna on 3/13/2016.
- */
+@Deprecated
 public class Trip implements Serializable {
     // Matches attributes in the <trip> tag.
     private String origin;

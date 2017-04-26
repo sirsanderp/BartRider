@@ -3,8 +3,8 @@ package com.sanderp.bartrider.asynctask;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.structure.Trip;
+import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
 import com.sanderp.bartrider.xmlparser.QuickPlannerParser;
 
@@ -17,6 +17,7 @@ import java.util.List;
 /**
  * Implementation of the AsyncTask to download quick planner data from the BART Schedule Api.
  */
+@Deprecated
 public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
     private static final String TAG = "QuickPlannerAsyncTask";
 

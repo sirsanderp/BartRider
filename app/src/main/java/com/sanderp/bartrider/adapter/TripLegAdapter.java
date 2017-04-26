@@ -8,7 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.sanderp.bartrider.R;
-import com.sanderp.bartrider.structure.Trip;
+import com.sanderp.bartrider.pojo.quickplanner.Leg;
 
 import java.util.List;
 
@@ -21,9 +21,9 @@ public class TripLegAdapter extends BaseAdapter {
 
     private Context mContext;
     private LayoutInflater mInflater;
-    private List<Trip.TripLeg> mDataSource;
+    private List<Leg> mDataSource;
 
-    public TripLegAdapter(Context context, List<Trip.TripLeg> tripLegs) {
+    public TripLegAdapter(Context context, List<Leg> tripLegs) {
         mContext = context;
         mDataSource = tripLegs;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -52,11 +52,11 @@ public class TripLegAdapter extends BaseAdapter {
         TextView mDestName = (TextView) rowView.findViewById(R.id.trip_leg_dest_name);
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_leg_dest_time);
 
-        Trip.TripLeg tripLeg = (Trip.TripLeg) getItem(position);
+        Leg tripLeg = (Leg) getItem(position);
         mOrigName.setText(tripLeg.getOrigin());
         mDestName.setText(tripLeg.getDestination());
-        mOrigTime.setText(tripLeg.getEstLegOrigDeparture());
-        mDestTime.setText(tripLeg.getEstLegDestArrival());
+        mOrigTime.setText(tripLeg.getEtdLegOrig());
+        mDestTime.setText(tripLeg.getEtaLegDest());
 
         return rowView;
     }

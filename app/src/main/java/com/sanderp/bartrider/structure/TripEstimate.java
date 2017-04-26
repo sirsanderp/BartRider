@@ -2,11 +2,11 @@ package com.sanderp.bartrider.structure;
 
 import java.io.Serializable;
 
-/**
- * Created by Sander Peerna on 11/11/2016.
- */
+@Deprecated
 public class TripEstimate implements Serializable {
     // Matches tags within the <estimate> tag.
+    private String date;
+    private String time;
     private int minutes;
     private int platform;
     private String direction;
@@ -16,6 +16,22 @@ public class TripEstimate implements Serializable {
     private boolean bikeFlag;
 
     public TripEstimate() {}
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
 
     public int getMinutes() {
         return minutes;

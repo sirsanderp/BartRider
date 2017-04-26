@@ -43,8 +43,12 @@ import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.intentservice.QuickPlannerService;
 import com.sanderp.bartrider.intentservice.RealTimeService;
-import com.sanderp.bartrider.structure.Trip;
-import com.sanderp.bartrider.structure.TripEstimate;
+import com.sanderp.bartrider.pojo.quickplanner.Leg;
+import com.sanderp.bartrider.pojo.quickplanner.QuickPlannerPojo;
+import com.sanderp.bartrider.pojo.quickplanner.Trip;
+import com.sanderp.bartrider.pojo.realtime.Estimate;
+import com.sanderp.bartrider.pojo.realtime.Etd;
+import com.sanderp.bartrider.pojo.realtime.RealTimePojo;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.PrefContract;
 import com.sanderp.bartrider.utility.Utils;
@@ -82,7 +86,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private Toolbar mToolbar;
 
     private List<Trip> tripSchedules;
-    private List<TripEstimate> tripEstimates;
+    private List<Estimate> tripEstimates;
     private int favoriteTrip;
     private String origAbbr;
     private String origFull;
@@ -154,7 +158,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mTripSchedules.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Trip selectedTrip = tripSchedules.get(position);
+                com.sanderp.bartrider.pojo.quickplanner.Trip selectedTrip = tripSchedules.get(position);
                 Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class)
                         .putExtra(TripDetailActivity.ORIG, origFull)
                         .putExtra(TripDetailActivity.DEST, destFull)
@@ -245,10 +249,6 @@ public class TripOverviewActivity extends AppCompatActivity
         alarmManager.cancel(quickPlannerPendingIntent);
         alarmManager.cancel(realTimePendingIntent);
 //        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-
-        Log.d(TAG, "Resetting first query parameter since app is stopping...");
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putBoolean(PrefContract.FIRST_QUERY, true).apply();
     }
 
     @Override
@@ -347,15 +347,15 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void onReceiveTripSchedules(Intent intent) {
         Log.d(TAG, "onReceiveTripSchedules(): Received callback from broadcast.");
-        tripSchedules = (List<Trip>) intent.getSerializableExtra(QuickPlannerService.RESULT);
+        QuickPlannerPojo result = (QuickPlannerPojo) intent.getSerializableExtra(QuickPlannerService.RESULT);
+        tripSchedules = result.getRoot().getSchedule().getRequest().getTrip();
         getTripRealTimeEstimates();
     }
 
     private void getTripRealTimeEstimates() {
         if (isTripSet() && Utils.isNetworkConnected(this)) {
             Intent realTimeIntent = new Intent(TripOverviewActivity.this, RealTimeService.class);
-            realTimeIntent.putExtra(RealTimeService.ORIG, origAbbr)
-                    .putExtra(RealTimeService.HEAD, tripSchedules.get(0).getTripLegs().get(0).getTrainHeadStation());
+            realTimeIntent.putExtra(RealTimeService.ORIG, origAbbr);
             realTimePendingIntent = PendingIntent.getService(this, -1, realTimeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 //            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis(), realTimePendingIntent);
             startService(realTimeIntent);
@@ -367,21 +367,36 @@ public class TripOverviewActivity extends AppCompatActivity
         mTripHeader.setText(origFull + " - " + destFull);
         mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
         setVisibility(View.VISIBLE);
-        tripEstimates = (List<TripEstimate>) intent.getSerializableExtra(RealTimeService.RESULT);
+
+        RealTimePojo result = (RealTimePojo) intent.getSerializableExtra(RealTimeService.RESULT);
+        String trainHeadStation = tripSchedules.get(0).getLeg().get(0).getTrainHeadStation();
+        for (Etd etd : result.getRoot().getStation().get(0).getEtd()) {
+            if (etd.getAbbreviation().equals(trainHeadStation)) {
+                tripEstimates = etd.getEstimate();
+                break;
+            }
+        }
+
         if (tripEstimates != null && !tripEstimates.isEmpty()) {
-            mergeSchedulesAndEstimates();
-            int nextDeparture = estimateNextDeparture(tripEstimates.get(0).getMinutes());
-            updateNextDepartureProgressBar(nextDeparture);
+            Estimate tripOne = tripEstimates.get(0);
+            int nextDeparture = estimateNextDeparture(tripOne.getMinutes(), result.getRoot().getDate(), result.getRoot().getTime());
+            if (nextDeparture != -1) {
+                mergeSchedulesAndEstimates();
+                updateNextDepartureProgressBar(nextDeparture);
+            }
+
             if (nextDeparture == 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
-            else alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimePendingIntent);
+            else if (nextDeparture > 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimePendingIntent);
         } else {
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
             int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+
             String offlineStatus;
             if (dayOfWeek == Calendar.SUNDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "8:00");
             else if (dayOfWeek == Calendar.SATURDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "6:00");
             else offlineStatus = String.format(getResources().getString(R.string.offline_status), "4:00");
+
             RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
             setVisibility(View.GONE);
@@ -398,33 +413,33 @@ public class TripOverviewActivity extends AppCompatActivity
         DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
         Log.d(TAG, "Current Time: " + df.format(now));
         for (int i = 0; i < tripEstimates.size(); i++) {
-            Trip trip = tripSchedules.get(i);
-            Trip.TripLeg tripLeg = trip.getTripLegs().get(0);
+            com.sanderp.bartrider.pojo.quickplanner.Trip trip = tripSchedules.get(i);
+            Leg tripLeg = trip.getLeg().get(0);
             int minUntilDeparture = tripEstimates.get(i).getMinutes();
             Log.d(TAG, "Until Departure: " + minUntilDeparture + " minutes");
             try {
                 Date origDeparture = df.parse(trip.getOrigTimeMin());
                 Date destArrival = df.parse(trip.getDestTimeMin());
                 Date estOrigDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000);
-                long diff = (estOrigDeparture.getTime() - origDeparture.getTime()) / (60 * 1000) % 60;
-                Date estDestArrival = new Date(destArrival.getTime() + diff * 60 * 1000L);
+                long diffMin = (estOrigDeparture.getTime() - origDeparture.getTime()) / (60 * 1000) % 60;
+                Date estDestArrival = new Date(destArrival.getTime() + diffMin * 60 * 1000);
                 Log.d(TAG, "Trip (planned): " + df.format(origDeparture) + " | " + df.format(destArrival));
                 Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
 
                 Date legDeparture = df.parse(tripLeg.getOrigTimeMin());
                 Date legArrival = df.parse(tripLeg.getDestTimeMin());
                 Date estLegOrigDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000);
-                Date estLegDestArrival = new Date(legArrival.getTime() + diff * 60 * 1000);
+                Date estLegDestArrival = new Date(legArrival.getTime() + diffMin * 60 * 1000);
                 Log.d(TAG, "Trip Leg (planned): " + df.format(legDeparture) + " | " + df.format(legArrival));
                 Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
 
-                Log.d(TAG, "Difference: " + diff + " minutes");
-                if (diff >= 1) {
+                Log.d(TAG, "Difference: " + diffMin + " minutes");
+                if (diffMin >= 1) {
                     Log.d(TAG, "Updating trip and trip leg estimated times...");
-                    trip.setEstOrigDeparture(df.format(estOrigDeparture));
-                    trip.setEstDestArrival(df.format(estDestArrival));
-                    tripLeg.setEstLegOrigDeparture(df.format(estLegOrigDeparture));
-                    tripLeg.setEstLegDestArrival(df.format(estLegDestArrival));
+                    trip.setEtdOrig(df.format(estOrigDeparture));
+                    trip.setEtaDest(df.format(estDestArrival));
+                    tripLeg.setEtdLegOrig(df.format(estLegOrigDeparture));
+                    tripLeg.setEtaLegDest(df.format(estLegDestArrival));
                 }
             } catch (ParseException e) {
                 Log.e(TAG, "Invalid date was entered.");
@@ -432,28 +447,38 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private int estimateNextDeparture(int minutes) {
-        if (minutes == 0) return 0;
+    private int estimateNextDeparture(int minutes, String date, String time) {
+        String dateAndTime = date + " " + time;
+        int seconds = 0;
+        try {
+            DateFormat df = new SimpleDateFormat("MM/dd/yyyy h:mm:ss a z", Locale.US);
+            Date currUpdateTime = df.parse(dateAndTime);
+            Date prevUpdateTime = df.parse(sharedPrefs.getString(PrefContract.PREV_UPDATE, "01/01/2017 0:00:00 AM PDT"));
+            long diffSec = (currUpdateTime.getTime() - prevUpdateTime.getTime()) / 1000;
+            int prevMinutes = sharedPrefs.getInt(PrefContract.PREV_MINUTES, -1);
+            Log.d(TAG, df.format(currUpdateTime) + " | " + df.format(prevUpdateTime) + " : " + diffSec);
+            Log.d(TAG, minutes + " | " + prevMinutes);
+            if (diffSec == 0) {
+                Log.d(TAG, "API has not updated since last query...");
+                seconds = -1;
+            } else if (diffSec > 120 * 1000) {
+                Log.d(TAG, "Haven't updated in a while...");
+                seconds = (minutes * 60) - 30;
+            } else {
+                Log.d(TAG, "Updated recently so let's do math...");
+                seconds = (int) ((minutes * 60) - diffSec);
+            }
+        } catch (ParseException e) {
+            Log.e(TAG, "Invalid date was entered.");
+        }
 
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        if (sharedPrefs.getBoolean(PrefContract.FIRST_QUERY, true)) {
-            Log.d(TAG, "First query since opening application...");
-            editor.putBoolean(PrefContract.FIRST_QUERY, false)
-                    .putInt(PrefContract.ESTIMATE, minutes)
-                    .putInt(PrefContract.ESTIMATE_COUNT, 1)
-                    .apply();
-            return (minutes * 60) - 30;
-        } else {
-            Log.d(TAG, "Doing time math...");
-            int prevMinutes = sharedPrefs.getInt(PrefContract.ESTIMATE, -1);
-            int count = ((minutes == prevMinutes) ? sharedPrefs.getInt(PrefContract.ESTIMATE_COUNT, -1) : 0);
-            editor.putInt(PrefContract.ESTIMATE, minutes)
-                    .putInt(PrefContract.ESTIMATE_COUNT, count + 1)
-                    .apply();
+        editor.putInt(PrefContract.PREV_MINUTES, minutes)
+                .putString(PrefContract.PREV_UPDATE, dateAndTime)
+                .apply();
 
-            if (count < 4) return (minutes * 60) - (count * 15);
-            else return (minutes * 60) - 45;
-        }
+        Log.d(TAG, "Seconds: " + seconds);
+        return seconds;
     }
 
     private void updateNextDepartureProgressBar(int seconds) {

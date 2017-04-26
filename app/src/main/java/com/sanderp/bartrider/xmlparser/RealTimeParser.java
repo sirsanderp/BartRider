@@ -16,10 +16,13 @@ import java.util.List;
 /**
  * Returns the Estimated Time of Departure (ETD) for the specified station.
  */
+@Deprecated
 public class RealTimeParser {
     private static final String TAG = "RealTimeParser";
 
     // Important XML field names
+    private static final String DATE = "date";
+    private static final String TIME = "time";
     private static final String STATION = "station";
     private static final String ESTIMATE_TIME_TO_DEPARTURE = "etd";
     private static final String ABBREVIATION = "abbreviation";
@@ -29,6 +32,8 @@ public class RealTimeParser {
     private static final String ns = null;
 
     // Other variables
+    private static String updateDate;
+    private static String updateTime;
     private static String trainHeadStation;
 
     public List<TripEstimate> parse(InputStream in, String trainHeadStation) throws XmlPullParserException, IOException {
@@ -41,7 +46,15 @@ public class RealTimeParser {
 
             while (parser.next() != XmlPullParser.END_DOCUMENT) {
                 if (parser.getEventType() != XmlPullParser.START_TAG) continue;
-                if (parser.getName().equals(STATION)) break;
+                if (parser.getName().equals(DATE)) {
+                    parser.next();
+                    updateDate = parser.getText();
+                }
+                else if (parser.getName().equals(TIME)) {
+                    parser.next();
+                    updateTime = parser.getText();
+                }
+                else if (parser.getName().equals(STATION)) break;
             }
             return readAPI(parser);
         } finally {
@@ -97,6 +110,8 @@ public class RealTimeParser {
 
     private TripEstimate readEstimate(XmlPullParser parser) throws XmlPullParserException, IOException {
         TripEstimate estimate = new TripEstimate();
+        estimate.setDate(updateDate);
+        estimate.setTime(updateTime);
 
         Log.i(TAG, "Parsing <estimate> tag...");
         parser.require(XmlPullParser.START_TAG, ns, ESTIMATE);
