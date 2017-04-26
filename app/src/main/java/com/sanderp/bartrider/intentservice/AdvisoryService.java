@@ -84,14 +84,12 @@ public class AdvisoryService extends IntentService {
         String defaultAdvisory = getResources().getString(R.string.default_advisory);
         String prevAdvisory = sharedPrefs.getString(PrefContract.PREV_ADVISORY, defaultAdvisory);
         Log.d(TAG, advisory + " | " + prevAdvisory);
-        if (!advisory.equals(prevAdvisory)) {
-            String alertText = advisory;
-            if (advisory.equals(defaultAdvisory)) alertText = "Delays have ended. Trains are running as scheduled.";
+        if (!advisory.equals(prevAdvisory) && !advisory.equals(defaultAdvisory)) {
             Notification notification = new NotificationCompat.Builder(this)
                     .setContentTitle("BART Advisory")
-                    .setContentText(alertText)
+                    .setContentText(advisory)
                     .setSmallIcon(R.drawable.ic_bart_rider_24dp)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(alertText))
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(advisory))
                     .build();
             mNotificationManager.notify(NOTIFICATION_ID, notification);
             sharedPrefs.edit().putString(PrefContract.PREV_ADVISORY, advisory).apply();

@@ -1,6 +1,5 @@
 package com.sanderp.bartrider.utility;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
