@@ -8,16 +8,18 @@ import android.content.SharedPreferences;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sanderp.bartrider.R;
+import com.sanderp.bartrider.pojo.advisory.AdvisoryPojo;
+import com.sanderp.bartrider.pojo.advisory.Bsa;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.PrefContract;
 import com.sanderp.bartrider.utility.Utils;
-import com.sanderp.bartrider.xmlparser.AdvisoryParser;
-
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -47,24 +49,27 @@ public class AdvisoryService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             try {
-                String result = advisoryText(getAdvisories());
+                String result = advisoryText(getAdvisories().getRoot().getBsa());
                 postAdvisoryNotification(result);
-            } catch (XmlPullParserException e) {
-                Log.d(TAG, "Failed to refresh");
             } catch (IOException e) {
-                Log.d(TAG, "XML parser failed");
+                Log.d(TAG, "Input stream failed.");
+                e.printStackTrace();
             }
         }
     }
-
-    private List<String> getAdvisories() throws XmlPullParserException, IOException {
+//Thu Dec 31 2037 11:59 PM PST
+    private AdvisoryPojo getAdvisories() throws IOException {
         InputStream stream = null;
-        AdvisoryParser parser = new AdvisoryParser();
-        String url = Constants.Api.URL + "bsa.aspx?cmd=bsa&key=" + Constants.Api.KEY;
+        String url = Constants.Api.URL + "bsa.aspx?cmd=bsa"
+                + "&key=" + Constants.Api.KEY
+                + "&json=y";
         try {
             Log.i(TAG, "Parsing advisories...");
+            ObjectMapper mapper = new ObjectMapper()
+                    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+                    .setDateFormat(new SimpleDateFormat("EEE MMM dd yyyy KK:mm a zzz"));
             stream = Utils.getUrlStream(url);
-            return parser.parse(stream);
+            return mapper.readValue(stream, AdvisoryPojo.class);
         } finally {
             if (stream != null) {
                 stream.close();
@@ -72,10 +77,10 @@ public class AdvisoryService extends IntentService {
         }
     }
 
-    private String advisoryText(List<String> advisories) {
+    private String advisoryText(List<Bsa> advisories) {
         StringBuilder advisory = new StringBuilder();
-        for (String s : advisories) {
-            advisory.append(s + "\n\n");
+        for (Bsa bsa : advisories) {
+            advisory.append(bsa.getDescription().getCdataSection().trim().replaceAll(" +", " ") + "\n\n");
         }
         return advisory.toString().trim();
     }
