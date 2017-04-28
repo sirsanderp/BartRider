@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * Returns the current BART Service Advisories (BSA).
  */
+@Deprecated
 public class AdvisoryParser {
     private static final String TAG = "AdvisoryParser";
 
