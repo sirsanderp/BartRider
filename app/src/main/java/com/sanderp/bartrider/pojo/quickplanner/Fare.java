@@ -17,24 +17,24 @@ class Fare implements Serializable {
     private final static long serialVersionUID = 4593250643945599573L;
 
     @JsonProperty("@amount")
-    private String amount;
+    private float amount;
     @JsonProperty("@class")
-    private String _class;
+    private String fareClass;
 
-    public String getAmount() {
+    public float getAmount() {
         return amount;
     }
 
-    public void setAmount(String amount) {
+    public void setAmount(float amount) {
         this.amount = amount;
     }
 
     public String getClass_() {
-        return _class;
+        return fareClass;
     }
 
     public void setClass_(String _class) {
-        this._class = _class;
+        this.fareClass = _class;
     }
 
     @Override

@@ -28,7 +28,7 @@ public class Root implements Serializable {
     @JsonProperty("destination")
     private String destination;
     @JsonProperty("sched_num")
-    private String schedNum;
+    private int schedNum;
     @JsonProperty("schedule")
     private Schedule schedule;
 
@@ -48,11 +48,11 @@ public class Root implements Serializable {
         this.destination = destination;
     }
 
-    public String getSchedNum() {
+    public int getSchedNum() {
         return schedNum;
     }
 
-    public void setSchedNum(String schedNum) {
+    public void setSchedNum(int schedNum) {
         this.schedNum = schedNum;
     }
 

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.sanderp.bartrider.pojo.TimeToLongDeserializer;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
@@ -30,7 +32,7 @@ public class Leg implements Serializable {
     private final static long serialVersionUID = 4533555934408239702L;
 
     @JsonProperty("@order")
-    private String order;
+    private int order;
     @JsonProperty("@transfercode")
     private String transfercode;
     @JsonProperty("@origin")
@@ -38,36 +40,38 @@ public class Leg implements Serializable {
     @JsonProperty("@destination")
     private String destination;
     @JsonProperty("@origTimeMin")
-    private String origTimeMin;
+    @JsonDeserialize(using = TimeToLongDeserializer.class)
+    private long origTimeMin;
     @JsonProperty("@origTimeDate")
     private String origTimeDate;
     @JsonProperty("@destTimeMin")
-    private String destTimeMin;
+    @JsonDeserialize(using = TimeToLongDeserializer.class)
+    private long destTimeMin;
     @JsonProperty("@destTimeDate")
     private String destTimeDate;
     @JsonProperty("@line")
     private String line;
     @JsonProperty("@bikeflag")
-    private String bikeflag;
+    private int bikeflag;
     @JsonProperty("@trainHeadStation")
     private String trainHeadStation;
     @JsonProperty("@load")
-    private String load;
+    private int load;
     @JsonProperty("@trainId")
-    private String trainId;
+    private long trainId;
     @JsonProperty("@trainIdx")
-    private String trainIdx;
+    private int trainIdx;
 
     @JsonIgnore
-    private String etdLegOrig;
+    private long etdOrigTimeMin;
     @JsonIgnore
-    private String etaLegDest;
+    private long etdDestTimeMin;
 
-    public String getOrder() {
+    public int getOrder() {
         return order;
     }
 
-    public void setOrder(String order) {
+    public void setOrder(int order) {
         this.order = order;
     }
 
@@ -95,12 +99,13 @@ public class Leg implements Serializable {
         this.destination = destination;
     }
 
-    public String getOrigTimeMin() {
+    public long getOrigTimeMin() {
         return origTimeMin;
     }
 
-    public void setOrigTimeMin(String origTimeMin) {
+    public void setOrigTimeMin(long origTimeMin) {
         this.origTimeMin = origTimeMin;
+        setEtdOrigTimeMin(origTimeMin);
     }
 
     public String getOrigTimeDate() {
@@ -111,12 +116,13 @@ public class Leg implements Serializable {
         this.origTimeDate = origTimeDate;
     }
 
-    public String getDestTimeMin() {
+    public long getDestTimeMin() {
         return destTimeMin;
     }
 
-    public void setDestTimeMin(String destTimeMin) {
+    public void setDestTimeMin(long destTimeMin) {
         this.destTimeMin = destTimeMin;
+        setEtdDestTimeMin(destTimeMin);
     }
 
     public String getDestTimeDate() {
@@ -135,11 +141,11 @@ public class Leg implements Serializable {
         this.line = line;
     }
 
-    public String getBikeflag() {
+    public int getBikeflag() {
         return bikeflag;
     }
 
-    public void setBikeflag(String bikeflag) {
+    public void setBikeflag(int bikeflag) {
         this.bikeflag = bikeflag;
     }
 
@@ -151,44 +157,44 @@ public class Leg implements Serializable {
         this.trainHeadStation = trainHeadStation;
     }
 
-    public String getLoad() {
+    public int getLoad() {
         return load;
     }
 
-    public void setLoad(String load) {
+    public void setLoad(int load) {
         this.load = load;
     }
 
-    public String getTrainId() {
+    public long getTrainId() {
         return trainId;
     }
 
-    public void setTrainId(String trainId) {
+    public void setTrainId(long trainId) {
         this.trainId = trainId;
     }
 
-    public String getTrainIdx() {
+    public int getTrainIdx() {
         return trainIdx;
     }
 
-    public void setTrainIdx(String trainIdx) {
+    public void setTrainIdx(int trainIdx) {
         this.trainIdx = trainIdx;
     }
 
-    public String getEtdLegOrig() {
-        return etdLegOrig;
+    public long getEtdOrigTimeMin() {
+        return etdOrigTimeMin;
     }
 
-    public void setEtdLegOrig(String etdLegOrig) {
-        this.etdLegOrig = etdLegOrig;
+    public void setEtdOrigTimeMin(long etdOrigTimeMin) {
+        this.etdOrigTimeMin = etdOrigTimeMin;
     }
 
-    public String getEtaLegDest() {
-        return etaLegDest;
+    public long getEtdDestTimeMin() {
+        return etdDestTimeMin;
     }
 
-    public void setEtaLegDest(String etaLegDest) {
-        this.etaLegDest = etaLegDest;
+    public void setEtdDestTimeMin(long etdDestTimeMin) {
+        this.etdDestTimeMin = etdDestTimeMin;
     }
 
     @Override

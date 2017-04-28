@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.sanderp.bartrider.pojo.TimeToLongDeserializer;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
@@ -33,30 +35,32 @@ public class Trip implements Serializable {
     @JsonProperty("@destination")
     private String destination;
     @JsonProperty("@fare")
-    private String fare;
+    private float fare;
     @JsonProperty("@origTimeMin")
-    private String origTimeMin;
+    @JsonDeserialize(using = TimeToLongDeserializer.class)
+    private long origTimeMin;
     @JsonProperty("@origTimeDate")
     private String origTimeDate;
     @JsonProperty("@destTimeMin")
-    private String destTimeMin;
+    @JsonDeserialize(using = TimeToLongDeserializer.class)
+    private long destTimeMin;
     @JsonProperty("@destTimeDate")
     private String destTimeDate;
     @JsonProperty("@clipper")
-    private String clipper;
+    private float clipper;
     @JsonProperty("@tripTime")
-    private String tripTime;
+    private int tripTime;
     @JsonProperty("@co2")
-    private String co2;
+    private float co2;
     @JsonProperty("fares")
     private Fares fares;
     @JsonProperty("leg")
     private List<Leg> leg = null;
 
     @JsonIgnore
-    private String etdOrig;
+    private long etdOrigTimeMin;
     @JsonIgnore
-    private String etaDest;
+    private long etdDestTimeMin;
 
     public String getOrigin() {
         return origin;
@@ -74,20 +78,21 @@ public class Trip implements Serializable {
         this.destination = destination;
     }
 
-    public String getFare() {
+    public float getFare() {
         return fare;
     }
 
-    public void setFare(String fare) {
+    public void setFare(float fare) {
         this.fare = fare;
     }
 
-    public String getOrigTimeMin() {
+    public long getOrigTimeMin() {
         return origTimeMin;
     }
 
-    public void setOrigTimeMin(String origTimeMin) {
+    public void setOrigTimeMin(long origTimeMin) {
         this.origTimeMin = origTimeMin;
+        setEtdOrigTimeMin(origTimeMin);
     }
 
     public String getOrigTimeDate() {
@@ -98,12 +103,13 @@ public class Trip implements Serializable {
         this.origTimeDate = origTimeDate;
     }
 
-    public String getDestTimeMin() {
+    public long getDestTimeMin() {
         return destTimeMin;
     }
 
-    public void setDestTimeMin(String destTimeMin) {
+    public void setDestTimeMin(long destTimeMin) {
         this.destTimeMin = destTimeMin;
+        setEtdDestTimeMin(destTimeMin);
     }
 
     public String getDestTimeDate() {
@@ -114,27 +120,27 @@ public class Trip implements Serializable {
         this.destTimeDate = destTimeDate;
     }
 
-    public String getClipper() {
+    public float getClipper() {
         return clipper;
     }
 
-    public void setClipper(String clipper) {
+    public void setClipper(float clipper) {
         this.clipper = clipper;
     }
 
-    public String getTripTime() {
+    public int getTripTime() {
         return tripTime;
     }
 
-    public void setTripTime(String tripTime) {
+    public void setTripTime(int tripTime) {
         this.tripTime = tripTime;
     }
 
-    public String getCo2() {
+    public float getCo2() {
         return co2;
     }
 
-    public void setCo2(String co2) {
+    public void setCo2(float co2) {
         this.co2 = co2;
     }
 
@@ -154,20 +160,20 @@ public class Trip implements Serializable {
         this.leg = leg;
     }
 
-    public String getEtdOrig() {
-        return etdOrig;
+    public long getEtdOrigTimeMin() {
+        return etdOrigTimeMin;
     }
 
-    public void setEtdOrig(String etdOrig) {
-        this.etdOrig = etdOrig;
+    public void setEtdOrigTimeMin(long etdOrigTimeMin) {
+        this.etdOrigTimeMin = etdOrigTimeMin;
     }
 
-    public String getEtaDest() {
-        return etaDest;
+    public long getEtdDestTimeMin() {
+        return etdDestTimeMin;
     }
 
-    public void setEtaDest(String etaDest) {
-        this.etaDest = etaDest;
+    public void setEtdDestTimeMin(long etdDestTimeMin) {
+        this.etdDestTimeMin = etdDestTimeMin;
     }
 
     @Override

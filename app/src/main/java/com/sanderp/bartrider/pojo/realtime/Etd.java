@@ -24,7 +24,7 @@ public class Etd implements Serializable {
     @JsonProperty("abbreviation")
     private String abbreviation;
     @JsonProperty("limited")
-    private String limited;
+    private int limited;
     @JsonProperty("estimate")
     private List<Estimate> estimate = null;
 
@@ -44,11 +44,11 @@ public class Etd implements Serializable {
         this.abbreviation = abbreviation;
     }
 
-    public String getLimited() {
+    public int getLimited() {
         return limited;
     }
 
-    public void setLimited(String limited) {
+    public void setLimited(int limited) {
         this.limited = limited;
     }
 

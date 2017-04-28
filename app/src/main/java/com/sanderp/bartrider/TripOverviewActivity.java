@@ -158,7 +158,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mTripSchedules.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                com.sanderp.bartrider.pojo.quickplanner.Trip selectedTrip = tripSchedules.get(position);
+                Trip selectedTrip = tripSchedules.get(position);
                 Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class)
                         .putExtra(TripDetailActivity.ORIG, origFull)
                         .putExtra(TripDetailActivity.DEST, destFull)
@@ -196,7 +196,7 @@ public class TripOverviewActivity extends AppCompatActivity
         });
 
         if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
-            Log.i(TAG, "Retrieving last trip information...");
+            Log.i(TAG, "onCreate(): Retrieving last trip information...");
             setTrip(
                     sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_ORIG_FULL, null),
@@ -212,9 +212,8 @@ public class TripOverviewActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-
         if (isTripSet()) {
-            Log.i(TAG, "Saving last trip information...");
+            Log.i(TAG, "onPause(): Saving last trip information...");
             SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.putBoolean(PrefContract.LAST_TRIP, true)
                     .putInt(PrefContract.LAST_ID, favoriteTrip)
@@ -230,6 +229,7 @@ public class TripOverviewActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         if (isTripSet()) {
+            Log.i(TAG, "onResume(): Refreshing trip schedules...");
             getTripSchedules();
             setAdvisory();
         }
@@ -244,24 +244,16 @@ public class TripOverviewActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
-
-        Log.d(TAG, "Cancelling all alarms.");
+        Log.d(TAG, "onStop(): Cancelling all alarms...");
         alarmManager.cancel(quickPlannerPendingIntent);
         alarmManager.cancel(realTimePendingIntent);
-//        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-//        Log.d(TAG, "Cancelling the realTimePendingIntent alarm.");
-//        alarmManager.cancel(realTimePendingIntent);
-//        LocalBroadcastManager.getInstance(this).unregisterReceiver(realTimeReceiver);
-//
-//        Log.d(TAG, "Resetting first query parameter since app is stopping...");
-//        SharedPreferences.Editor editor = sharedPrefs.edit();
-//        editor.putBoolean(PrefContract.FIRST_QUERY, true).apply();
+        Log.d(TAG, "onDestory()");
     }
 
     @Override
@@ -324,6 +316,7 @@ public class TripOverviewActivity extends AppCompatActivity
             this.origFull = origFull;
             this.destAbbr = destAbbr;
             this.destFull = destFull;
+            mTripHeader.setText(origFull + " - " + destFull);
         }
     }
 
@@ -364,16 +357,14 @@ public class TripOverviewActivity extends AppCompatActivity
 
     public void onReceiveTripRealTimeEstimates(Intent intent) {
         Log.d(TAG, "onReceiveTripRealTimeEstimates(): Received callback from broadcast.");
-        mTripHeader.setText(origFull + " - " + destFull);
-        mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
-        setVisibility(View.VISIBLE);
-
         RealTimePojo result = (RealTimePojo) intent.getSerializableExtra(RealTimeService.RESULT);
-        String trainHeadStation = tripSchedules.get(0).getLeg().get(0).getTrainHeadStation();
-        for (Etd etd : result.getRoot().getStation().get(0).getEtd()) {
-            if (etd.getAbbreviation().equals(trainHeadStation)) {
-                tripEstimates = etd.getEstimate();
-                break;
+        if (result != null) {
+            String trainHeadStation = tripSchedules.get(0).getLeg().get(0).getTrainHeadStation();
+            for (Etd etd : result.getRoot().getStation().get(0).getEtd()) {
+                if (etd.getAbbreviation().equals(trainHeadStation)) {
+                    tripEstimates = etd.getEstimate();
+                    break;
+                }
             }
         }
 
@@ -384,9 +375,11 @@ public class TripOverviewActivity extends AppCompatActivity
                 mergeSchedulesAndEstimates();
                 updateNextDepartureProgressBar(nextDeparture);
             }
+            mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
+            setVisibility(View.VISIBLE);
 
-            if (nextDeparture == 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
-            else if (nextDeparture > 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimePendingIntent);
+            if (nextDeparture <= 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
+            else alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimePendingIntent);
         } else {
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
@@ -400,6 +393,7 @@ public class TripOverviewActivity extends AppCompatActivity
             RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
             setVisibility(View.GONE);
+            mTripHeader.setVisibility(View.VISIBLE);
             mTripSchedules.setVisibility(View.GONE);
             mNextDeparture.setLayoutParams(layout);
             mNextDeparture.setText(offlineStatus);
@@ -409,40 +403,32 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void mergeSchedulesAndEstimates() {
-        Date now = new Date();
         DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
+        long now = new Date().getTime();
         Log.d(TAG, "Current Time: " + df.format(now));
         for (int i = 0; i < tripEstimates.size(); i++) {
-            com.sanderp.bartrider.pojo.quickplanner.Trip trip = tripSchedules.get(i);
+            Trip trip = tripSchedules.get(i);
             Leg tripLeg = trip.getLeg().get(0);
-            int minUntilDeparture = tripEstimates.get(i).getMinutes();
-            Log.d(TAG, "Until Departure: " + minUntilDeparture + " minutes");
-            try {
-                Date origDeparture = df.parse(trip.getOrigTimeMin());
-                Date destArrival = df.parse(trip.getDestTimeMin());
-                Date estOrigDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000);
-                long diffMin = (estOrigDeparture.getTime() - origDeparture.getTime()) / (60 * 1000) % 60;
-                Date estDestArrival = new Date(destArrival.getTime() + diffMin * 60 * 1000);
-                Log.d(TAG, "Trip (planned): " + df.format(origDeparture) + " | " + df.format(destArrival));
-                Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
+            int etdMinutes = tripEstimates.get(i).getMinutes();
+            Log.d(TAG, "Until Departure: " + etdMinutes + " minutes");
+            long estOrigDeparture = now + (etdMinutes * 60 * 1000);
+            long diffMinutes = ((estOrigDeparture - trip.getOrigTimeMin()) / (60 * 1000)) % 60;
+            long estDestArrival = trip.getDestTimeMin() + (diffMinutes * 60 * 1000);
+            Log.d(TAG, "Trip (planned): " + df.format(trip.getOrigTimeMin()) + " | " + df.format(trip.getDestTimeMin()));
+            Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
 
-                Date legDeparture = df.parse(tripLeg.getOrigTimeMin());
-                Date legArrival = df.parse(tripLeg.getDestTimeMin());
-                Date estLegOrigDeparture = new Date(now.getTime() + minUntilDeparture * 60 * 1000);
-                Date estLegDestArrival = new Date(legArrival.getTime() + diffMin * 60 * 1000);
-                Log.d(TAG, "Trip Leg (planned): " + df.format(legDeparture) + " | " + df.format(legArrival));
-                Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
+            long estLegOrigDeparture = now + (etdMinutes * 60 * 1000);
+            long estLegDestArrival = tripLeg.getDestTimeMin() + (diffMinutes * 60 * 1000);
+            Log.d(TAG, "Trip Leg (planned): " + df.format(tripLeg.getOrigTimeMin()) + " | " + df.format(tripLeg.getDestTimeMin()));
+            Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
 
-                Log.d(TAG, "Difference: " + diffMin + " minutes");
-                if (diffMin >= 1) {
-                    Log.d(TAG, "Updating trip and trip leg estimated times...");
-                    trip.setEtdOrig(df.format(estOrigDeparture));
-                    trip.setEtaDest(df.format(estDestArrival));
-                    tripLeg.setEtdLegOrig(df.format(estLegOrigDeparture));
-                    tripLeg.setEtaLegDest(df.format(estLegDestArrival));
-                }
-            } catch (ParseException e) {
-                Log.e(TAG, "Invalid date was entered.");
+            Log.d(TAG, "Difference: " + diffMinutes + " minutes");
+            if (diffMinutes >= 1) {
+                Log.d(TAG, "Updating trip and trip leg estimated times...");
+                trip.setEtdOrigTimeMin(estOrigDeparture);
+                trip.setEtdDestTimeMin(estDestArrival);
+                tripLeg.setEtdOrigTimeMin(estLegOrigDeparture);
+                tripLeg.setEtdDestTimeMin(estLegDestArrival);
             }
         }
     }
@@ -454,19 +440,19 @@ public class TripOverviewActivity extends AppCompatActivity
             DateFormat df = new SimpleDateFormat("MM/dd/yyyy h:mm:ss a z", Locale.US);
             Date currUpdateTime = df.parse(dateAndTime);
             Date prevUpdateTime = df.parse(sharedPrefs.getString(PrefContract.PREV_UPDATE, "01/01/2017 0:00:00 AM PDT"));
-            long diffSec = (currUpdateTime.getTime() - prevUpdateTime.getTime()) / 1000;
+            long diffSeconds = (currUpdateTime.getTime() - prevUpdateTime.getTime()) / 1000;
             int prevMinutes = sharedPrefs.getInt(PrefContract.PREV_MINUTES, -1);
-            Log.d(TAG, df.format(currUpdateTime) + " | " + df.format(prevUpdateTime) + " : " + diffSec);
+            Log.d(TAG, df.format(currUpdateTime) + " | " + df.format(prevUpdateTime) + " : " + diffSeconds);
             Log.d(TAG, minutes + " | " + prevMinutes);
-            if (diffSec == 0) {
+            if (diffSeconds == 0) {
                 Log.d(TAG, "API has not updated since last query...");
                 seconds = -1;
-            } else if (diffSec > 120 * 1000) {
+            } else if (diffSeconds > 120 * 1000) {
                 Log.d(TAG, "Haven't updated in a while...");
                 seconds = (minutes * 60) - 30;
             } else {
                 Log.d(TAG, "Updated recently so let's do math...");
-                seconds = (int) ((minutes * 60) - diffSec);
+                seconds = (int) ((minutes * 60) - diffSeconds);
             }
         } catch (ParseException e) {
             Log.e(TAG, "Invalid date was entered.");
@@ -542,13 +528,11 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private boolean isTripSame(String orig, String dest) {
-        if (isTripSet() && orig.equals(origAbbr) && dest.equals(destAbbr)) return true;
-        return false;
+        return isTripSet() && orig.equals(origAbbr) && dest.equals(destAbbr);
     }
 
     private boolean isTripSet() {
-        if (origAbbr == null || destAbbr == null) return false;
-        return true;
+        return !(origAbbr == null || destAbbr == null);
     }
 
     private boolean isValidTrip(String orig, String dest) {

@@ -10,7 +10,9 @@ import android.widget.TextView;
 import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.pojo.quickplanner.Leg;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Sander Peerna on 11/16/2016.
@@ -18,6 +20,8 @@ import java.util.List;
 
 public class TripLegAdapter extends BaseAdapter {
     private static final String TAG = "TripLegAdapter";
+
+    private static final SimpleDateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
 
     private Context mContext;
     private LayoutInflater mInflater;
@@ -55,8 +59,8 @@ public class TripLegAdapter extends BaseAdapter {
         Leg tripLeg = (Leg) getItem(position);
         mOrigName.setText(tripLeg.getOrigin());
         mDestName.setText(tripLeg.getDestination());
-        mOrigTime.setText(tripLeg.getEtdLegOrig());
-        mDestTime.setText(tripLeg.getEtaLegDest());
+        mOrigTime.setText(df.format(tripLeg.getEtdOrigTimeMin()));
+        mDestTime.setText(df.format(tripLeg.getEtdDestTimeMin()));
 
         return rowView;
     }

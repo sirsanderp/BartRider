@@ -10,14 +10,17 @@ import android.widget.TextView;
 import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.pojo.quickplanner.Trip;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Sander Peerna on 11/3/2016.
  */
-
 public class TripAdapter extends BaseAdapter {
     private static final String TAG = "TripAdapter";
+
+    private static final SimpleDateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
 
     private Context mContext;
     private LayoutInflater mInflater;
@@ -51,10 +54,10 @@ public class TripAdapter extends BaseAdapter {
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_dest_time);
         TextView mFare = (TextView) rowView.findViewById(R.id.trip_fare);
 
-        com.sanderp.bartrider.pojo.quickplanner.Trip trip = (com.sanderp.bartrider.pojo.quickplanner.Trip) getItem(position);
-        mOrigTime.setText(trip.getOrigTimeMin());
-        mDestTime.setText(trip.getDestTimeMin());
-        mFare.setText("$" + trip.getFare());
+        Trip trip = (com.sanderp.bartrider.pojo.quickplanner.Trip) getItem(position);
+        mOrigTime.setText(df.format(trip.getEtdOrigTimeMin()));
+        mDestTime.setText(df.format(trip.getEtdDestTimeMin()));
+        mFare.setText(String.format("$%.2f", trip.getFare()));
 
         return rowView;
     }

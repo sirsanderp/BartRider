@@ -24,9 +24,9 @@ public class Schedule implements Serializable {
     @JsonProperty("time")
     private String time;
     @JsonProperty("before")
-    private String before;
+    private int before;
     @JsonProperty("after")
-    private String after;
+    private int after;
     @JsonProperty("request")
     private Request request;
 
@@ -46,19 +46,19 @@ public class Schedule implements Serializable {
         this.time = time;
     }
 
-    public String getBefore() {
+    public int getBefore() {
         return before;
     }
 
-    public void setBefore(String before) {
+    public void setBefore(int before) {
         this.before = before;
     }
 
-    public String getAfter() {
+    public int getAfter() {
         return after;
     }
 
-    public void setAfter(String after) {
+    public void setAfter(int after) {
         this.after = after;
     }
 

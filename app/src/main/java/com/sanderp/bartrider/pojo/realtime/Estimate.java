@@ -24,17 +24,17 @@ public class Estimate implements Serializable {
     @JsonProperty("minutes")
     private int minutes;
     @JsonProperty("platform")
-    private String platform;
+    private int platform;
     @JsonProperty("direction")
     private String direction;
     @JsonProperty("length")
-    private String length;
+    private int length;
     @JsonProperty("color")
     private String color;
     @JsonProperty("hexcolor")
     private String hexcolor;
     @JsonProperty("bikeflag")
-    private String bikeflag;
+    private int bikeflag;
 
     public int getMinutes() {
         return minutes;
@@ -45,11 +45,11 @@ public class Estimate implements Serializable {
         else this.minutes = Integer.parseInt(minutes);
     }
 
-    public String getPlatform() {
+    public int getPlatform() {
         return platform;
     }
 
-    public void setPlatform(String platform) {
+    public void setPlatform(int platform) {
         this.platform = platform;
     }
 
@@ -61,11 +61,11 @@ public class Estimate implements Serializable {
         this.direction = direction;
     }
 
-    public String getLength() {
+    public int getLength() {
         return length;
     }
 
-    public void setLength(String length) {
+    public void setLength(int length) {
         this.length = length;
     }
 
@@ -85,11 +85,11 @@ public class Estimate implements Serializable {
         this.hexcolor = hexcolor;
     }
 
-    public String getBikeflag() {
+    public int getBikeflag() {
         return bikeflag;
     }
 
-    public void setBikeflag(String bikeflag) {
+    public void setBikeflag(int bikeflag) {
         this.bikeflag = bikeflag;
     }
 

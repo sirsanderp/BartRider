@@ -46,7 +46,7 @@ public class TripDetailActivity extends AppCompatActivity {
         Trip trip = (Trip) data.getSerializableExtra(TRIP);
         mOrig.setText(data.getStringExtra(ORIG));
         mDest.setText(data.getStringExtra(DEST));
-        mCo2.setText("CO2 Saved: " + trip.getCo2());
+        mCo2.setText(String.format(getResources().getString(R.string.co2_saved), trip.getCo2()));
 
         TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getLeg());
         mListView.setAdapter(adapter);
