@@ -6,17 +6,18 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sanderp.bartrider.database.BartRiderContract;
-import com.sanderp.bartrider.structure.Station;
+import com.sanderp.bartrider.pojo.stationlist.Station;
+import com.sanderp.bartrider.pojo.stationlist.StationListPojo;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
-import com.sanderp.bartrider.xmlparser.StationListParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 /**
  * Implementation of the AsyncTask to download station data from the BART Station Api.
@@ -26,7 +27,6 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
 
     private AsyncTaskResponse delegate;
     private Context context;
-    private List<Station> stations;
 
     public StationListAsyncTask(AsyncTaskResponse delegate, Context context) {
         this.context = context;
@@ -38,9 +38,8 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
         try {
             getStations();
         } catch (IOException e) {
-            Log.e(TAG, "Failed to refresh.");
-        } catch (XmlPullParserException e) {
-            Log.e(TAG, "XML parser failed.");
+            Log.d(TAG, "Input stream failed.");
+            e.printStackTrace();
         }
         return null;
     }
@@ -50,24 +49,26 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
         delegate.processFinish(result);
     }
 
-    private void getStations() throws XmlPullParserException, IOException {
+    private void getStations() throws IOException {
         InputStream stream = null;
-        StationListParser stationList = new StationListParser();
         String url = Constants.Api.URL + "stn.aspx?cmd=stns"
-                + "&key=" + Constants.Api.KEY;
+                + "&key=" + Constants.Api.KEY
+                + "&json=y";
         try {
-            Log.i(TAG, "Parsing stations...");
+            Log.i(TAG, "Parsing station lists...");
+            ObjectMapper mapper = new ObjectMapper()
+                    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
             stream = Utils.getUrlStream(url);
-            stations = stationList.parse(stream);
+            StationListPojo stationList = mapper.readValue(stream, StationListPojo.class);
 
             ContentValues values = new ContentValues();
-            for (Station station : stations) {
+            for (Station station : stationList.getRoot().getStations().getStation()) {
                 values.clear();
                 values.put(BartRiderContract.Stations.Column.ID, station.getId());
                 values.put(BartRiderContract.Stations.Column.NAME, station.getName());
                 values.put(BartRiderContract.Stations.Column.ABBREVIATION, station.getAbbr());
-                values.put(BartRiderContract.Stations.Column.LATITUDE, station.getLatitude());
-                values.put(BartRiderContract.Stations.Column.LONGITUDE, station.getLongitude());
+                values.put(BartRiderContract.Stations.Column.LATITUDE, station.getGtfsLatitude());
+                values.put(BartRiderContract.Stations.Column.LONGITUDE, station.getGtfsLongitude());
                 values.put(BartRiderContract.Stations.Column.ADDRESS, station.getAddress());
                 values.put(BartRiderContract.Stations.Column.CITY, station.getCity());
                 values.put(BartRiderContract.Stations.Column.COUNTY, station.getCounty());

@@ -2,6 +2,7 @@ package com.sanderp.bartrider.structure;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Deprecated
 public class Station {
     static AtomicInteger nextId = new AtomicInteger();
     private final int id;

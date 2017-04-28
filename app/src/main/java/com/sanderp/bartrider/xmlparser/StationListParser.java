@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * Returns a list of all BART stations.
  */
+@Deprecated
 public class StationListParser {
     private static final String TAG = "StationListParser";
 
