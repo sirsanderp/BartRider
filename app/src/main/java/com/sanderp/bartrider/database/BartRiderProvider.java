@@ -33,7 +33,7 @@ public class BartRiderProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mStationDbHelper = new BartRiderDbHelper(getContext());
+        mStationDbHelper = BartRiderDbHelper.getInstance(getContext());
         return (mStationDbHelper == null) ? false : true;
     }
 

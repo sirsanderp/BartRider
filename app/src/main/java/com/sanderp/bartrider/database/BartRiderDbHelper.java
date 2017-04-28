@@ -11,8 +11,17 @@ import android.util.Log;
 public class BartRiderDbHelper extends SQLiteOpenHelper {
     private static final String TAG = "BartRiderDbHelper";
 
-    public BartRiderDbHelper(Context context) {
+    private static BartRiderDbHelper mInstance = null;
+
+    private BartRiderDbHelper(Context context) {
         super(context, BartRiderContract.DB_NAME, null, BartRiderContract.DB_VERSION);
+    }
+
+    public static BartRiderDbHelper getInstance(Context context) {
+        if (mInstance == null) {
+            mInstance = new BartRiderDbHelper(context);
+        }
+        return mInstance;
     }
 
     @Override
