@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -33,6 +34,13 @@ public class AdvisoryService extends IntentService {
 
     private NotificationManager mNotificationManager;
     private SharedPreferences sharedPrefs;
+
+    private static final ObjectMapper mapper;
+    static {
+        mapper = new ObjectMapper()
+                .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+                .setDateFormat(new SimpleDateFormat("EEE MMM dd yyyy KK:mm a zzz", Locale.US));
+    }
 
     public AdvisoryService() {
         super(TAG);
@@ -57,17 +65,15 @@ public class AdvisoryService extends IntentService {
             }
         }
     }
-//Thu Dec 31 2037 11:59 PM PST
+
     private AdvisoryPojo getAdvisories() throws IOException {
         InputStream stream = null;
         String url = Constants.Api.URL + "bsa.aspx?cmd=bsa"
                 + "&key=" + Constants.Api.KEY
                 + "&json=y";
         try {
-            Log.i(TAG, "Parsing advisories...");
-            ObjectMapper mapper = new ObjectMapper()
-                    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
-                    .setDateFormat(new SimpleDateFormat("EEE MMM dd yyyy KK:mm a zzz"));
+            Log.i(TAG, "Getting advisories...");
+            Log.d(TAG, mapper.toString());
             stream = Utils.getUrlStream(url);
             return mapper.readValue(stream, AdvisoryPojo.class);
         } finally {

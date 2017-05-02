@@ -25,6 +25,12 @@ public class QuickPlannerService extends IntentService {
     public static final String DEST = "destination";
     public static final String RESULT = "result";
 
+    private static final ObjectMapper mapper;
+    static {
+        mapper = new ObjectMapper()
+                .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+    }
+
     public QuickPlannerService() {
         super(TAG);
     }
@@ -59,9 +65,8 @@ public class QuickPlannerService extends IntentService {
                 + "&key=" + Constants.Api.KEY
                 + "&json=y";
         try {
-            Log.i(TAG, "Parsing trip schedules...");
-            ObjectMapper mapper = new ObjectMapper()
-                    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+            Log.i(TAG, "Getting trip schedules...");
+            Log.d(TAG, mapper.toString());
             stream = Utils.getUrlStream(url);
             return mapper.readValue(stream, QuickPlannerPojo.class);
         } finally {

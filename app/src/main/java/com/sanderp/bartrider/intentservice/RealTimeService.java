@@ -24,6 +24,12 @@ public class RealTimeService extends IntentService {
     public static final String ORIG = "origin";
     public static final String RESULT = "result";
 
+    private static final ObjectMapper mapper;
+    static {
+        mapper = new ObjectMapper()
+                .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+    }
+
     public RealTimeService() {
         super(TAG);
     }
@@ -56,9 +62,7 @@ public class RealTimeService extends IntentService {
                 + "&key=" + Constants.Api.KEY
                 + "&json=y";
         try {
-            Log.i(TAG, "Parsing real-time estimates...");
-            ObjectMapper mapper = new ObjectMapper()
-                    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+            Log.i(TAG, "Getting real-time estimates...");
             stream = Utils.getUrlStream(url);
             return mapper.readValue(stream, RealTimePojo.class);
         } finally {
