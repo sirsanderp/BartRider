@@ -42,6 +42,7 @@ import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.intentservice.QuickPlannerService;
+import com.sanderp.bartrider.intentservice.RealTimeEtdService;
 import com.sanderp.bartrider.intentservice.RealTimeService;
 import com.sanderp.bartrider.pojo.quickplanner.Leg;
 import com.sanderp.bartrider.pojo.quickplanner.QuickPlannerPojo;
@@ -49,6 +50,7 @@ import com.sanderp.bartrider.pojo.quickplanner.Trip;
 import com.sanderp.bartrider.pojo.realtime.Estimate;
 import com.sanderp.bartrider.pojo.realtime.Etd;
 import com.sanderp.bartrider.pojo.realtime.RealTimePojo;
+import com.sanderp.bartrider.pojo.realtimeetd.RealTimeEtdPojo;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.PrefContract;
 import com.sanderp.bartrider.utility.Utils;
@@ -96,8 +98,9 @@ public class TripOverviewActivity extends AppCompatActivity
     private AlarmManager alarmManager;
     private BroadcastReceiver broadcastReceiver;
     private CountDownTimer nextDepartureCountdown;
-    private PendingIntent realTimePendingIntent;
     private PendingIntent quickPlannerPendingIntent;
+    private PendingIntent realTimePendingIntent;
+    private PendingIntent realTimeEtdPendingIntent;
 
     public TripOverviewActivity() {
         super();
@@ -134,18 +137,21 @@ public class TripOverviewActivity extends AppCompatActivity
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.d(TAG, "Received broadcast.");
-                if (intent.getAction().equals(Constants.Broadcast.REAL_TIME_SERVICE)) {
-                    Log.d(TAG, "onReceive(): delegate to onReceiveTripRealTimeEstimates()");
-                    onReceiveTripRealTimeEstimates(intent);
-                }
                 if (intent.getAction().equals(Constants.Broadcast.QUICK_PLANNER_SERVICE)) {
                     Log.d(TAG, "onReceive(): delegate to onReceiveTripSchedules()");
                     onReceiveTripSchedules(intent);
+                } else if (intent.getAction().equals(Constants.Broadcast.REAL_TIME_ETD_SERVICE)) {
+                    Log.d(TAG, "onReceive(): delegate to onReceiveTripRealTimeEtd()");
+                    onReceiveTripRealTimeEtd(intent);
+                } else if (intent.getAction().equals(Constants.Broadcast.REAL_TIME_SERVICE)) {
+                    Log.d(TAG, "onReceive(): delegate to onReceiveTripRealTimeEstimates()");
+                    onReceiveTripRealTimeEstimates(intent);
                 }
             }
         };
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_SERVICE));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.QUICK_PLANNER_SERVICE));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_ETD_SERVICE));
+//        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_SERVICE));
 
         fragmentManager = getSupportFragmentManager();
         drawerFragment = (TripDrawerFragment) fragmentManager.findFragmentById(R.id.trip_drawer_fragment);
@@ -170,7 +176,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mNextDeparture = (TextView) findViewById(R.id.next_departure);
         mNextDepartureWindow = (TextView) findViewById(R.id.next_departure_window);
         mAdvisory = (TextView) findViewById(R.id.advisory);
-        setVisibility(View.GONE);
+        setOverviewVisibility(View.GONE);
 
         // Drawer portion of the main activity
         mDrawerLayout = (DrawerLayout) findViewById(R.id.trip_overview_drawer_layout);
@@ -246,7 +252,8 @@ public class TripOverviewActivity extends AppCompatActivity
         super.onStop();
         Log.d(TAG, "onStop(): Cancelling all alarms...");
         alarmManager.cancel(quickPlannerPendingIntent);
-        alarmManager.cancel(realTimePendingIntent);
+        alarmManager.cancel(realTimeEtdPendingIntent);
+//        alarmManager.cancel(realTimePendingIntent);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
@@ -342,7 +349,79 @@ public class TripOverviewActivity extends AppCompatActivity
         Log.d(TAG, "onReceiveTripSchedules(): Received callback from broadcast.");
         QuickPlannerPojo result = (QuickPlannerPojo) intent.getSerializableExtra(QuickPlannerService.RESULT);
         tripSchedules = result.getRoot().getSchedule().getRequest().getTrip();
-        getTripRealTimeEstimates();
+        getTripRealTimeEtd(tripSchedules.get(0).getLeg().get(0).getTrainHeadStation());
+//        getTripRealTimeEstimates();
+    }
+
+    private void getTripRealTimeEtd(String headAbbr) {
+        if (isTripSet() && Utils.isNetworkConnected(this)) {
+            Intent realTimeEtdIntent = new Intent(TripOverviewActivity.this, RealTimeEtdService.class);
+            realTimeEtdIntent.putExtra(RealTimeEtdService.ORIG, origAbbr)
+                    .putExtra(RealTimeEtdService.HEAD, headAbbr);
+            realTimeEtdPendingIntent = PendingIntent.getService(this, -1, realTimeEtdIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis(), realTimeEtdPendingIntent);
+            startService(realTimeEtdIntent);
+        }
+    }
+
+    private void onReceiveTripRealTimeEtd(Intent intent) {
+        Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
+        RealTimeEtdPojo result = (RealTimeEtdPojo) intent.getSerializableExtra(RealTimeEtdService.RESULT);
+        if (result.getEtdSeconds() != null) {
+            int nextDeparture = result.getEtdSeconds().get(0);
+            mergeSchedulesAndEtd(result.getEtdMinutes());
+
+            mTripSchedules.clearAnimation();
+            mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
+            setNextDepartureProgressBar(nextDeparture);
+            setOverviewVisibility(View.VISIBLE);
+
+            if (nextDeparture == 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
+            else alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimeEtdPendingIntent);
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date());
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+
+            String offlineStatus;
+            if (dayOfWeek == Calendar.SUNDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "8:00");
+            else if (dayOfWeek == Calendar.SATURDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "6:00");
+            else offlineStatus = String.format(getResources().getString(R.string.offline_status), "4:00");
+
+            setOverviewVisibility(View.GONE);
+            setOfflineLayout(offlineStatus);
+        }
+    }
+
+    private void mergeSchedulesAndEtd(List<Integer> etd) {
+        DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
+        long now = new Date().getTime();
+        Log.d(TAG, "Current Time: " + df.format(now));
+        for (int i = 0; i < etd.size(); i++) {
+            Trip trip = tripSchedules.get(i);
+            Leg tripLeg = trip.getLeg().get(0);
+            int etdMinutes = etd.get(i);
+            Log.d(TAG, "Until Departure: " + etdMinutes + " minutes");
+            long estOrigDeparture = now + (etdMinutes * 60 * 1000);
+            long diffMinutes = ((estOrigDeparture - trip.getOrigTimeMin()) / (60 * 1000)) % 60;
+            long estDestArrival = trip.getDestTimeMin() + (diffMinutes * 60 * 1000);
+            Log.d(TAG, "Trip (planned): " + df.format(trip.getOrigTimeMin()) + " | " + df.format(trip.getDestTimeMin()));
+            Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
+
+            long estLegOrigDeparture = now + (etdMinutes * 60 * 1000);
+            long estLegDestArrival = tripLeg.getDestTimeMin() + (diffMinutes * 60 * 1000);
+            Log.d(TAG, "Trip Leg (planned): " + df.format(tripLeg.getOrigTimeMin()) + " | " + df.format(tripLeg.getDestTimeMin()));
+            Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
+
+            Log.d(TAG, "Difference: " + diffMinutes + " minutes");
+            if (diffMinutes >= 1) {
+                Log.d(TAG, "Updating trip and trip leg estimated times...");
+                trip.setEtdOrigTimeMin(estOrigDeparture);
+                trip.setEtdDestTimeMin(estDestArrival);
+                tripLeg.setEtdOrigTimeMin(estLegOrigDeparture);
+                tripLeg.setEtdDestTimeMin(estLegDestArrival);
+            }
+        }
     }
 
     private void getTripRealTimeEstimates() {
@@ -355,16 +434,14 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    public void onReceiveTripRealTimeEstimates(Intent intent) {
+    private void onReceiveTripRealTimeEstimates(Intent intent) {
         Log.d(TAG, "onReceiveTripRealTimeEstimates(): Received callback from broadcast.");
         RealTimePojo result = (RealTimePojo) intent.getSerializableExtra(RealTimeService.RESULT);
-        if (result != null) {
-            String trainHeadStation = tripSchedules.get(0).getLeg().get(0).getTrainHeadStation();
-            for (Etd etd : result.getRoot().getStation().get(0).getEtd()) {
-                if (etd.getAbbreviation().equals(trainHeadStation)) {
-                    tripEstimates = etd.getEstimate();
-                    break;
-                }
+        String trainHeadStation = tripSchedules.get(0).getLeg().get(0).getTrainHeadStation();
+        for (Etd etd : result.getRoot().getStation().get(0).getEtd()) {
+            if (etd.getAbbreviation().equals(trainHeadStation)) {
+                tripEstimates = etd.getEstimate();
+                break;
             }
         }
 
@@ -373,10 +450,10 @@ public class TripOverviewActivity extends AppCompatActivity
             int nextDeparture = estimateNextDeparture(tripOne.getMinutes(), result.getRoot().getDate(), result.getRoot().getTime());
             if (nextDeparture != -1) {
                 mergeSchedulesAndEstimates();
-                updateNextDepartureProgressBar(nextDeparture);
+                setNextDepartureProgressBar(nextDeparture);
             }
             mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
-            setVisibility(View.VISIBLE);
+            setOverviewVisibility(View.VISIBLE);
 
             if (nextDeparture <= 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
             else alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimePendingIntent);
@@ -390,15 +467,8 @@ public class TripOverviewActivity extends AppCompatActivity
             else if (dayOfWeek == Calendar.SATURDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "6:00");
             else offlineStatus = String.format(getResources().getString(R.string.offline_status), "4:00");
 
-            RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-            setVisibility(View.GONE);
-            mTripHeader.setVisibility(View.VISIBLE);
-            mTripSchedules.setVisibility(View.GONE);
-            mNextDeparture.setLayoutParams(layout);
-            mNextDeparture.setText(offlineStatus);
-            mNextDeparture.setTextSize(18);
-            mNextDeparture.setVisibility(View.VISIBLE);
+            setOverviewVisibility(View.GONE);
+            setOfflineLayout(offlineStatus);
         }
     }
 
@@ -447,7 +517,7 @@ public class TripOverviewActivity extends AppCompatActivity
             if (diffSeconds == 0) {
                 Log.d(TAG, "API has not updated since last query...");
                 seconds = -1;
-            } else if (diffSeconds > 120 * 1000) {
+            } else if (diffSeconds > 120) {
                 Log.d(TAG, "Haven't updated in a while...");
                 seconds = (minutes * 60) - 30;
             } else {
@@ -467,7 +537,7 @@ public class TripOverviewActivity extends AppCompatActivity
         return seconds;
     }
 
-    private void updateNextDepartureProgressBar(int seconds) {
+    private void setNextDepartureProgressBar(int seconds) {
         mNextDepartureProgressBar.clearAnimation();
         ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
         animator.setDuration(seconds * 1000);
@@ -519,12 +589,24 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private void setVisibility(int visibility) {
+    private void setOverviewVisibility(int visibility) {
         mTripHeader.setVisibility(visibility);
         mNextDepartureProgressBar.setVisibility(visibility);
         mNextDeparture.setVisibility(visibility);
         mNextDepartureWindow.setVisibility(visibility);
         mAdvisory.setVisibility(visibility);
+    }
+
+    private void setOfflineLayout(String text) {
+        RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+
+        mTripHeader.setVisibility(View.VISIBLE);
+        mTripSchedules.setVisibility(View.GONE);
+        mNextDeparture.setLayoutParams(layout);
+        mNextDeparture.setText(text);
+        mNextDeparture.setTextSize(18);
+        mNextDeparture.setVisibility(View.VISIBLE);
     }
 
     private boolean isTripSame(String orig, String dest) {

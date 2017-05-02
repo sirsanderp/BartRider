@@ -45,6 +45,10 @@
             android:exported="false" />
 
         <service
+            android:name=".intentservice.RealTimeEtdService"
+            android:exported="false" />
+
+        <service
             android:name=".intentservice.QuickPlannerService"
             android:exported="false" />
 

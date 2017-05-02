@@ -11,6 +11,7 @@ public class Constants {
 
     public class Broadcast {
         public static final String ADVISORY_SERVICE = "com.sanderp.bartrider.ADVISORY_SERVICE";
+        public static final String REAL_TIME_ETD_SERVICE = "com.sanderp.bartrider.REAL_TIME_ETD_SERVICE";
         public static final String REAL_TIME_SERVICE = "com.sanderp.bartrider.REAL_TIME_SERVICE";
         public static final String QUICK_PLANNER_SERVICE = "com.sanderp.bartrider.QUICK_PLANNER_SERVICE";
     }
