@@ -20,42 +20,31 @@
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin">
 
-        <TextView
-            android:id="@+id/trip_orig"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/toolbar"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:textSize="24sp"
-            tools:text="@string/sample_orig" />
+        <com.sanderp.bartrider.view.AutoResizeTextView
+            android:id="@+id/trip_header"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="@string/empty_field"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            tools:text="@string/sample_trip" />
 
-        <TextView
-            android:id="@+id/dash"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/trip_orig"
-            android:layout_centerHorizontal="true"
-            android:includeFontPadding="false"
-            android:text="to"
-            android:textSize="24sp" />
-
-        <TextView
-            android:id="@+id/trip_dest"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/dash"
-            android:layout_centerHorizontal="true"
-            android:textSize="24sp"
-            tools:text="@string/sample_dest" />
+        <!--<com.sanderp.bartrider.view.TrainRouteView-->
+            <!--android:id="@+id/train_route"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_below="@+id/trip_header"-->
+            <!--android:layout_centerInParent="true"-->
+            <!--android:layout_marginTop="16dp" />-->
 
         <ListView
             android:id="@+id/trip_detail_list_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/trip_co2"
-            android:layout_below="@+id/trip_dest"
-            android:layout_marginTop="16dp"
+            android:layout_below="@+id/trip_header"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
             android:choiceMode="singleChoice"
             tools:listitem="@layout/trip_detail_list_item" />
 
@@ -63,9 +52,9 @@
             android:id="@+id/trip_co2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:textSize="12sp"
-            android:layout_alignParentBottom="true"
             tools:text="@string/sample_co2" />
 
     </RelativeLayout>

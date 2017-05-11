@@ -3,8 +3,8 @@ package com.sanderp.bartrider;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -19,7 +19,7 @@ import android.widget.Spinner;
 import com.sanderp.bartrider.database.BartRiderContract;
 
 /**
- * A simple {@link Fragment} subclass.
+ * A simple {@link DialogFragment} subclass.
  * Activities that contain this fragment must implement the
  * {@link OnFragmentListener} interface
  * to handle interaction events.
@@ -59,11 +59,12 @@ public class TripPlannerFragment extends DialogFragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setStyle(STYLE_NO_TITLE, 0);
     }
 
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = getActivity().getLayoutInflater().inflate(R.layout.trip_planner_fragment, container, false);
 
         // Initialize buttons
@@ -110,7 +111,6 @@ public class TripPlannerFragment extends DialogFragment implements
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 //        getDialog().getWindow().setBackgroundDrawableResource(R.drawable.rounded_corners);
         getDialog().getWindow().setLayout((int) (displayMetrics.widthPixels * 0.95), ViewGroup.LayoutParams.WRAP_CONTENT);
-
         super.onResume();
     }
 

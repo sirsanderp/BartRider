@@ -8,6 +8,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,6 +76,8 @@ public class TripDrawerFragment extends Fragment implements
                     mTextView.setEllipsize(TextUtils.TruncateAt.END);
                     mTextView.setMaxLines(1);
                     mTextView.setText(normalizeText(getOrigFull(cursor)) + " - " + normalizeText(getDestFull(cursor)));
+                    mTextView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+                    mTextView.setTextSize(16);
                     return true;
                 }
                 return false;

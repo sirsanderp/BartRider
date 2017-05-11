@@ -20,4 +20,8 @@
         <item name="android:gravity">left|center_vertical</item>
     </style>
 
+    <style name="fab">
+        <item name="android:layout_margin">0dp</item>
+    </style>
+
 </resources>

@@ -21,4 +21,8 @@
         <item name="color">@color/material_light</item>
     </style>
 
+    <style name="fab">
+        <item name="android:layout_margin">16dp</item>
+    </style>
+
 </resources>
