@@ -53,6 +53,7 @@ public class RealTimeEtdService extends IntentService {
 
     private RealTimeEtdPojo getRealTimeEtd(String origAbbr, String headAbbr) throws IOException {
         Log.i(TAG, "Getting real-time etd...");
+        Log.d(TAG, origAbbr + " -> " + headAbbr);
         return mapper.load(RealTimeEtdPojo.class, origAbbr, headAbbr);
     }
 }

@@ -13,7 +13,7 @@ import java.io.Serializable;
         "@amount",
         "@class"
 })
-class Fare implements Serializable {
+public class Fare implements Serializable {
     private final static long serialVersionUID = 4593250643945599573L;
 
     @JsonProperty("@amount")
