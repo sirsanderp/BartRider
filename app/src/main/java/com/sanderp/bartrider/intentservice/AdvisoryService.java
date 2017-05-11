@@ -57,8 +57,7 @@ public class AdvisoryService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             try {
-                String result = advisoryText(getAdvisories().getRoot().getBsa());
-                postAdvisoryNotification(result);
+                postAdvisoryNotification(advisoryText(getAdvisories()));
             } catch (IOException e) {
                 Log.d(TAG, "Input stream failed.");
                 e.printStackTrace();
@@ -83,10 +82,11 @@ public class AdvisoryService extends IntentService {
         }
     }
 
-    private String advisoryText(List<Bsa> advisories) {
+    private String advisoryText(AdvisoryPojo pojo) {
         StringBuilder advisory = new StringBuilder();
-        for (Bsa bsa : advisories) {
-            advisory.append(bsa.getDescription().getCdataSection().trim().replaceAll(" +", " ") + "\n\n");
+//        advisory.append("As of " + pojo.getRoot().getBsa().get(0).getPosted() + "\n\n");
+        for (Bsa bsa : pojo.getRoot().getBsa()) {
+            advisory.append(bsa.getDescription().getCdataSection() + "\n\n");
         }
         return advisory.toString().trim();
     }
