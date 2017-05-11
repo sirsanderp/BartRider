@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="routes">
+        <item>ROUTE 1|#ffffff33</item>
+        <item>ROUTE 2|#ffffff33</item>
+        <item>ROUTE 3|#ffff9933</item>
+        <item>ROUTE 4|#ffff9933</item>
+        <item>ROUTE 5|#ff339933</item>
+        <item>ROUTE 6|#ff339933</item>
+        <item>ROUTE 7|#ffff0000</item>
+        <item>ROUTE 8|#ffff0000</item>
+        <item>ROUTE 9|#ffffff33</item>
+        <item>ROUTE 10|#ffffff33</item>
+        <item>ROUTE 11|#ff0099cc</item>
+        <item>ROUTE 12|#ff0099cc</item>
+        <item>ROUTE 19|#ffd5cfa3</item>
+        <item>ROUTE 20|#ffd5cfa3</item>
+    </string-array>
+</resources>

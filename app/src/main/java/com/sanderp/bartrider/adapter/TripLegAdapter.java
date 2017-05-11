@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.pojo.quickplanner.Leg;
+import com.sanderp.bartrider.view.TrainRouteView;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -27,10 +28,13 @@ public class TripLegAdapter extends BaseAdapter {
     private LayoutInflater mInflater;
     private List<Leg> mDataSource;
 
-    public TripLegAdapter(Context context, List<Leg> tripLegs) {
+    private int[] colors;
+
+    public TripLegAdapter(Context context, List<Leg> tripLegs, int[] colors) {
         mContext = context;
         mDataSource = tripLegs;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.colors = colors;
     }
 
     @Override
@@ -55,12 +59,14 @@ public class TripLegAdapter extends BaseAdapter {
         TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_leg_orig_time);
         TextView mDestName = (TextView) rowView.findViewById(R.id.trip_leg_dest_name);
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_leg_dest_time);
+        TrainRouteView mTrainRoute = (TrainRouteView) rowView.findViewById(R.id.train_route);
 
         Leg tripLeg = (Leg) getItem(position);
         mOrigName.setText(tripLeg.getOrigin());
         mDestName.setText(tripLeg.getDestination());
         mOrigTime.setText(df.format(tripLeg.getEtdOrigTimeMin()));
         mDestTime.setText(df.format(tripLeg.getEtdDestTimeMin()));
+        mTrainRoute.setTrainRoutes(1, new int[]{colors[position]});
 
         return rowView;
     }

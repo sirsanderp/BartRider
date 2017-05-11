@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.sanderp.bartrider.adapter.TripLegAdapter;
 import com.sanderp.bartrider.pojo.quickplanner.Trip;
+import com.sanderp.bartrider.view.TrainRouteView;
 
 public class TripDetailActivity extends AppCompatActivity {
     private static final String TAG = "TripDetailActivity";
@@ -18,10 +19,10 @@ public class TripDetailActivity extends AppCompatActivity {
     public static final String TRIP = "trip";
 
     private ListView mListView;
-    private TextView mOrig;
-    private TextView mDest;
     private TextView mCo2;
+    private TextView mTripHeader;
     private Toolbar mToolbar;
+//    private TrainRouteView mTrainRoute;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,22 +34,20 @@ public class TripDetailActivity extends AppCompatActivity {
         mToolbar.setTitle("Trip Details");
         mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
         setSupportActionBar(mToolbar);
-//        getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setHomeButtonEnabled(true);
 
-        mOrig = (TextView) findViewById(R.id.trip_orig);
-        mDest = (TextView) findViewById(R.id.trip_dest);
-        mCo2 = (TextView) findViewById(R.id.trip_co2);
+        mTripHeader = (TextView) findViewById(R.id.trip_header);
         mListView = (ListView) findViewById(R.id.trip_detail_list_view);
+        mCo2 = (TextView) findViewById(R.id.trip_co2);
+//        mTrainRoute = (TrainRouteView) findViewById(R.id.train_route);
 
-        Intent data= this.getIntent();
+        Intent data = this.getIntent();
         Trip trip = (Trip) data.getSerializableExtra(TRIP);
-        mOrig.setText(data.getStringExtra(ORIG));
-        mDest.setText(data.getStringExtra(DEST));
+        mTripHeader.setText(data.getStringExtra(ORIG) + " - " + data.getStringExtra(DEST));
         mCo2.setText(String.format(getResources().getString(R.string.co2_saved), trip.getCo2()));
+//        mTrainRoute.setTrainRoutes(trip.getLeg().size(), trip.getRouteColors());
 
-        TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getLeg());
+        TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getLeg(), trip.getRouteColors());
         mListView.setAdapter(adapter);
     }
 }

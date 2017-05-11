@@ -61,6 +61,8 @@ public class Trip implements Serializable {
     private long etdOrigTimeMin;
     @JsonIgnore
     private long etdDestTimeMin;
+    @JsonIgnore
+    private int[] routeColors;
 
     public String getOrigin() {
         return origin;
@@ -174,6 +176,14 @@ public class Trip implements Serializable {
 
     public void setEtdDestTimeMin(long etdDestTimeMin) {
         this.etdDestTimeMin = etdDestTimeMin;
+    }
+
+    public int[] getRouteColors() {
+        return routeColors;
+    }
+
+    public void setRouteColors(int[] routeColors) {
+        this.routeColors = routeColors;
     }
 
     @Override

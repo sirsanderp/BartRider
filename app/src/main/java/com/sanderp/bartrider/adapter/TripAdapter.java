@@ -1,6 +1,7 @@
 package com.sanderp.bartrider.adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,11 +9,15 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.sanderp.bartrider.R;
+import com.sanderp.bartrider.pojo.quickplanner.Leg;
 import com.sanderp.bartrider.pojo.quickplanner.Trip;
+import com.sanderp.bartrider.view.TrainRouteView;
 
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Created by Sander Peerna on 11/3/2016.
@@ -52,12 +57,12 @@ public class TripAdapter extends BaseAdapter {
         View rowView = mInflater.inflate(R.layout.trip_overview_list_item, parent, false);
         TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_orig_time);
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_dest_time);
-        TextView mFare = (TextView) rowView.findViewById(R.id.trip_fare);
+        TrainRouteView mTrainRoute = (TrainRouteView) rowView.findViewById(R.id.train_route);
 
-        Trip trip = (com.sanderp.bartrider.pojo.quickplanner.Trip) getItem(position);
+        Trip trip = (Trip) getItem(position);
         mOrigTime.setText(df.format(trip.getEtdOrigTimeMin()));
         mDestTime.setText(df.format(trip.getEtdDestTimeMin()));
-        mFare.setText(String.format("$%.2f", trip.getFare()));
+        mTrainRoute.setTrainRoutes(trip.getLeg().size(), trip.getRouteColors());
 
         return rowView;
     }
