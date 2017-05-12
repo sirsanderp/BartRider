@@ -48,7 +48,6 @@ import com.sanderp.bartrider.pojo.quickplanner.Fare;
 import com.sanderp.bartrider.pojo.quickplanner.Leg;
 import com.sanderp.bartrider.pojo.quickplanner.QuickPlannerPojo;
 import com.sanderp.bartrider.pojo.quickplanner.Trip;
-import com.sanderp.bartrider.pojo.realtime.Estimate;
 import com.sanderp.bartrider.pojo.realtimeetd.RealTimeEtdPojo;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.PrefContract;
@@ -56,9 +55,11 @@ import com.sanderp.bartrider.utility.Utils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -89,8 +90,8 @@ public class TripOverviewActivity extends AppCompatActivity
     private TextView mTripFare;
     private Toolbar mToolbar;
 
+    private ArrayList<Object> batchLoadObjects;
     private List<Trip> tripSchedules;
-    private List<Estimate> tripEstimates;
     private Map<String, String> routeColorMap;
 
     private int favoriteTrip;
@@ -351,7 +352,6 @@ public class TripOverviewActivity extends AppCompatActivity
             quickPlannerIntent.putExtra(QuickPlannerService.ORIG, origAbbr)
                     .putExtra(QuickPlannerService.DEST, destAbbr);
             quickPlannerPendingIntent = PendingIntent.getService(this, -1, quickPlannerIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis(), quickPlannerPendingIntent);
             startService(quickPlannerIntent);
         }
     }
@@ -361,26 +361,28 @@ public class TripOverviewActivity extends AppCompatActivity
         QuickPlannerPojo result = (QuickPlannerPojo) intent.getSerializableExtra(QuickPlannerService.RESULT);
         tripSchedules = result.getRoot().getSchedule().getRequest().getTrip();
         setRouteColors();
-        getTripRealTimeEtd(tripSchedules.get(0).getLeg().get(0).getTrainHeadStation());
+        setBatchLoadObjects();
+        getTripRealTimeEtd();
     }
 
-    private void getTripRealTimeEtd(String headAbbr) {
+    private void getTripRealTimeEtd() {
         if (isTripSet() && Utils.isNetworkConnected(this)) {
+            // Have to use bundle to be able to pass serialized objects through the AlarmManager.
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(RealTimeEtdService.OBJECT_LIST, batchLoadObjects);
             Intent realTimeEtdIntent = new Intent(TripOverviewActivity.this, RealTimeEtdService.class);
-            realTimeEtdIntent.putExtra(RealTimeEtdService.ORIG, origAbbr)
-                    .putExtra(RealTimeEtdService.HEAD, headAbbr);
+            realTimeEtdIntent.putExtra(RealTimeEtdService.OBJECT_LIST, bundle);
             realTimeEtdPendingIntent = PendingIntent.getService(this, -1, realTimeEtdIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis(), realTimeEtdPendingIntent);
             startService(realTimeEtdIntent);
         }
     }
 
     private void onReceiveTripRealTimeEtd(Intent intent) {
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
-        RealTimeEtdPojo result = (RealTimeEtdPojo) intent.getSerializableExtra(RealTimeEtdService.RESULT);
-        if (result != null && result.getEtdSeconds() != null) {
-            int nextDeparture = result.getEtdSeconds().get(0);
-            mergeSchedulesAndEtd(result.getEtdMinutes());
+        HashMap<String, RealTimeEtdPojo> results = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
+        if (results != null) {
+            int nextDeparture = results.get(tripSchedules.get(0).getLeg().get(0).getTrainHeadStation()).getEtdSeconds().get(0);
+            mergeSchedulesAndEtd(results);
 
             List<Fare> fares = tripSchedules.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
@@ -389,32 +391,36 @@ public class TripOverviewActivity extends AppCompatActivity
             setNextDepartureProgressBar(nextDeparture);
             setOverviewVisibility(View.VISIBLE);
 
-            if (nextDeparture == 0) alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
-            else alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimeEtdPendingIntent);
+            if (nextDeparture == 0)
+                alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
+            else
+                alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimeEtdPendingIntent);
         } else {
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
             int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 
             String offlineStatus;
-            if (dayOfWeek == Calendar.SUNDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "8:00");
-            else if (dayOfWeek == Calendar.SATURDAY) offlineStatus = String.format(getResources().getString(R.string.offline_status), "6:00");
-            else offlineStatus = String.format(getResources().getString(R.string.offline_status), "4:00");
+            if (dayOfWeek == Calendar.SUNDAY)
+                offlineStatus = String.format(getResources().getString(R.string.offline_status), "8:00");
+            else if (dayOfWeek == Calendar.SATURDAY)
+                offlineStatus = String.format(getResources().getString(R.string.offline_status), "6:00");
+            else
+                offlineStatus = String.format(getResources().getString(R.string.offline_status), "4:00");
 
             setOverviewVisibility(View.GONE);
             setOfflineLayout(offlineStatus);
         }
     }
 
-    private void mergeSchedulesAndEtd(List<Integer> etd) {
-        // TODO: Currently assuming there is only a single head station for the trip.
+    private void mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> results) {
         DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
         long now = new Date().getTime();
         Log.d(TAG, "Current Time: " + df.format(now));
-        for (int i = 0; i < etd.size(); i++) {
-            Trip trip = tripSchedules.get(i);
+        for (Trip trip : tripSchedules) {
             Leg tripLeg = trip.getLeg().get(0);
-            int etdMinutes = etd.get(i);
+            String headAbbr = trip.getLeg().get(0).getTrainHeadStation();
+            int etdMinutes = results.get(headAbbr).getEtdMinutes().remove(0);
             Log.d(TAG, "Until Departure: " + etdMinutes + " minutes");
             long estOrigDeparture = now + (etdMinutes * 60 * 1000);
             long diffMinutes = ((estOrigDeparture - trip.getOrigTimeMin()) / (60 * 1000)) % 60;
@@ -520,6 +526,22 @@ public class TripOverviewActivity extends AppCompatActivity
                 routeColors[leg] = Color.parseColor(routeColorMap.get(tripLegs.get(leg).getLine()));
             }
             trip.setRouteColors(routeColors);
+        }
+    }
+
+    private void setBatchLoadObjects() {
+        batchLoadObjects = new ArrayList<>();
+        HashSet<String> headStationSet = new HashSet<>();
+        for (Trip trip : tripSchedules) {
+            String origAbbr = trip.getOrigin();
+            String headAbbr = trip.getLeg().get(0).getTrainHeadStation();
+            if (!headStationSet.contains(headAbbr)) {
+                RealTimeEtdPojo pojo = new RealTimeEtdPojo();
+                pojo.setOrigAbbr(origAbbr);
+                pojo.setHeadAbbr(headAbbr);
+                batchLoadObjects.add(pojo);
+                headStationSet.add(headAbbr);
+            }
         }
     }
 

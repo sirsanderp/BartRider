@@ -2,6 +2,7 @@ package com.sanderp.bartrider.intentservice;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -10,7 +11,9 @@ import com.sanderp.bartrider.pojo.realtimeetd.RealTimeEtdPojo;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
 
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -19,8 +22,7 @@ import java.io.IOException;
 public class RealTimeEtdService extends IntentService {
     private static final String TAG = "RealTimeEtdService";
 
-    public static final String ORIG = "origin";
-    public static final String HEAD = "head";
+    public static final String OBJECT_LIST = "objectList";
     public static final String RESULT = "result";
 
     private static DynamoDBMapper mapper;
@@ -38,22 +40,21 @@ public class RealTimeEtdService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
-            try {
-                RealTimeEtdPojo pojo = getRealTimeEtd(intent.getStringExtra(ORIG), intent.getStringExtra(HEAD));
-                Intent localIntent = new Intent(Constants.Broadcast.REAL_TIME_ETD_SERVICE)
-                        .putExtra(RESULT, pojo);
-                Log.d(TAG, "Sending broadcast from service.");
-                LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-            } catch (IOException e) {
-                Log.d(TAG, "Input stream failed.");
-                e.printStackTrace();
-            }
+            Intent localIntent = new Intent(Constants.Broadcast.REAL_TIME_ETD_SERVICE)
+                    .putExtra(RESULT, getRealTimeEtd(intent.getBundleExtra(OBJECT_LIST)));
+            Log.d(TAG, "Sending broadcast from service.");
+            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
         }
     }
 
-    private RealTimeEtdPojo getRealTimeEtd(String origAbbr, String headAbbr) throws IOException {
-        Log.i(TAG, "Getting real-time etd...");
-        Log.d(TAG, origAbbr + " -> " + headAbbr);
-        return mapper.load(RealTimeEtdPojo.class, origAbbr, headAbbr);
+    private HashMap<String, RealTimeEtdPojo> getRealTimeEtd(Bundle bundle) {
+        Log.i(TAG, "Getting real-time etds...");
+        Map<String, List<Object>> pojoMap = mapper.batchLoad((List<Object>) bundle.getSerializable(OBJECT_LIST));
+        HashMap<String, RealTimeEtdPojo> headMap = new HashMap<>();
+        for (Object object : pojoMap.get("REAL_TIME_ETD")) {
+            RealTimeEtdPojo pojo = (RealTimeEtdPojo) object;
+            if (!headMap.containsKey(pojo.getHeadAbbr())) headMap.put(pojo.getHeadAbbr(), pojo);
+        }
+        return headMap;
     }
 }
