@@ -66,7 +66,6 @@ public class QuickPlannerService extends IntentService {
                 + "&json=y";
         try {
             Log.i(TAG, "Getting trip schedules...");
-            Log.d(TAG, mapper.toString());
             stream = Utils.getUrlStream(url);
             return mapper.readValue(stream, QuickPlannerPojo.class);
         } finally {
