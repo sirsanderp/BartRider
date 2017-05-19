@@ -20,8 +20,9 @@ import com.sanderp.bartrider.utility.Utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -31,6 +32,7 @@ public class AdvisoryService extends IntentService {
     private static final String TAG = "AdvisoryService";
 
     public static final int NOTIFICATION_ID = 101;
+    private static final String DEFAULT_ADVISORY = "No delays reported.";
 
     private NotificationManager mNotificationManager;
     private SharedPreferences sharedPrefs;
@@ -57,7 +59,12 @@ public class AdvisoryService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             try {
-                postAdvisoryNotification(advisoryText(getAdvisories()));
+                Set<String> advisorySet = advisoriesToSet(getAdvisories());
+                postAdvisoryNotification(getAdvisoriesDiff(advisorySet));
+                sharedPrefs.edit()
+                        .putString(PrefContract.ADVISORY, advisoriesToString(advisorySet))
+                        .putStringSet(PrefContract.PREV_ADVISORY, advisorySet)
+                        .apply();
             } catch (IOException e) {
                 Log.d(TAG, "Input stream failed.");
                 e.printStackTrace();
@@ -72,7 +79,6 @@ public class AdvisoryService extends IntentService {
                 + "&json=y";
         try {
             Log.i(TAG, "Getting advisories...");
-            Log.d(TAG, mapper.toString());
             stream = Utils.getUrlStream(url);
             return mapper.readValue(stream, AdvisoryPojo.class);
         } finally {
@@ -82,28 +88,43 @@ public class AdvisoryService extends IntentService {
         }
     }
 
-    private String advisoryText(AdvisoryPojo pojo) {
-        StringBuilder advisory = new StringBuilder();
-//        advisory.append("As of " + pojo.getRoot().getBsa().get(0).getPosted() + "\n\n");
-        for (Bsa bsa : pojo.getRoot().getBsa()) {
-            advisory.append(bsa.getDescription().getCdataSection() + "\n\n");
-        }
-        return advisory.toString().trim();
-    }
-
-    private void postAdvisoryNotification(String advisory) {
-        String defaultAdvisory = getResources().getString(R.string.default_advisory);
-        String prevAdvisory = sharedPrefs.getString(PrefContract.PREV_ADVISORY, defaultAdvisory);
-        Log.d(TAG, advisory + " | " + prevAdvisory);
-        if (!advisory.equals(prevAdvisory) && !advisory.equals(defaultAdvisory)) {
+    private void postAdvisoryNotification(String advisories) {
+        if (!advisories.isEmpty() && !advisories.equals(DEFAULT_ADVISORY)) {
             Notification notification = new NotificationCompat.Builder(this)
                     .setContentTitle("BART Advisory")
-                    .setContentText(advisory)
+                    .setContentText(advisories)
                     .setSmallIcon(R.drawable.ic_bart_rider_24dp)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(advisory))
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(advisories))
                     .build();
             mNotificationManager.notify(NOTIFICATION_ID, notification);
-            sharedPrefs.edit().putString(PrefContract.PREV_ADVISORY, advisory).apply();
         }
+    }
+
+    private Set<String> advisoriesToSet(AdvisoryPojo pojo) {
+        Set<String> advisorySet = new HashSet<>();
+        for (Bsa bsa : pojo.getRoot().getBsa()) {
+            advisorySet.add(bsa.getDescription().getCdataSection());
+        }
+        return advisorySet;
+    }
+
+    private String advisoriesToString(Set<String> advisorySet) {
+        StringBuilder advisories = new StringBuilder();
+        for (String advisory : advisorySet) {
+            advisories.append(advisory + "\n\n");
+        }
+        return advisories.toString().trim();
+    }
+
+    private String getAdvisoriesDiff(Set<String> advisorySet) {
+        Set<String> prevAdvisorySet = sharedPrefs.getStringSet(PrefContract.PREV_ADVISORY, new HashSet<String>());
+        Log.d(TAG, advisoriesToString(advisorySet) + " | " + advisoriesToString(prevAdvisorySet));
+        StringBuilder advisories = new StringBuilder();
+        for (String advisory : advisorySet) {
+            if (!prevAdvisorySet.contains(advisory)) {
+                advisories.append(advisory + "\n\n");
+            }
+        }
+        return advisories.toString().trim();
     }
 }

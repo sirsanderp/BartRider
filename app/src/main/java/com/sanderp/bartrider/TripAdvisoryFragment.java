@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import com.sanderp.bartrider.utility.PrefContract;
 
+import java.util.Set;
+
 /**
  * A simple {@link DialogFragment} subclass.
  */
@@ -41,7 +43,7 @@ public class TripAdvisoryFragment extends DialogFragment {
 
         sharedPrefs = getActivity().getSharedPreferences(PrefContract.PREFS_NAME, 0);
         mAdvisory = (TextView) view.findViewById(R.id.advisory);
-        mAdvisory.setText(sharedPrefs.getString(PrefContract.PREV_ADVISORY, getResources().getString(R.string.default_advisory)));
+        mAdvisory.setText(sharedPrefs.getString(PrefContract.ADVISORY, getResources().getString(R.string.default_advisory)));
 
         return view;
     }

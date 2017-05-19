@@ -7,6 +7,7 @@ package com.sanderp.bartrider.utility;
 public class PrefContract {
     public static final String PREFS_NAME = "BartRiderPrefs";
 
+    public static final String ADVISORY = "advisory";
     public static final String FIRST_RUN = "firstRun";
     public static final String LAST_TRIP = "lastTrip";
     public static final String LAST_ID = "lastId";
