@@ -123,7 +123,7 @@ public class TripDrawerFragment extends Fragment implements
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (id == LOADER_ID) {
             return new CursorLoader(getActivity(), BartRiderContract.Favorites.CONTENT_URI,
-                    PROJECTION, null, null, BartRiderContract.Favorites.DEFAULT_SORT);
+                    PROJECTION, null, null, BartRiderContract.Favorites.Column.ORIG_FULL + " ASC," + BartRiderContract.Favorites.Column.DEST_FULL);
         }
         return null;
     }
