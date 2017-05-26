@@ -1,35 +1,38 @@
 package com.sanderp.bartrider.pojo.realtimeetd;
 
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBAttribute;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBHashKey;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMarshalling;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBRangeKey;
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBTable;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sanderp.bartrider.pojo.TimeToLongMarshaller;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @DynamoDBTable(tableName = "REAL_TIME_ETD")
 public class RealTimeEtdPojo implements Serializable {
     private final static long serialVersionUID = 2626209002115756111L;
+    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("hh:mm:ss a", Locale.US);
 
+    private String api_update;
     private String color;
-    private String date;
     private String direction;
     private List<Integer> etdMinutes = null;
     private List<Integer> etdSeconds = null;
     private String headAbbr;
     private String headName;
     private String hexcolor;
+    private long lastTrain;
     private List<Integer> lengths = null;
     private String origAbbr;
     private String origName;
     private int platform;
-    private long time;
 
     @DynamoDBHashKey(attributeName = "orig_abbr")
     public String getOrigAbbr() {
@@ -49,6 +52,15 @@ public class RealTimeEtdPojo implements Serializable {
         this.headAbbr = headAbbr;
     }
 
+    @DynamoDBAttribute(attributeName = "api_update")
+    public String getApiUpdate() {
+        return api_update;
+    }
+
+    public void setApiUpdate(String date) {
+        this.api_update = date;
+    }
+
     @DynamoDBAttribute(attributeName = "color")
     public String getColor() {
         return color;
@@ -56,15 +68,6 @@ public class RealTimeEtdPojo implements Serializable {
 
     public void setColor(String color) {
         this.color = color;
-    }
-
-    @DynamoDBAttribute(attributeName = "date")
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
     }
 
     @DynamoDBAttribute(attributeName = "direction")
@@ -112,6 +115,16 @@ public class RealTimeEtdPojo implements Serializable {
         this.hexcolor = hexcolor;
     }
 
+    @DynamoDBAttribute(attributeName = "last_train")
+    @DynamoDBMarshalling(marshallerClass = TimeToLongMarshaller.class)
+    public long getLastTrain() {
+        return lastTrain;
+    }
+
+    public void setLastTrain(long lastTrain) {
+        this.lastTrain = lastTrain;
+    }
+
     @DynamoDBAttribute(attributeName = "lengths")
     public List<Integer> getLengths() {
         return lengths;
@@ -137,15 +150,6 @@ public class RealTimeEtdPojo implements Serializable {
 
     public void setPlatform(int platform) {
         this.platform = platform;
-    }
-
-    @DynamoDBAttribute(attributeName = "time")
-    public long getTime() {
-        return time;
-    }
-
-    public void setTime(long time) {
-        this.time = time;
     }
 
     @Override

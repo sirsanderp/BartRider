@@ -63,10 +63,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
-/**
- * Created by Sander Peerna on 8/23/2015.
- */
 public class TripOverviewActivity extends AppCompatActivity
         implements TripPlannerFragment.OnFragmentListener, TripDrawerFragment.OnFragmentListener {
     private static final String TAG = "TripOverviewActivity";
@@ -380,10 +378,11 @@ public class TripOverviewActivity extends AppCompatActivity
     private void onReceiveTripRealTimeEtd(Intent intent) {
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
         HashMap<String, RealTimeEtdPojo> results = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
-        if (results != null && results.get(tripSchedules.get(0).getLeg().get(0).getTrainHeadStation()) != null) {
-            int nextDeparture = results.get(tripSchedules.get(0).getLeg().get(0).getTrainHeadStation()).getEtdSeconds().get(0);
-//            mergeSchedulesAndEtd(results);
+        RealTimeEtdPojo firstTrip = results.get(tripSchedules.get(0).getLeg().get(0).getTrainHeadStation());
+        int nextDeparture = firstTrip.getEtdSeconds().get(0);
+        mergeSchedulesAndEtd(results);
 
+        if (!(nextDeparture == 0 && firstTrip.getEtdSeconds().size() == 1)) {
             List<Fare> fares = tripSchedules.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
             mTripSchedules.clearAnimation();
@@ -415,39 +414,50 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> results) {
         DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
+        df.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
         Date now = new Date();
-//        Log.d(TAG, "Current Time: " + df.format(now));
+        Log.d(TAG, "Current Time: " + df.format(now));
+
         for (int i = 0; i < tripSchedules.size(); i++) {
             Trip trip = tripSchedules.get(i);
-//            Log.d(TAG, df.format(new Date(trip.getOrigTimeMin())) + " | " + df.format(now));
-//            if (!isTripAfterNow(new Date(trip.getOrigTimeMin()), now)) {
-//                tripSchedules.remove(i);
-//                continue;
-//            }
-//            Leg tripLeg = trip.getLeg().get(0);
-            String headAbbr = trip.getLeg().get(0).getTrainHeadStation();
+            Leg tripLeg = trip.getLeg().get(0);
+
+            String headAbbr = tripLeg.getTrainHeadStation();
+            Log.d(TAG, df.format(trip.getOrigTimeMin()) + " | "  + df.format(results.get(headAbbr).getLastTrain()));
+            if (trip.getOrigTimeMin() < results.get(headAbbr).getLastTrain()) {
+                tripSchedules.remove(i--);
+                continue;
+            }
+
             Log.d(TAG, origAbbr + " -> " + headAbbr);
-            int etdMinutes = results.get(headAbbr).getEtdMinutes().remove(0);
-//            Log.d(TAG, "Until Departure: " + etdMinutes + " minutes");
+            int etdMinutes;
+            if (!results.get(headAbbr).getEtdMinutes().isEmpty()) {
+                etdMinutes = results.get(headAbbr).getEtdMinutes().remove(0);
+            } else {
+                tripSchedules.remove(i);
+                break;
+            }
+
+            Log.d(TAG, "Until Departure: " + etdMinutes + " minutes");
             long estOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000);
             long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000);
-//            Log.d(TAG, "Trip (planned): " + df.format(trip.getOrigTimeMin()) + " | " + df.format(trip.getDestTimeMin()));
-//            Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
+            Log.d(TAG, "Trip (planned): " + df.format(trip.getOrigTimeMin()) + " | " + df.format(trip.getDestTimeMin()));
+            Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
 
-//            long diffMinutes = ((estOrigDeparture - trip.getOrigTimeMin()) / (60 * 1000)) % 60;
-//            long estLegOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000);
-//            long estLegDestArrival = tripLeg.getDestTimeMin() + (diffMinutes * 60 * 1000);
-//            Log.d(TAG, "Trip Leg (planned): " + df.format(tripLeg.getOrigTimeMin()) + " | " + df.format(tripLeg.getDestTimeMin()));
-//            Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
+            long diffMinutes = ((estOrigDeparture - trip.getOrigTimeMin()) / (60 * 1000)) % 60;
+            long estLegOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000);
+            long estLegDestArrival = tripLeg.getDestTimeMin() + (diffMinutes * 60 * 1000);
+            Log.d(TAG, "Trip Leg (planned): " + df.format(tripLeg.getOrigTimeMin()) + " | " + df.format(tripLeg.getDestTimeMin()));
+            Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
 
-//            Log.d(TAG, "Difference: " + diffMinutes + " minutes");
-//            if (diffMinutes >= 1) {
-//                Log.d(TAG, "Updating trip and trip leg estimated times...");
+            Log.d(TAG, "Difference: " + diffMinutes + " minutes");
+            if (diffMinutes >= 1) {
+                Log.d(TAG, "Updating trip and trip leg estimated times...");
                 trip.setEtdOrigTimeMin(estOrigDeparture);
                 trip.setEtdDestTimeMin(estDestArrival);
-//                tripLeg.setEtdOrigTimeMin(estLegOrigDeparture);
-//                tripLeg.setEtdDestTimeMin(estLegDestArrival);
-//            }
+                tripLeg.setEtdOrigTimeMin(estLegOrigDeparture);
+                tripLeg.setEtdDestTimeMin(estLegDestArrival);
+            }
         }
     }
 
@@ -505,7 +515,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setOverviewVisibility(int visibility) {
-        mTripHeader.setVisibility(visibility);
+//        mTripHeader.setVisibility(visibility);
         mTripFare.setVisibility(visibility);
         findViewById(R.id.trip_fare_info).setVisibility(visibility);
         mNextDepartureProgressBar.setVisibility(visibility);
@@ -550,20 +560,6 @@ public class TripOverviewActivity extends AppCompatActivity
                 headStationSet.add(headAbbr);
             }
         }
-    }
-
-    private boolean isTripAfterNow(Date d1, Date d2) {
-        DateFormat df = new SimpleDateFormat("h:mm a z", Locale.US);
-        DateFormat tz = new SimpleDateFormat("z", Locale.US);
-        long t1, t2;
-        t1 = (d1.getTime() % (24 * 60 * 60 * 1000L));
-//        Log.d(TAG, tz.format(d2.getTime()));
-        if (tz.format(d2.getTime()).equals("PDT")) t2 = ((d2.getTime() + 60 * 60 * 1000L) % (24 * 60 * 60 * 1000L));
-        else t2 = (d2.getTime() % (24 * 60 * 60 * 1000L));
-
-        Log.d(TAG, t1 + " | " + t2);
-//        Log.d(TAG, df.format(new Date(t2)));
-        return t1 >= t2;
     }
 
     private boolean isTripSame(String orig, String dest) {

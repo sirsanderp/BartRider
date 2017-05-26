@@ -10,7 +10,10 @@ import com.sanderp.bartrider.pojo.TimeToLongDeserializer;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -29,6 +32,7 @@ import java.util.List;
 })
 public class Trip implements Serializable {
     private final static long serialVersionUID = 4533555934408239702L;
+    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
 
     @JsonProperty("@origin")
     private String origin;
@@ -94,7 +98,7 @@ public class Trip implements Serializable {
 
     public void setOrigTimeMin(long origTimeMin) {
         this.origTimeMin = origTimeMin;
-        setEtdOrigTimeMin(origTimeMin);
+        setEtdOrigTimeMin(this.origTimeMin);
     }
 
     public String getOrigTimeDate() {
@@ -111,7 +115,7 @@ public class Trip implements Serializable {
 
     public void setDestTimeMin(long destTimeMin) {
         this.destTimeMin = destTimeMin;
-        setEtdDestTimeMin(destTimeMin);
+        setEtdDestTimeMin(this.destTimeMin);
     }
 
     public String getDestTimeDate() {

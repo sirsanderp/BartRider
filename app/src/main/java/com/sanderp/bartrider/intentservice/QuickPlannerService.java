@@ -61,7 +61,7 @@ public class QuickPlannerService extends IntentService {
         String url = Constants.Api.URL + "sched.aspx?cmd=depart"
                 + "&orig=" + origAbbr
                 + "&dest=" + destAbbr
-                + "&a=3&b=0"
+                + "&a=3&b=2"
                 + "&key=" + Constants.Api.KEY
                 + "&json=y";
         try {
