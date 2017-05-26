@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/trip_header"
-            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:layout_marginTop="3dp"
             android:choiceMode="singleChoice"
             tools:listitem="@layout/trip_detail_list_item" />
 
