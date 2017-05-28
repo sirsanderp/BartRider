@@ -1,13 +1,13 @@
 package com.sanderp.bartrider.pojo.advisory;
 
-import java.io.Serializable;
-import java.util.Date;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import java.io.Serializable;
+import java.util.Date;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
         "expires"
 })
 public class Bsa implements Serializable {
-    private final static long serialVersionUID = -7515140446250679961L;
+    private static final long serialVersionUID = -7515140446250679961L;
 
     @JsonProperty("@id")
     private long id;

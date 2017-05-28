@@ -16,6 +16,4 @@ public class PrefContract {
     public static final String LAST_DEST_ABBR = "lastDestAbbr";
     public static final String LAST_DEST_FULL = "lastDestFull";
     public static final String PREV_ADVISORY = "prevAdvisory";
-    public static final String PREV_MINUTES = "prevMinutes";
-    public static final String PREV_UPDATE = "prevUpdate";
 }

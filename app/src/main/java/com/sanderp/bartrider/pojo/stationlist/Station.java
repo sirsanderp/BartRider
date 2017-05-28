@@ -1,14 +1,14 @@
 package com.sanderp.bartrider.pojo.stationlist;
 
-import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
         "zipcode"
 })
 public class Station implements Serializable {
-    private final static long serialVersionUID = -4636956806771258102L;
+    private static final long serialVersionUID = -4636956806771258102L;
 
     @JsonProperty("name")
     private String name;

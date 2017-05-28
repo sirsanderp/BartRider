@@ -14,8 +14,6 @@ import com.sanderp.bartrider.pojo.stationlist.StationListPojo;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
 
-import org.xmlpull.v1.XmlPullParserException;
-
 import java.io.IOException;
 import java.io.InputStream;
 

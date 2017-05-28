@@ -12,8 +12,6 @@ import android.widget.TextView;
 
 import com.sanderp.bartrider.utility.PrefContract;
 
-import java.util.Set;
-
 /**
  * A simple {@link DialogFragment} subclass.
  */

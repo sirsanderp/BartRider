@@ -22,7 +22,7 @@ import java.util.List;
         "message"
 })
 public class Root implements Serializable {
-    private final static long serialVersionUID = 7166346698097837835L;
+    private static final long serialVersionUID = 7166346698097837835L;
 
     @JsonProperty("date")
     private String date;

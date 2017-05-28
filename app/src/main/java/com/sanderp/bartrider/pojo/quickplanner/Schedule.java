@@ -17,7 +17,7 @@ import java.io.Serializable;
         "request"
 })
 public class Schedule implements Serializable {
-    private final static long serialVersionUID = -344428777904140725L;
+    private static final long serialVersionUID = -344428777904140725L;
 
     @JsonProperty("date")
     private String date;

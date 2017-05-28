@@ -16,7 +16,7 @@ import java.util.List;
         "etd"
 })
 public class Station implements Serializable {
-    private final static long serialVersionUID = -4520020253277326720L;
+    private static final long serialVersionUID = -4520020253277326720L;
 
     @JsonProperty("name")
     private String name;

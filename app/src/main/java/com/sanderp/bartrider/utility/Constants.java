@@ -6,7 +6,7 @@ package com.sanderp.bartrider.utility;
 public class Constants {
     public class Api {
         public static final String URL = "https://api.bart.gov/api/";
-        public static final String KEY = "MW9S-E7SL-26DU-VV8V";
+        public static final String KEY = "QAZH-5LYZ-9J2T-DWE9";
     }
 
     public class Broadcast {

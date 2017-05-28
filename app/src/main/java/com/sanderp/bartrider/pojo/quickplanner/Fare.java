@@ -14,7 +14,7 @@ import java.io.Serializable;
         "@class"
 })
 public class Fare implements Serializable {
-    private final static long serialVersionUID = 4593250643945599573L;
+    private static final long serialVersionUID = 4593250643945599573L;
 
     @JsonProperty("@amount")
     private float amount;

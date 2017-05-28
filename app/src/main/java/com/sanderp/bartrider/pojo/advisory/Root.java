@@ -1,14 +1,14 @@
 package com.sanderp.bartrider.pojo.advisory;
 
-import java.io.Serializable;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import java.io.Serializable;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties({
@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
         "message"
 })
 public class Root implements Serializable {
-    private final static long serialVersionUID = 592093178472927449L;
+    private static final long serialVersionUID = 592093178472927449L;
 
     @JsonProperty("date")
     private String date;

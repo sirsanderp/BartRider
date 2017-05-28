@@ -1,13 +1,13 @@
 package com.sanderp.bartrider.pojo.stationlist;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties({
@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
         "root"
 })
 public class StationListPojo implements Serializable {
-    private final static long serialVersionUID = 3438456345554997785L;
+    private static final long serialVersionUID = 3438456345554997785L;
 
     @JsonProperty("root")
     private Root root;

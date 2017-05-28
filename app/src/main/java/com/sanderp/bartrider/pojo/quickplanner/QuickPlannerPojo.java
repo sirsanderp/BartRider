@@ -17,7 +17,7 @@ import java.io.Serializable;
         "root"
 })
 public class QuickPlannerPojo implements Serializable {
-    private final static long serialVersionUID = 6969078032949729289L;
+    private static final long serialVersionUID = 6969078032949729289L;
 
     @JsonProperty("root")
     private Root root;

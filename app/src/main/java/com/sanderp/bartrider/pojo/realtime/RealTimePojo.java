@@ -17,7 +17,7 @@ import java.io.Serializable;
         "root"
 })
 public class RealTimePojo implements Serializable {
-    private final static long serialVersionUID = -2080676166675022519L;
+    private static final long serialVersionUID = -2080676166675022519L;
 
     @JsonProperty("root")
     private Root root;

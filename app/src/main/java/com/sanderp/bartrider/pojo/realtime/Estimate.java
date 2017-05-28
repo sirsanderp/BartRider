@@ -19,7 +19,7 @@ import java.io.Serializable;
         "bikeflag"
 })
 public class Estimate implements Serializable {
-    private final static long serialVersionUID = 1853668132722861521L;
+    private static final long serialVersionUID = 1853668132722861521L;
 
     @JsonProperty("minutes")
     private int minutes;

@@ -15,7 +15,7 @@ import java.util.List;
         "fare"
 })
 public class Fares implements Serializable {
-    private final static long serialVersionUID = 4709120675289656788L;
+    private static final long serialVersionUID = 4709120675289656788L;
     
     @JsonProperty("@level")
     private String level;

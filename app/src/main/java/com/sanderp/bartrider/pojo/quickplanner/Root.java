@@ -21,7 +21,7 @@ import java.io.Serializable;
         "schedule"
 })
 public class Root implements Serializable {
-    private final static long serialVersionUID = -4313624189561203897L;
+    private static final long serialVersionUID = -4313624189561203897L;
 
     @JsonProperty("origin")
     private String origin;

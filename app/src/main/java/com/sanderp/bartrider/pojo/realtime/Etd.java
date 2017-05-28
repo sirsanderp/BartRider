@@ -17,7 +17,7 @@ import java.util.List;
         "estimate"
 })
 public class Etd implements Serializable {
-    private final static long serialVersionUID = -3119064484513923078L;
+    private static final long serialVersionUID = -3119064484513923078L;
 
     @JsonProperty("destination")
     private String destination;
