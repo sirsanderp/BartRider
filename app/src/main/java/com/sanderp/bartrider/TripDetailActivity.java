@@ -9,7 +9,6 @@ import android.widget.TextView;
 
 import com.sanderp.bartrider.adapter.TripLegAdapter;
 import com.sanderp.bartrider.pojo.quickplanner.Trip;
-import com.sanderp.bartrider.view.TrainRouteView;
 
 public class TripDetailActivity extends AppCompatActivity {
     private static final String TAG = "TripDetailActivity";
@@ -45,9 +44,9 @@ public class TripDetailActivity extends AppCompatActivity {
         Trip trip = (Trip) data.getSerializableExtra(TRIP);
         mTripHeader.setText(data.getStringExtra(ORIG) + " - " + data.getStringExtra(DEST));
         mCo2.setText(String.format(getResources().getString(R.string.co2_saved), trip.getCo2()));
-//        mTrainRoute.setTrainRoutes(trip.getLeg().size(), trip.getRouteColors());
+//        mTrainRoute.setTrainRoutes(trip.getLegs().size(), trip.getRouteColors());
 
-        TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getLeg(), trip.getRouteColors());
+        TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getLegs(), trip.getRouteColors());
         mListView.setAdapter(adapter);
     }
 }

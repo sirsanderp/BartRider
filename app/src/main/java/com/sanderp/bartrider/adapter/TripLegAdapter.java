@@ -64,8 +64,8 @@ public class TripLegAdapter extends BaseAdapter {
         Leg tripLeg = (Leg) getItem(position);
         mOrigName.setText(tripLeg.getOrigin());
         mDestName.setText(tripLeg.getDestination());
-        mOrigTime.setText(df.format(tripLeg.getEtdOrigTimeMin()));
-        mDestTime.setText(df.format(tripLeg.getEtdDestTimeMin()));
+        mOrigTime.setText(df.format(tripLeg.getEtdOrigTime()));
+        mDestTime.setText(df.format(tripLeg.getEtdDestTime()));
         mTrainRoute.setTrainRoutes(1, new int[]{colors[position]});
 
         return rowView;

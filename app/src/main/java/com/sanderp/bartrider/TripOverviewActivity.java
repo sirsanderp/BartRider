@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -47,6 +46,7 @@ import com.sanderp.bartrider.intentservice.RealTimeEtdService;
 import com.sanderp.bartrider.pojo.quickplanner.Fare;
 import com.sanderp.bartrider.pojo.quickplanner.Leg;
 import com.sanderp.bartrider.pojo.quickplanner.QuickPlannerPojo;
+import com.sanderp.bartrider.pojo.quickplanner.Request;
 import com.sanderp.bartrider.pojo.quickplanner.Trip;
 import com.sanderp.bartrider.pojo.realtimeetd.RealTimeEtdPojo;
 import com.sanderp.bartrider.utility.Constants;
@@ -59,10 +59,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
 public class TripOverviewActivity extends AppCompatActivity
@@ -88,9 +86,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private TextView mTripFare;
     private Toolbar mToolbar;
 
-    private ArrayList<Object> batchLoadObjects;
-    private List<Trip> tripSchedules;
-    private Map<String, String> routeColorMap;
+    private List<Trip> trips;
 
     private int favoriteTrip;
     private String origAbbr;
@@ -116,9 +112,6 @@ public class TripOverviewActivity extends AppCompatActivity
         // Set up Toolbar to replace ActionBar.
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-//        getSupportActionBar().setDisplayShowHomeEnabled(true);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setHomeButtonEnabled(true);
 
         // Set up advisory notifications and station database on first run.
         sharedPrefs = getSharedPreferences(PrefContract.PREFS_NAME, 0);
@@ -131,14 +124,6 @@ public class TripOverviewActivity extends AppCompatActivity
                     sharedPrefs.edit().putBoolean(PrefContract.FIRST_RUN, false).apply();
                 }
             }, this).execute();
-        }
-
-        // Initialize a map of routes and their colors.
-        String[] routeArray = getResources().getStringArray(R.array.routes);
-        routeColorMap = new HashMap<>();
-        for (String route : routeArray) {
-            String[] routeInfo = route.split("\\|", 2);
-            routeColorMap.put(routeInfo[0], routeInfo[1]);
         }
 
         // Configurations for scheduling repeating jobs.
@@ -170,11 +155,10 @@ public class TripOverviewActivity extends AppCompatActivity
         mTripSchedules.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Trip selectedTrip = tripSchedules.get(position);
                 Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class)
                         .putExtra(TripDetailActivity.ORIG, origFull)
                         .putExtra(TripDetailActivity.DEST, destFull)
-                        .putExtra(TripDetailActivity.TRIP, selectedTrip);
+                        .putExtra(TripDetailActivity.TRIP, trips.get(position));
                 startActivity(tripDetailIntent);
             }
         });
@@ -356,18 +340,16 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void onReceiveTripSchedules(Intent intent) {
         Log.d(TAG, "onReceiveTripSchedules(): Received callback from broadcast.");
-        QuickPlannerPojo result = (QuickPlannerPojo) intent.getSerializableExtra(QuickPlannerService.RESULT);
-        tripSchedules = result.getRoot().getSchedule().getRequest().getTrip();
-        setRouteColors();
-        setBatchLoadObjects();
-        getTripRealTimeEtd();
+        QuickPlannerPojo scheduleResults = (QuickPlannerPojo) intent.getSerializableExtra(QuickPlannerService.RESULT);
+        trips = scheduleResults.getRoot().getSchedule().getRequest().getTrips();
+        getTripRealTimeEtd(scheduleResults.getRoot().getSchedule().getRequest());
     }
 
-    private void getTripRealTimeEtd() {
+    private void getTripRealTimeEtd(Request result) {
         if (isTripSet() && Utils.isNetworkConnected(this)) {
             // Have to use bundle to be able to pass serialized objects through the AlarmManager.
             Bundle bundle = new Bundle();
-            bundle.putSerializable(RealTimeEtdService.OBJECT_LIST, batchLoadObjects);
+            bundle.putSerializable(RealTimeEtdService.OBJECT_LIST, result.buildBatchLoad());
             Intent realTimeEtdIntent = new Intent(TripOverviewActivity.this, RealTimeEtdService.class);
             realTimeEtdIntent.putExtra(RealTimeEtdService.OBJECT_LIST, bundle);
             realTimeEtdPendingIntent = PendingIntent.getService(this, -1, realTimeEtdIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -377,16 +359,16 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void onReceiveTripRealTimeEtd(Intent intent) {
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
-        HashMap<String, RealTimeEtdPojo> results = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
-        RealTimeEtdPojo firstTrip = results.get(tripSchedules.get(0).getLeg().get(0).getTrainHeadStation());
-        int nextDeparture = firstTrip.getEtdSeconds().get(0);
-        mergeSchedulesAndEtd(results);
+        HashMap<String, RealTimeEtdPojo> etdResults = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
+        RealTimeEtdPojo firstTrip = etdResults.get(trips.get(0).getLeg(0).getTrainHeadStation());
+        int nextDeparture = firstTrip.getEtdSeconds(0);
+        List<Trip> currTrips = mergeSchedulesAndEtd(etdResults);
 
         if (!(nextDeparture == 0 && firstTrip.getEtdSeconds().size() == 1)) {
-            List<Fare> fares = tripSchedules.get(0).getFares().getFare();
+            List<Fare> fares = trips.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
             mTripSchedules.clearAnimation();
-            mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, tripSchedules));
+            mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, currTrips));
             setNextDepartureProgressBar(nextDeparture);
             setOverviewVisibility(View.VISIBLE);
 
@@ -412,53 +394,56 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private void mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> results) {
+    private List<Trip> mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> etdResults) {
         DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
         df.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
         Date now = new Date();
         Log.d(TAG, "Current Time: " + df.format(now));
 
-        for (int i = 0; i < tripSchedules.size(); i++) {
-            Trip trip = tripSchedules.get(i);
-            Leg tripLeg = trip.getLeg().get(0);
+        List<Trip> currTrips = new ArrayList<>(trips);
+        for (int i = 0; i < currTrips.size(); i++) {
+            Trip trip = currTrips.get(i);
+            Leg tripLeg = trip.getLeg(0);
 
             String headAbbr = tripLeg.getTrainHeadStation();
-            Log.d(TAG, df.format(trip.getOrigTimeMin()) + " | "  + df.format(results.get(headAbbr).getLastTrain()));
-            if (trip.getOrigTimeMin() < results.get(headAbbr).getLastTrain()) {
-                tripSchedules.remove(i--);
+            Log.d(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepartTime());
+            Log.d(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartTimeEpoch());
+            if (trip.getOrigTimeEpoch() < etdResults.get(headAbbr).getPrevDepartTimeEpoch()) {
+                currTrips.remove(i--);
                 continue;
             }
 
             Log.d(TAG, origAbbr + " -> " + headAbbr);
             int etdMinutes;
-            if (!results.get(headAbbr).getEtdMinutes().isEmpty()) {
-                etdMinutes = results.get(headAbbr).getEtdMinutes().remove(0);
+            if (!etdResults.get(headAbbr).getEtdMinutes().isEmpty()) {
+                etdMinutes = etdResults.get(headAbbr).getEtdMinutes().remove(0);
             } else {
-                tripSchedules.remove(i);
-                break;
+                currTrips.remove(i--);
+                continue;
             }
 
             Log.d(TAG, "Until Departure: " + etdMinutes + " minutes");
             long estOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000);
             long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000);
-            Log.d(TAG, "Trip (planned): " + df.format(trip.getOrigTimeMin()) + " | " + df.format(trip.getDestTimeMin()));
+            Log.d(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " | " + trip.getDestTimeMin());
             Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
 
-            long diffMinutes = ((estOrigDeparture - trip.getOrigTimeMin()) / (60 * 1000)) % 60;
+            long diffMinutes = ((estOrigDeparture - trip.getOrigTimeEpoch()) / (60 * 1000)) % 60;
             long estLegOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000);
-            long estLegDestArrival = tripLeg.getDestTimeMin() + (diffMinutes * 60 * 1000);
-            Log.d(TAG, "Trip Leg (planned): " + df.format(tripLeg.getOrigTimeMin()) + " | " + df.format(tripLeg.getDestTimeMin()));
+            long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffMinutes * 60 * 1000);
+            Log.d(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " | " + tripLeg.getDestTimeMin());
             Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
 
             Log.d(TAG, "Difference: " + diffMinutes + " minutes");
             if (diffMinutes >= 1) {
                 Log.d(TAG, "Updating trip and trip leg estimated times...");
-                trip.setEtdOrigTimeMin(estOrigDeparture);
-                trip.setEtdDestTimeMin(estDestArrival);
-                tripLeg.setEtdOrigTimeMin(estLegOrigDeparture);
-                tripLeg.setEtdDestTimeMin(estLegDestArrival);
+                trip.setEtdOrigTime(estOrigDeparture);
+                trip.setEtdDestTime(estDestArrival);
+                tripLeg.setEtdOrigTime(estLegOrigDeparture);
+                tripLeg.setEtdDestTime(estLegDestArrival);
             }
         }
+        return currTrips;
     }
 
     private void setNextDepartureProgressBar(int seconds) {
@@ -515,7 +500,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setOverviewVisibility(int visibility) {
-//        mTripHeader.setVisibility(visibility);
+        mTripHeader.setVisibility(visibility);
         mTripFare.setVisibility(visibility);
         findViewById(R.id.trip_fare_info).setVisibility(visibility);
         mNextDepartureProgressBar.setVisibility(visibility);
@@ -527,39 +512,11 @@ public class TripOverviewActivity extends AppCompatActivity
         RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
 
-        mTripHeader.setVisibility(View.VISIBLE);
         mTripSchedules.setVisibility(View.GONE);
         mNextDeparture.setLayoutParams(layout);
         mNextDeparture.setText(text);
         mNextDeparture.setTextSize(18);
         mNextDeparture.setVisibility(View.VISIBLE);
-    }
-
-    private void setRouteColors() {
-        for (Trip trip : tripSchedules) {
-            List<Leg> tripLegs = trip.getLeg();
-            int[] routeColors = new int[tripLegs.size()];
-            for (int leg = 0; leg < tripLegs.size(); leg++) {
-                routeColors[leg] = Color.parseColor(routeColorMap.get(tripLegs.get(leg).getLine()));
-            }
-            trip.setRouteColors(routeColors);
-        }
-    }
-
-    private void setBatchLoadObjects() {
-        batchLoadObjects = new ArrayList<>();
-        HashSet<String> headStationSet = new HashSet<>();
-        for (Trip trip : tripSchedules) {
-            String origAbbr = trip.getOrigin();
-            String headAbbr = trip.getLeg().get(0).getTrainHeadStation();
-            if (!headStationSet.contains(headAbbr)) {
-                RealTimeEtdPojo pojo = new RealTimeEtdPojo();
-                pojo.setOrigAbbr(origAbbr);
-                pojo.setHeadAbbr(headAbbr);
-                batchLoadObjects.add(pojo);
-                headStationSet.add(headAbbr);
-            }
-        }
     }
 
     private boolean isTripSame(String orig, String dest) {

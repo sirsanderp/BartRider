@@ -1,17 +1,18 @@
 package com.sanderp.bartrider.pojo.quickplanner;
 
+import android.graphics.Color;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.sanderp.bartrider.pojo.TimeToLongDeserializer;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -31,8 +32,26 @@ import java.util.Locale;
         "leg"
 })
 public class Trip implements Serializable {
-    private final static long serialVersionUID = 4533555934408239702L;
-    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
+    private static final long serialVersionUID = 4533555934408239702L;
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy h:mm a", Locale.US);
+    private static final HashMap<String, String> ROUTE_COLORS = new HashMap<String, String>() {
+        {
+            put("ROUTE 1", "#ffffff33");
+            put("ROUTE 2", "#ffffff33");
+            put("ROUTE 3", "#ffff9933");
+            put("ROUTE 4", "#ffff9933");
+            put("ROUTE 5", "#ff339933");
+            put("ROUTE 6", "#ff339933");
+            put("ROUTE 7", "#ffff0000");
+            put("ROUTE 8", "#ffff0000");
+            put("ROUTE 9", "#ffffff33");
+            put("ROUTE 10", "#ffffff33");
+            put("ROUTE 11", "#ff0099cc");
+            put("ROUTE 12", "#ff0099cc");
+            put("ROUTE 19", "#ffd5cfa3");
+            put("ROUTE 20", "#ffd5cfa3");
+        }
+    };
 
     @JsonProperty("@origin")
     private String origin;
@@ -41,13 +60,11 @@ public class Trip implements Serializable {
     @JsonProperty("@fare")
     private float fare;
     @JsonProperty("@origTimeMin")
-    @JsonDeserialize(using = TimeToLongDeserializer.class)
-    private long origTimeMin;
+    private String origTimeMin;
     @JsonProperty("@origTimeDate")
     private String origTimeDate;
     @JsonProperty("@destTimeMin")
-    @JsonDeserialize(using = TimeToLongDeserializer.class)
-    private long destTimeMin;
+    private String destTimeMin;
     @JsonProperty("@destTimeDate")
     private String destTimeDate;
     @JsonProperty("@clipper")
@@ -59,12 +76,12 @@ public class Trip implements Serializable {
     @JsonProperty("fares")
     private Fares fares;
     @JsonProperty("leg")
-    private List<Leg> leg = null;
+    private List<Leg> legs = null;
 
     @JsonIgnore
-    private long etdOrigTimeMin;
+    private long etdOrigTime;
     @JsonIgnore
-    private long etdDestTimeMin;
+    private long etdDestTime;
     @JsonIgnore
     private int[] routeColors;
 
@@ -92,13 +109,12 @@ public class Trip implements Serializable {
         this.fare = fare;
     }
 
-    public long getOrigTimeMin() {
+    public String getOrigTimeMin() {
         return origTimeMin;
     }
 
-    public void setOrigTimeMin(long origTimeMin) {
+    public void setOrigTimeMin(String origTimeMin) {
         this.origTimeMin = origTimeMin;
-        setEtdOrigTimeMin(this.origTimeMin);
     }
 
     public String getOrigTimeDate() {
@@ -107,15 +123,24 @@ public class Trip implements Serializable {
 
     public void setOrigTimeDate(String origTimeDate) {
         this.origTimeDate = origTimeDate;
+        setEtdOrigTime(getOrigTimeEpoch());
     }
 
-    public long getDestTimeMin() {
+    public long getOrigTimeEpoch() {
+        try {
+            return DATE_FORMAT.parse(origTimeDate + " " + origTimeMin).getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0L;
+    }
+
+    public String getDestTimeMin() {
         return destTimeMin;
     }
 
-    public void setDestTimeMin(long destTimeMin) {
+    public void setDestTimeMin(String destTimeMin) {
         this.destTimeMin = destTimeMin;
-        setEtdDestTimeMin(this.destTimeMin);
     }
 
     public String getDestTimeDate() {
@@ -124,6 +149,16 @@ public class Trip implements Serializable {
 
     public void setDestTimeDate(String destTimeDate) {
         this.destTimeDate = destTimeDate;
+        setEtdDestTime(getDestTimeEpoch());
+    }
+
+    public long getDestTimeEpoch() {
+        try {
+            return DATE_FORMAT.parse(destTimeDate + " " + destTimeMin).getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0L;
     }
 
     public float getClipper() {
@@ -158,28 +193,33 @@ public class Trip implements Serializable {
         this.fares = fares;
     }
 
-    public List<Leg> getLeg() {
-        return leg;
+    public Leg getLeg(int index) {
+        return legs.get(index);
     }
 
-    public void setLeg(List<Leg> leg) {
-        this.leg = leg;
+    public List<Leg> getLegs() {
+        return legs;
     }
 
-    public long getEtdOrigTimeMin() {
-        return etdOrigTimeMin;
+    public void setLegs(List<Leg> legs) {
+        this.legs = legs;
+        buildRouteColors();
     }
 
-    public void setEtdOrigTimeMin(long etdOrigTimeMin) {
-        this.etdOrigTimeMin = etdOrigTimeMin;
+    public long getEtdOrigTime() {
+        return etdOrigTime;
     }
 
-    public long getEtdDestTimeMin() {
-        return etdDestTimeMin;
+    public void setEtdOrigTime(long etdOrigTime) {
+        this.etdOrigTime = etdOrigTime;
     }
 
-    public void setEtdDestTimeMin(long etdDestTimeMin) {
-        this.etdDestTimeMin = etdDestTimeMin;
+    public long getEtdDestTime() {
+        return etdDestTime;
+    }
+
+    public void setEtdDestTime(long etdDestTime) {
+        this.etdDestTime = etdDestTime;
     }
 
     public int[] getRouteColors() {
@@ -188,6 +228,14 @@ public class Trip implements Serializable {
 
     public void setRouteColors(int[] routeColors) {
         this.routeColors = routeColors;
+    }
+
+    private void buildRouteColors() {
+        int[] routeColors = new int[getLegs().size()];
+        for (int leg = 0; leg < getLegs().size(); leg++) {
+            routeColors[leg] = Color.parseColor(ROUTE_COLORS.get(getLegs().get(leg).getLine()));
+        }
+        setRouteColors(routeColors);
     }
 
     @Override
