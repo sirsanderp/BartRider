@@ -11,7 +11,7 @@
     <string name="drawer_open">Drawer Opened</string>
     <string name="drawer_close">Drawer Closed</string>
     <string name="empty_field">N/A</string>
-    <string name="empty_list_view">Please select stations in the trips planner.</string>
+    <string name="empty_list_view">Select stations using the \'+\' button on the bottom right.</string>
     <string name="fares">$%1$.2f / $%2$.2f*</string>
     <string name="fare_info">*youth, senior or RTC Clipper card</string>
     <string name="favorite_trips">Favorite Trips</string>

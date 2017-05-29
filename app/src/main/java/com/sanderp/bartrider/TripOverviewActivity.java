@@ -86,6 +86,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private TextView mTripFare;
     private Toolbar mToolbar;
 
+    private List<Trip> currTrips;
     private List<Trip> trips;
 
     private int favoriteTrip;
@@ -158,7 +159,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 Intent tripDetailIntent = new Intent(TripOverviewActivity.this, TripDetailActivity.class)
                         .putExtra(TripDetailActivity.ORIG, origFull)
                         .putExtra(TripDetailActivity.DEST, destFull)
-                        .putExtra(TripDetailActivity.TRIP, trips.get(position));
+                        .putExtra(TripDetailActivity.TRIP, currTrips.get(position));
                 startActivity(tripDetailIntent);
             }
         });
@@ -361,9 +362,9 @@ public class TripOverviewActivity extends AppCompatActivity
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
         HashMap<String, RealTimeEtdPojo> etdResults = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
         RealTimeEtdPojo firstTrip = etdResults.get(trips.get(0).getLeg(0).getTrainHeadStation());
-        int nextDeparture = firstTrip.getEtdSeconds(0);
-        List<Trip> currTrips = mergeSchedulesAndEtd(etdResults);
+        mergeSchedulesAndEtd(etdResults);
 
+        int nextDeparture = firstTrip.getEtdSeconds(0);
         if (!(nextDeparture == 0 && firstTrip.getEtdSeconds().size() == 1)) {
             List<Fare> fares = trips.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
@@ -394,13 +395,13 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private List<Trip> mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> etdResults) {
+    private void mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> etdResults) {
         DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
         df.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
         Date now = new Date();
         Log.d(TAG, "Current Time: " + df.format(now));
 
-        List<Trip> currTrips = new ArrayList<>(trips);
+        currTrips = new ArrayList<>(trips);
         for (int i = 0; i < currTrips.size(); i++) {
             Trip trip = currTrips.get(i);
             Leg tripLeg = trip.getLeg(0);
@@ -418,18 +419,17 @@ public class TripOverviewActivity extends AppCompatActivity
             if (!etdResults.get(headAbbr).getEtdMinutes().isEmpty()) {
                 etdMinutes = etdResults.get(headAbbr).getEtdMinutes().remove(0);
             } else {
-                currTrips.remove(i--);
                 continue;
             }
 
             Log.d(TAG, "Until Departure: " + etdMinutes + " minutes");
-            long estOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000);
+            long estOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000) - (30 * 1000);
             long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000);
             Log.d(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " | " + trip.getDestTimeMin());
             Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
 
             long diffMinutes = ((estOrigDeparture - trip.getOrigTimeEpoch()) / (60 * 1000)) % 60;
-            long estLegOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000);
+            long estLegOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000) - (30 * 1000);
             long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffMinutes * 60 * 1000);
             Log.d(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " | " + tripLeg.getDestTimeMin());
             Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
@@ -443,7 +443,6 @@ public class TripOverviewActivity extends AppCompatActivity
                 tripLeg.setEtdDestTime(estLegDestArrival);
             }
         }
-        return currTrips;
     }
 
     private void setNextDepartureProgressBar(int seconds) {
