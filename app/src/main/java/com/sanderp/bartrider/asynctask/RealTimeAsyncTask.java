@@ -1,8 +1,10 @@
 package com.sanderp.bartrider.asynctask;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.structure.TripEstimate;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
@@ -22,8 +24,10 @@ public class RealTimeAsyncTask extends AsyncTask<String, Void, List<TripEstimate
     private static final String TAG = "RealTimeAsyncTask";
 
     private AsyncTaskResponse delegate;
+    private Context context;
 
-    public RealTimeAsyncTask(AsyncTaskResponse delegate) {
+    public RealTimeAsyncTask(AsyncTaskResponse delegate, Context context) {
+        this.context = context;
         this.delegate = delegate;
     }
 
@@ -49,9 +53,9 @@ public class RealTimeAsyncTask extends AsyncTask<String, Void, List<TripEstimate
         RealTimeParser estimates = new RealTimeParser();
 
         Log.i(TAG, "Parsing real-time estimates...");
-        String url = Constants.Api.URL + "etd.aspx?cmd=etd"
+        String url = Constants.Bart.API_URL + "etd.aspx?cmd=etd"
                 + "&orig=" + origAbbr
-                + "&key=" + Constants.Api.KEY;
+                + "&key=" + context.getResources().getString(R.string.bartApiKey);
         try {
             stream = Utils.getUrlStream(url);
             return estimates.parse(stream, trainHeadStation);

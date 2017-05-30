@@ -1,8 +1,10 @@
 package com.sanderp.bartrider.asynctask;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
 import com.sanderp.bartrider.xmlparser.AdvisoryParser;
@@ -22,8 +24,10 @@ public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
     private static final String TAG = "AdvisoryAsyncTask";
 
     private AsyncTaskResponse delegate;
+    private Context context;
 
-    public AdvisoryAsyncTask(AsyncTaskResponse delegate) {
+    public AdvisoryAsyncTask(AsyncTaskResponse delegate, Context context) {
+        this.context = context;
         this.delegate = delegate;
     }
 
@@ -47,8 +51,8 @@ public class AdvisoryAsyncTask extends AsyncTask<String, Void, String> {
     private List<String> getAdvisories() throws XmlPullParserException, IOException {
         InputStream stream = null;
         AdvisoryParser parser = new AdvisoryParser();
-        String url = Constants.Api.URL + "bsa.aspx?cmd=bsa"
-                + "&key=" + Constants.Api.KEY;
+        String url = Constants.Bart.API_URL + "bsa.aspx?cmd=bsa"
+                + "&key=" + context.getResources().getString(R.string.bartApiKey);
         List<String> advisories = new ArrayList<>();
         try {
             Log.i(TAG, "Parsing advisories...");

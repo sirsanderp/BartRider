@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.pojo.quickplanner.QuickPlannerPojo;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
@@ -58,11 +59,11 @@ public class QuickPlannerService extends IntentService {
 
     private QuickPlannerPojo getSchedule(String origAbbr, String destAbbr) throws IOException {
         InputStream stream = null;
-        String url = Constants.Api.URL + "sched.aspx?cmd=depart"
+        String url = Constants.Bart.API_URL + "sched.aspx?cmd=depart"
                 + "&orig=" + origAbbr
                 + "&dest=" + destAbbr
                 + "&a=3&b=2"
-                + "&key=" + Constants.Api.KEY
+                + "&key=" + getResources().getString(R.string.bartApiKey)
                 + "&json=y";
         try {
             Log.i(TAG, "Getting trip schedules...");

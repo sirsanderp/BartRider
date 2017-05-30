@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.database.BartRiderContract;
 import com.sanderp.bartrider.pojo.stationlist.Station;
 import com.sanderp.bartrider.pojo.stationlist.StationListPojo;
@@ -49,8 +50,8 @@ public class StationListAsyncTask extends AsyncTask<String, Void, String> {
 
     private void getStations() throws IOException {
         InputStream stream = null;
-        String url = Constants.Api.URL + "stn.aspx?cmd=stns"
-                + "&key=" + Constants.Api.KEY
+        String url = Constants.Bart.API_URL + "stn.aspx?cmd=stns"
+                + "&key=" + context.getResources().getString(R.string.bartApiKey)
                 + "&json=y";
         try {
             Log.i(TAG, "Parsing station lists...");

@@ -4,9 +4,8 @@ package com.sanderp.bartrider.utility;
  * Created by Sander Peerna on 11/10/2016.
  */
 public class Constants {
-    public class Api {
-        public static final String URL = "https://api.bart.gov/api/";
-        public static final String KEY = "QAZH-5LYZ-9J2T-DWE9";
+    public class Bart {
+        public static final String API_URL = "https://api.bart.gov/api/";
     }
 
     public class Broadcast {

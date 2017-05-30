@@ -74,8 +74,8 @@ public class AdvisoryService extends IntentService {
 
     private AdvisoryPojo getAdvisories() throws IOException {
         InputStream stream = null;
-        String url = Constants.Api.URL + "bsa.aspx?cmd=bsa"
-                + "&key=" + Constants.Api.KEY
+        String url = Constants.Bart.API_URL + "bsa.aspx?cmd=bsa"
+                + "&key=" + getResources().getString(R.string.bartApiKey)
                 + "&json=y";
         try {
             Log.i(TAG, "Getting advisories...");

@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.pojo.realtime.RealTimePojo;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
@@ -57,9 +58,9 @@ public class RealTimeService extends IntentService {
 
     private RealTimePojo getRealTimeEstimates(String origAbbr) throws IOException {
         InputStream stream = null;
-        String url = Constants.Api.URL + "etd.aspx?cmd=etd"
+        String url = Constants.Bart.API_URL + "etd.aspx?cmd=etd"
                 + "&orig=" + origAbbr
-                + "&key=" + Constants.Api.KEY
+                + "&key=" + getResources().getString(R.string.bartApiKey)
                 + "&json=y";
         try {
             Log.i(TAG, "Getting real-time estimates...");

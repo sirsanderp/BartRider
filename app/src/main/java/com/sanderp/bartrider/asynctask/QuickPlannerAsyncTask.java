@@ -1,8 +1,10 @@
 package com.sanderp.bartrider.asynctask;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.sanderp.bartrider.R;
 import com.sanderp.bartrider.structure.Trip;
 import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.Utils;
@@ -22,8 +24,10 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
     private static final String TAG = "QuickPlannerAsyncTask";
 
     private AsyncTaskResponse delegate;
+    private Context context;
 
-    public QuickPlannerAsyncTask(AsyncTaskResponse delegate) {
+    public QuickPlannerAsyncTask(AsyncTaskResponse delegate, Context context) {
+        this.context = context;
         this.delegate = delegate;
     }
 
@@ -47,11 +51,11 @@ public class QuickPlannerAsyncTask extends AsyncTask<String, Void, List<Trip>> {
     private List<Trip> getSchedule(String origAbbr, String destAbbr) throws XmlPullParserException, IOException {
         InputStream stream = null;
         QuickPlannerParser planner = new QuickPlannerParser();
-        String url = Constants.Api.URL + "sched.aspx?cmd=depart"
+        String url = Constants.Bart.API_URL + "sched.aspx?cmd=depart"
                 + "&orig=" + origAbbr
                 + "&dest=" + destAbbr
                 + "&a=3&b=0"
-                + "&key=" + Constants.Api.KEY;
+                + "&key=" + context.getResources().getString(R.string.bartApiKey);
         try {
             Log.i(TAG, "Parsing trip schedule...");
             stream = Utils.getUrlStream(url);
