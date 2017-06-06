@@ -48,6 +48,7 @@ public class TripDrawerFragment extends Fragment implements
     private Cursor favoritesTable;
     private SimpleCursorAdapter mAdapter;
     private ListView mListView;
+    private TextView mEmptyView;
 
     private OnFragmentListener mFragmentListener;
 
@@ -97,6 +98,7 @@ public class TripDrawerFragment extends Fragment implements
             }
         });
         mListView.setAdapter(mAdapter);
+        mEmptyView = (TextView) view.findViewById(R.id.empty_list_item);
         getLoaderManager().initLoader(LOADER_ID, null, this);
 
         return view;
@@ -132,6 +134,7 @@ public class TripDrawerFragment extends Fragment implements
         if (loader.getId() == LOADER_ID && data != null) {
 //            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
             favoritesTable = data;
+            if (favoritesTable.getCount() == 0) mListView.setEmptyView(mEmptyView);
             mAdapter.swapCursor(data);
         }
     }

@@ -33,8 +33,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:text="@string/empty_list_view"
-                android:textSize="18sp"
+                android:gravity="center"
+                android:text="@string/empty_overview_list_view"
+                android:textSize="24sp"
                 android:visibility="gone" />
 
             <RelativeLayout
@@ -130,7 +131,7 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginBottom="@dimen/activity_vertical_margin"
                 android:text="@string/fare_info"
-                android:textSize="10sp" />
+                android:textSize="12sp" />
 
         </RelativeLayout>
 

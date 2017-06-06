@@ -31,14 +31,6 @@
             android:textStyle="bold"
             tools:text="@string/sample_trip" />
 
-        <!--<com.sanderp.bartrider.view.TrainRouteView-->
-            <!--android:id="@+id/train_route"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_below="@+id/trip_header"-->
-            <!--android:layout_centerInParent="true"-->
-            <!--android:layout_marginTop="16dp" />-->
-
         <ListView
             android:id="@+id/trip_detail_list_view"
             android:layout_width="wrap_content"

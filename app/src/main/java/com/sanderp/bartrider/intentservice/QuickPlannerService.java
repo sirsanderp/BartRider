@@ -62,7 +62,7 @@ public class QuickPlannerService extends IntentService {
         String url = Constants.Bart.API_URL + "sched.aspx?cmd=depart"
                 + "&orig=" + origAbbr
                 + "&dest=" + destAbbr
-                + "&a=3&b=2"
+                + "&a=4&b=2"
                 + "&key=" + getResources().getString(R.string.bartApiKey)
                 + "&json=y";
         try {

@@ -19,7 +19,7 @@ public class RealTimeEtdPojo implements Serializable {
     private static final long serialVersionUID = 2626209002115756111L;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a", Locale.US);
 
-    private String api_update;
+    private String apiUpdate;
     private String color;
     private String direction;
     private List<Integer> etdMinutes = null;
@@ -27,7 +27,7 @@ public class RealTimeEtdPojo implements Serializable {
     private String headAbbr;
     private String headName;
     private String hexcolor;
-    private String prevDepartTime;
+    private String prevDepart;
     private List<Integer> lengths = null;
     private String origAbbr;
     private String origName;
@@ -53,11 +53,21 @@ public class RealTimeEtdPojo implements Serializable {
 
     @DynamoDBAttribute(attributeName = "api_update")
     public String getApiUpdate() {
-        return api_update;
+        return apiUpdate;
     }
 
     public void setApiUpdate(String date) {
-        this.api_update = date;
+        this.apiUpdate = date;
+    }
+
+    @DynamoDBIgnore
+    public long getApiUpdateEpoch() {
+        try {
+            return DATE_FORMAT.parse(apiUpdate).getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0L;
     }
 
     @DynamoDBAttribute(attributeName = "color")
@@ -150,18 +160,18 @@ public class RealTimeEtdPojo implements Serializable {
     }
 
     @DynamoDBAttribute(attributeName = "prev_depart")
-    public String getPrevDepartTime() {
-        return prevDepartTime;
+    public String getPrevDepart() {
+        return prevDepart;
     }
 
-    public void setPrevDepartTime(String prevDepartTime) {
-        this.prevDepartTime = prevDepartTime;
+    public void setPrevDepart(String prevDepart) {
+        this.prevDepart = prevDepart;
     }
 
     @DynamoDBIgnore
-    public long getPrevDepartTimeEpoch() {
+    public long getPrevDepartEpoch() {
         try {
-            return DATE_FORMAT.parse(prevDepartTime).getTime();
+            return DATE_FORMAT.parse(prevDepart).getTime();
         } catch (ParseException e) {
             e.printStackTrace();
         }

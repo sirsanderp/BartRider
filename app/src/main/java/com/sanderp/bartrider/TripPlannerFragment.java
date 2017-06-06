@@ -43,6 +43,9 @@ public class TripPlannerFragment extends DialogFragment implements
     private Spinner mOrigSpinner;
     private Spinner mDestSpinner;
 
+    private String origAbbr;
+    private String destAbbr;
+
     private OnFragmentListener mFragmentListener;
 
     public interface OnFragmentListener {
@@ -92,8 +95,7 @@ public class TripPlannerFragment extends DialogFragment implements
         });
 
         // Initialize spinners
-        mAdapter = new SimpleCursorAdapter(getActivity(),
-                R.layout.simple_spinner_item, null, FROM, TO, 0);
+        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.simple_spinner_item, null, FROM, TO, 0);
         mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         mOrigSpinner = (Spinner) view.findViewById(R.id.orig_spinner);
@@ -144,6 +146,7 @@ public class TripPlannerFragment extends DialogFragment implements
         if (loader.getId() == LOADER_ID && data != null) {
 //            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
             mAdapter.swapCursor(data);
+//            setSpinnersToTrip();
         }
     }
 
@@ -175,5 +178,30 @@ public class TripPlannerFragment extends DialogFragment implements
     private void resetSpinners() {
         mOrigSpinner.setSelection(0);
         mDestSpinner.setSelection(0);
+    }
+
+    public void setSpinners(String origAbbr, String destAbbr) {
+        this.origAbbr = origAbbr;
+        this.destAbbr = destAbbr;
+    }
+
+    private void setSpinnersToTrip() {
+        if (origAbbr != null || destAbbr != null) {
+            Cursor cOrig = getContext().getContentResolver().query(BartRiderContract.Stations.CONTENT_URI, PROJECTION,
+                    BartRiderContract.Stations.Column.ABBREVIATION + "=?", new String[] {origAbbr}, BartRiderContract.Stations.DEFAULT_SORT);
+            if (cOrig != null) {
+                cOrig.moveToFirst();
+                mOrigSpinner.setSelection(cOrig.getInt(cOrig.getColumnIndex(BartRiderContract.Stations.Column.ID)) - 1);
+                cOrig.close();
+            }
+
+            Cursor cDest = getActivity().getContentResolver().query(BartRiderContract.Stations.CONTENT_URI, PROJECTION,
+                    BartRiderContract.Stations.Column.ABBREVIATION + "=?", new String[] {destAbbr}, BartRiderContract.Stations.DEFAULT_SORT);
+            if (cDest != null) {
+                cDest.moveToFirst();
+                mDestSpinner.setSelection(cDest.getInt(cDest.getColumnIndex(BartRiderContract.Stations.Column.ID)) - 1);
+                cDest.close();
+            }
+        }
     }
 }
