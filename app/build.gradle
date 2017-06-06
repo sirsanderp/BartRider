@@ -42,6 +42,7 @@ dependencies {
     compile 'com.android.support:design:25.1.0'
     compile 'com.android.support:support-v4:25.1.0'
     compile 'com.android.support:recyclerview-v7:25.1.0'
+    compile 'com.davemorrissey.labs:subsampling-scale-image-view:3.6.0'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.8'
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.8'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.8.8'

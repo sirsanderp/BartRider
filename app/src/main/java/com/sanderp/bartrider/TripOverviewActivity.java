@@ -89,7 +89,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private List<Trip> currTrips;
     private List<Trip> trips;
 
-    private int favoriteTrip;
+    private int favoriteTrip = -1;
     private String origAbbr;
     private String origFull;
     private String destAbbr;
@@ -187,6 +187,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                plannerFragment.setSpinners(origAbbr, destAbbr);
                 plannerFragment.show(fragmentManager, "Trip Planner Fragment");
             }
         });
@@ -203,6 +204,7 @@ public class TripOverviewActivity extends AppCompatActivity
         } else {
             mTripSchedules.setEmptyView(findViewById(R.id.empty_list_item));
         }
+        favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
     }
 
     @Override
@@ -224,12 +226,12 @@ public class TripOverviewActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.QUICK_PLANNER_SERVICE));
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_ETD_SERVICE));
         if (isTripSet()) {
             Log.i(TAG, "onResume(): Refreshing trip schedules...");
             getTripSchedules();
         }
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.QUICK_PLANNER_SERVICE));
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_ETD_SERVICE));
     }
 
     @Override
@@ -241,27 +243,29 @@ public class TripOverviewActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(TAG, "onStop(): Cancelling all alarms...");
-        alarmManager.cancel(quickPlannerPendingIntent);
-        alarmManager.cancel(realTimeEtdPendingIntent);
+        cancelAlarms();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestory()");
+        Log.d(TAG, "onDestroy()");
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_bart_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
         mAdvisoryIcon = menu.getItem(1).getIcon();
         mFavoriteIcon = menu.getItem(0).getIcon();
-        int id = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
-        if (id != 0) setFavoriteIcon(id);
-        return true;
+        setFavoriteIcon();
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -280,7 +284,17 @@ public class TripOverviewActivity extends AppCompatActivity
             case R.id.action_advisory:
                 showAdvisory();
                 return true;
+            case R.id.action_bart_map:
+                Intent mapIntent = new Intent(TripOverviewActivity.this, MapActivity.class);
+                startActivity(mapIntent);
+                return true;
             case R.id.action_refresh:
+                getTripSchedules();
+                return true;
+            case R.id.action_reverse_trip:
+                setTrip(destAbbr, destFull, origAbbr, origFull);
+                favoriteTrip = -1;
+                invalidateOptionsMenu();
                 getTripSchedules();
                 return true;
             case R.id.action_settings:
@@ -293,7 +307,8 @@ public class TripOverviewActivity extends AppCompatActivity
     public void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull) {
         if (!isTripSame(origAbbr, destAbbr)) {
             setTrip(origAbbr, origFull, destAbbr, destFull);
-            setFavoriteIcon(-1);
+            favoriteTrip = -1;
+            invalidateOptionsMenu();
             getTripSchedules();
         }
     }
@@ -302,14 +317,16 @@ public class TripOverviewActivity extends AppCompatActivity
     public void onFavoriteClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
         if (!isTripSame(origAbbr, destAbbr)) {
             setTrip(origAbbr, origFull, destAbbr, destFull);
-            setFavoriteIcon(id);
+            favoriteTrip = id;
+            invalidateOptionsMenu();
             getTripSchedules();
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
     private void setTrip(String origAbbr, String origFull, String destAbbr, String destFull) {
-        if (isValidTrip(origAbbr, destAbbr)) {
+        cancelAlarms();
+        if (isTripValid(origAbbr, destAbbr)) {
             this.origAbbr = origAbbr;
             this.origFull = origFull;
             this.destAbbr = destAbbr;
@@ -322,11 +339,19 @@ public class TripOverviewActivity extends AppCompatActivity
         // TODO: Change color of icon based on the delays.
     }
 
-    private void setFavoriteIcon(int id) {
-        favoriteTrip = ((id == -1) ? favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr) : id);
+    private void setFavoriteIcon() {
+        // -1: Not checked yet, 0: Checked, not a favorite, 1+: Checked, a favorite
+        if (favoriteTrip == -1) favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr);
 
-        if (favoriteTrip == 0) mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
-        else mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
+//        invalidateOptionsMenu();
+        Log.d(TAG, "Favorite Trip: " + favoriteTrip);
+        if (favoriteTrip == 0) {
+            Log.d(TAG, "Favorite set to white.");
+            mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
+        } else {
+            Log.d(TAG, "Favorite set to green.");
+            mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
+        }
     }
 
     private void getTripSchedules() {
@@ -361,11 +386,8 @@ public class TripOverviewActivity extends AppCompatActivity
     private void onReceiveTripRealTimeEtd(Intent intent) {
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
         HashMap<String, RealTimeEtdPojo> etdResults = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
-        RealTimeEtdPojo firstTrip = etdResults.get(trips.get(0).getLeg(0).getTrainHeadStation());
-        mergeSchedulesAndEtd(etdResults);
-
-        int nextDeparture = firstTrip.getEtdSeconds(0);
-        if (!(nextDeparture == 0 && firstTrip.getEtdSeconds().size() == 1)) {
+        int nextDeparture = mergeSchedulesAndEtd(etdResults);
+        if (currTrips.size() > 0) {
             List<Fare> fares = trips.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
             mTripSchedules.clearAnimation();
@@ -395,47 +417,54 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
-    private void mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> etdResults) {
-        DateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
+    private int mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> etdResults) {
+        DateFormat df = new SimpleDateFormat("h:mm:ss a", Locale.US);
         df.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
         Date now = new Date();
-        Log.d(TAG, "Current Time: " + df.format(now));
 
         currTrips = new ArrayList<>(trips);
+        int nextDeparture = Integer.MAX_VALUE;
         for (int i = 0; i < currTrips.size(); i++) {
             Trip trip = currTrips.get(i);
             Leg tripLeg = trip.getLeg(0);
 
             String headAbbr = tripLeg.getTrainHeadStation();
-            Log.d(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepartTime());
-            Log.d(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartTimeEpoch());
-            if (trip.getOrigTimeEpoch() < etdResults.get(headAbbr).getPrevDepartTimeEpoch()) {
+            Log.d(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
+            Log.d(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
+            if (trip.getOrigTimeEpoch() < etdResults.get(headAbbr).getPrevDepartEpoch()) {
                 currTrips.remove(i--);
                 continue;
             }
 
             Log.d(TAG, origAbbr + " -> " + headAbbr);
-            int etdMinutes;
-            if (!etdResults.get(headAbbr).getEtdMinutes().isEmpty()) {
-                etdMinutes = etdResults.get(headAbbr).getEtdMinutes().remove(0);
-            } else {
+            if (etdResults.get(headAbbr).getEtdSeconds().isEmpty()) {
                 continue;
             }
 
-            Log.d(TAG, "Until Departure: " + etdMinutes + " minutes");
-            long estOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000) - (30 * 1000);
-            long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000);
-            Log.d(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " | " + trip.getDestTimeMin());
-            Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " | " + df.format(estDestArrival));
+            long sinceLastUpdate = now.getTime() - etdResults.get(headAbbr).getApiUpdateEpoch();
+            int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
+            Log.d(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
+            int etdSeconds = etdResults.get(headAbbr).getEtdSeconds().remove(0);
+            if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
+            else etdSeconds = etdSeconds - sinceLastUpdateSeconds;
+
+            if (etdSeconds < nextDeparture) nextDeparture = etdSeconds;
+            Log.d(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
+
+            Log.d(TAG, "Current Time: " + df.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
+            long estOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
+            long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000) - sinceLastUpdate;
+            Log.d(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
+            Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " - " + df.format(estDestArrival));
 
             long diffMinutes = ((estOrigDeparture - trip.getOrigTimeEpoch()) / (60 * 1000)) % 60;
-            long estLegOrigDeparture = now.getTime() + (etdMinutes * 60 * 1000) - (30 * 1000);
-            long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffMinutes * 60 * 1000);
-            Log.d(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " | " + tripLeg.getDestTimeMin());
-            Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " | " + df.format(estLegDestArrival));
+            long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
+            long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffMinutes * 60 * 1000) - sinceLastUpdate;
+            Log.d(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
+            Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " - " + df.format(estLegDestArrival));
 
             Log.d(TAG, "Difference: " + diffMinutes + " minutes");
-            if (diffMinutes >= 1) {
+            if (diffMinutes > 0) {
                 Log.d(TAG, "Updating trip and trip leg estimated times...");
                 trip.setEtdOrigTime(estOrigDeparture);
                 trip.setEtdDestTime(estDestArrival);
@@ -443,9 +472,11 @@ public class TripOverviewActivity extends AppCompatActivity
                 tripLeg.setEtdDestTime(estLegDestArrival);
             }
         }
+        return nextDeparture;
     }
 
     private void setNextDepartureProgressBar(int seconds) {
+        Log.d(TAG, "Next departure: " + seconds);
         mNextDepartureProgressBar.clearAnimation();
         ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
         animator.setDuration(seconds * 1000);
@@ -467,14 +498,37 @@ public class TripOverviewActivity extends AppCompatActivity
         }.start();
     }
 
+    private void setOfflineLayout(String text) {
+        RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+
+        mTripSchedules.setVisibility(View.GONE);
+        findViewById(R.id.empty_list_item).setVisibility(View.GONE);
+        mNextDeparture.setLayoutParams(layout);
+        mNextDeparture.setText(text);
+        mNextDeparture.setTextSize(24);
+        mNextDeparture.setVisibility(View.VISIBLE);
+    }
+
+    private void setOverviewVisibility(int visibility) {
+        mTripHeader.setVisibility(visibility);
+        mTripSchedules.setVisibility(visibility);
+        mNextDepartureProgressBar.setVisibility(visibility);
+        mNextDeparture.setVisibility(visibility);
+        mNextDepartureWindow.setVisibility(visibility);
+        mTripFare.setVisibility(visibility);
+        findViewById(R.id.trip_fare_info).setVisibility(visibility);
+    }
+
     private void showAdvisory() {
         advisoryFragment.show(fragmentManager, "Trip Advisory Fragment");
     }
 
     private void toggleFavorite() {
         if (!isTripSet()) return;
+        if (favoriteTrip == -1) favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr);
 
-        if (favoriteTrip <= 0) {
+        if (favoriteTrip == 0) {
             ContentValues values = new ContentValues();
             values.put(BartRiderContract.Favorites.Column.ORIG_ABBR, origAbbr);
             values.put(BartRiderContract.Favorites.Column.ORIG_FULL, origFull);
@@ -486,7 +540,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 Log.d(TAG, uri.toString());
                 Log.d(TAG, String.format("Added to favorites: %s - %s", origAbbr, destAbbr));
             }
-            setFavoriteIcon(Integer.parseInt(uri.getLastPathSegment()));
+            favoriteTrip = Integer.parseInt(uri.getLastPathSegment());
         } else {
             Uri uri = Uri.parse(BartRiderContract.Favorites.CONTENT_URI + "/" + favoriteTrip);
             int count = this.getContentResolver().delete(uri, null, null);
@@ -494,28 +548,16 @@ public class TripOverviewActivity extends AppCompatActivity
                 Log.d(TAG, uri.toString());
                 Log.d(TAG, String.format("Removed from favorites: %s - %s", origAbbr, destAbbr));
             }
-            setFavoriteIcon(0);
+            favoriteTrip = 0;
         }
+        invalidateOptionsMenu();
     }
 
-    private void setOverviewVisibility(int visibility) {
-        mTripHeader.setVisibility(visibility);
-        mTripFare.setVisibility(visibility);
-        findViewById(R.id.trip_fare_info).setVisibility(visibility);
-        mNextDepartureProgressBar.setVisibility(visibility);
-        mNextDeparture.setVisibility(visibility);
-        mNextDepartureWindow.setVisibility(visibility);
-    }
-
-    private void setOfflineLayout(String text) {
-        RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-
-        mTripSchedules.setVisibility(View.GONE);
-        mNextDeparture.setLayoutParams(layout);
-        mNextDeparture.setText(text);
-        mNextDeparture.setTextSize(18);
-        mNextDeparture.setVisibility(View.VISIBLE);
+    private void cancelAlarms() {
+        Log.d(TAG, "Cancelling all alarms...");
+        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
+        if (quickPlannerPendingIntent != null) alarmManager.cancel(quickPlannerPendingIntent);
+        if (realTimeEtdPendingIntent != null) alarmManager.cancel(realTimeEtdPendingIntent);
     }
 
     private boolean isTripSame(String orig, String dest) {
@@ -526,7 +568,7 @@ public class TripOverviewActivity extends AppCompatActivity
         return !(origAbbr == null || destAbbr == null);
     }
 
-    private boolean isValidTrip(String orig, String dest) {
+    private boolean isTripValid(String orig, String dest) {
         if (orig.equals(dest)) {
             Toast.makeText(this, "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
             return false;

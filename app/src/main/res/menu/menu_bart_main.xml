@@ -17,13 +17,22 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_bart_map"
+        android:title="@string/action_bart_map"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_refresh"
         android:title="@string/action_refresh"
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_reverse_trip"
+        android:title="@string/action_reverse_trip"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_settings"
-        android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
 </menu>
