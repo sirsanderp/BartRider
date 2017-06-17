@@ -3,6 +3,8 @@
     <string name="action_advisory">Advisory</string>
     <string name="action_favorite">Favorite</string>
     <string name="action_bart_map">BART Map</string>
+    <string name="action_sfbart_twitter">\@SFBART</string>
+    <string name="action_sfbartalert_twitter">\@SFBARTalert</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_reverse_trip">Reverse Trip</string>
     <string name="action_settings">Settings</string>

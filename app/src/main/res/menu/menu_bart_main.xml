@@ -32,7 +32,12 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+        android:id="@+id/action_sfbart_twitter"
+        android:title="@string/action_sfbart_twitter"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sfbartalert_twitter"
+        android:title="@string/action_sfbartalert_twitter"
         app:showAsAction="never" />
 </menu>
