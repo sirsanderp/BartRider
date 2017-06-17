@@ -42,6 +42,7 @@
                 android:id="@+id/station_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_above="@+id/progress_layout"
                 android:orientation="vertical">
 
                 <com.sanderp.bartrider.view.AutoResizeTextView
@@ -55,23 +56,29 @@
                     android:textStyle="bold"
                     tools:text="@string/sample_trip" />
 
-                <ListView
-                    android:id="@+id/trip_list_view"
+                <android.support.v4.widget.SwipeRefreshLayout
+                    android:id="@+id/swipe_refresh"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/trip_header"
-                    android:choiceMode="singleChoice"
-                    android:layout_marginTop="3dp"
-                    tools:listitem="@layout/trip_overview_list_item" />
+                    android:layout_below="@+id/trip_header">
+
+                    <ListView
+                        android:id="@+id/trip_list_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:choiceMode="singleChoice"
+                        android:layout_marginTop="3dp"
+                        tools:listitem="@layout/trip_overview_list_item" />
+
+                </android.support.v4.widget.SwipeRefreshLayout>
 
             </RelativeLayout>
 
             <RelativeLayout
                 android:id="@+id/progress_layout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_above="@+id/trip_fare"
-                android:layout_below="@+id/station_layout">
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/trip_fare">
 
                 <ProgressBar
                     android:id="@+id/next_departure_progress_bar"

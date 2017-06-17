@@ -21,6 +21,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -41,6 +42,7 @@ import com.sanderp.bartrider.adapter.TripAdapter;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
+import com.sanderp.bartrider.intentservice.AdvisoryService;
 import com.sanderp.bartrider.intentservice.QuickPlannerService;
 import com.sanderp.bartrider.intentservice.RealTimeEtdService;
 import com.sanderp.bartrider.pojo.quickplanner.Fare;
@@ -80,6 +82,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private Drawable mFavoriteIcon;
     private ListView mTripSchedules;
     private ProgressBar mNextDepartureProgressBar;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private TextView mNextDeparture;
     private TextView mNextDepartureWindow;
     private TextView mTripHeader;
@@ -133,7 +136,10 @@ public class TripOverviewActivity extends AppCompatActivity
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.d(TAG, "Received broadcast.");
-                if (intent.getAction().equals(Constants.Broadcast.QUICK_PLANNER_SERVICE)) {
+                if (intent.getAction().equals(Constants.Broadcast.ADVISORY_SERVICE)) {
+                    Log.d(TAG, "onReceive(): delegate to onReceiveAdvisory()");
+                    onReceiveAdvisory();
+                } else if (intent.getAction().equals(Constants.Broadcast.QUICK_PLANNER_SERVICE)) {
                     Log.d(TAG, "onReceive(): delegate to onReceiveTripSchedules()");
                     onReceiveTripSchedules(intent);
                 } else if (intent.getAction().equals(Constants.Broadcast.REAL_TIME_ETD_SERVICE)) {
@@ -163,6 +169,16 @@ public class TripOverviewActivity extends AppCompatActivity
                 startActivity(tripDetailIntent);
             }
         });
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                cancelAlarms();
+                getTripSchedules();
+            }
+        });
+
         mNextDepartureProgressBar = (ProgressBar) findViewById(R.id.next_departure_progress_bar);
         mNextDeparture = (TextView) findViewById(R.id.next_departure);
         mNextDepartureWindow = (TextView) findViewById(R.id.next_departure_window);
@@ -226,6 +242,7 @@ public class TripOverviewActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.ADVISORY_SERVICE));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.QUICK_PLANNER_SERVICE));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_ETD_SERVICE));
         if (isTripSet()) {
@@ -282,22 +299,29 @@ public class TripOverviewActivity extends AppCompatActivity
                 toggleFavorite();
                 return true;
             case R.id.action_advisory:
-                showAdvisory();
+                getAdvisory();
                 return true;
             case R.id.action_bart_map:
-                Intent mapIntent = new Intent(TripOverviewActivity.this, MapActivity.class);
-                startActivity(mapIntent);
+                startActivity(new Intent(TripOverviewActivity.this, MapActivity.class));
                 return true;
             case R.id.action_refresh:
+                cancelAlarms();
                 getTripSchedules();
                 return true;
             case R.id.action_reverse_trip:
-                setTrip(destAbbr, destFull, origAbbr, origFull);
-                favoriteTrip = -1;
-                invalidateOptionsMenu();
-                getTripSchedules();
+                if (isTripSet()) {
+                    cancelAlarms();
+                    setTrip(destAbbr, destFull, origAbbr, origFull);
+                    favoriteTrip = -1;
+                    invalidateOptionsMenu();
+                    getTripSchedules();
+                }
                 return true;
-            case R.id.action_settings:
+            case R.id.action_sfbart_twitter:
+                showTwitter("SFBART");
+                return true;
+            case R.id.action_sfbartalert_twitter:
+                showTwitter("SFBARTalert");
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -354,6 +378,18 @@ public class TripOverviewActivity extends AppCompatActivity
         }
     }
 
+    private void getAdvisory() {
+        if (Utils.isNetworkConnected(this)) {
+            startService(new Intent(TripOverviewActivity.this, AdvisoryService.class)
+                    .putExtra(AdvisoryService.NOTIFY, false));
+        }
+    }
+
+    private void onReceiveAdvisory() {
+        Log.d(TAG, "onReceiveAdvisory(): Received callback from broadcast.");
+        showAdvisory();
+    }
+
     private void getTripSchedules() {
         if (isTripSet() && Utils.isNetworkConnected(this)) {
             Intent quickPlannerIntent = new Intent(TripOverviewActivity.this, QuickPlannerService.class);
@@ -369,6 +405,10 @@ public class TripOverviewActivity extends AppCompatActivity
         QuickPlannerPojo scheduleResults = (QuickPlannerPojo) intent.getSerializableExtra(QuickPlannerService.RESULT);
         trips = scheduleResults.getRoot().getSchedule().getRequest().getTrips();
         getTripRealTimeEtd(scheduleResults.getRoot().getSchedule().getRequest());
+
+        if (mSwipeRefreshLayout.isRefreshing()) {
+            mSwipeRefreshLayout.setRefreshing(false);
+        }
     }
 
     private void getTripRealTimeEtd(Request result) {
@@ -522,6 +562,14 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void showAdvisory() {
         advisoryFragment.show(fragmentManager, "Trip Advisory Fragment");
+    }
+
+    private void showTwitter(String username) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("twitter://user?screen_name=" + username)));
+        } catch (Exception e) {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/" + username)));
+        }
     }
 
     private void toggleFavorite() {
