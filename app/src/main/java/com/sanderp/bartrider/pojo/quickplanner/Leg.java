@@ -116,6 +116,10 @@ public class Leg implements Serializable {
         setEtdOrigTime(getOrigTimeEpoch());
     }
 
+    /**
+     * Converts leg origin time and date to epoch time.
+     * @return the epoch time
+     */
     public long getOrigTimeEpoch() {
         try {
             return DATE_FORMAT.parse(origTimeDate + " " + origTimeMin).getTime();
@@ -142,6 +146,10 @@ public class Leg implements Serializable {
         setEtdDestTime(getDestTimeEpoch());
     }
 
+    /**
+     * Converts leg destination time and date to epoch time.
+     * @return the epoch time
+     */
     public long getDestTimeEpoch() {
         try {
             return DATE_FORMAT.parse(destTimeDate + " " + destTimeMin).getTime();

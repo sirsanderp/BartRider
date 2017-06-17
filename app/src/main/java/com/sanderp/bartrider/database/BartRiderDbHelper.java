@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 /**
- * Created by Sander Peerna on 3/13/2016.
+ * Creates the device SQLite tables: favorites, stations.
  */
 public class BartRiderDbHelper extends SQLiteOpenHelper {
     private static final String TAG = "BartRiderDbHelper";

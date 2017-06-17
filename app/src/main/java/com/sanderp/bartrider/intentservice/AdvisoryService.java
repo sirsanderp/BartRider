@@ -26,8 +26,9 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
+ * Asynchronously requests advisory data from the BART API and updates a shared preference
+ * with a diff of the previous request. BAsed on the diff, posts a device notification if
+ * the service was called by an AlarmManager.
  */
 public class AdvisoryService extends IntentService {
     private static final String TAG = "AdvisoryService";
@@ -64,10 +65,10 @@ public class AdvisoryService extends IntentService {
             try {
                 Set<String> advisorySet = advisoriesToSet(getAdvisories());
                 if (intent.getBooleanExtra(NOTIFY, true)) {
-                    Log.d(TAG, "Posting notification...");
+                    Log.i(TAG, "Posting notification...");
                     postAdvisoryNotification(getAdvisoriesDiff(advisorySet));
                 } else {
-                    Log.d(TAG, "Sending broadcast...");
+                    Log.i(TAG, "Sending broadcast...");
                     Intent localIntent = new Intent(Constants.Broadcast.ADVISORY_SERVICE);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
                 }
@@ -76,7 +77,7 @@ public class AdvisoryService extends IntentService {
                         .putStringSet(PrefContract.PREV_ADVISORY, advisorySet)
                         .apply();
             } catch (IOException e) {
-                Log.d(TAG, "Input stream failed.");
+                Log.e(TAG, "Input stream failed.");
                 e.printStackTrace();
             }
         }

@@ -60,6 +60,10 @@ public class RealTimeEtdPojo implements Serializable {
         this.apiUpdate = date;
     }
 
+    /**
+     * Converts apiUpdate time to epoch time.
+     * @return the epoch time
+     */
     @DynamoDBIgnore
     public long getApiUpdateEpoch() {
         try {
@@ -168,6 +172,10 @@ public class RealTimeEtdPojo implements Serializable {
         this.prevDepart = prevDepart;
     }
 
+    /**
+     * Converts prevDepart time to epoch time.
+     * @return the epoch time
+     */
     @DynamoDBIgnore
     public long getPrevDepartEpoch() {
         try {

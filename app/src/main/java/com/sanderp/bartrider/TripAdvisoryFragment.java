@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.sanderp.bartrider.utility.PrefContract;
 
 /**
- * A simple {@link DialogFragment} subclass.
+ * A {@link DialogFragment} subclass for displaying BART advisories.
  */
 public class TripAdvisoryFragment extends DialogFragment {
     private static final String TAG = "TripAdvisoryFragment";

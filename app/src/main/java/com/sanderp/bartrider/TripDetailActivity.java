@@ -10,6 +10,9 @@ import android.widget.TextView;
 import com.sanderp.bartrider.adapter.TripLegAdapter;
 import com.sanderp.bartrider.pojo.quickplanner.Trip;
 
+/**
+ * Displays in-depth details about the selected trip.
+ */
 public class TripDetailActivity extends AppCompatActivity {
     private static final String TAG = "TripDetailActivity";
 

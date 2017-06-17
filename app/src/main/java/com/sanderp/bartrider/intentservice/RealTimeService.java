@@ -16,8 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
+ * Asynchronously requests real-time etd data from the BART API for the specified origin.
  */
 public class RealTimeService extends IntentService {
     private static final String TAG = "RealTimeService";
@@ -47,10 +46,10 @@ public class RealTimeService extends IntentService {
                 RealTimePojo pojo = getRealTimeEstimates(intent.getStringExtra(ORIG));
                 Intent localIntent = new Intent(Constants.Broadcast.REAL_TIME_SERVICE)
                         .putExtra(RESULT, pojo);
-                Log.d(TAG, "Sending broadcast from service.");
+                Log.i(TAG, "Sending broadcast...");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
             } catch (IOException e) {
-                Log.d(TAG, "Input stream failed.");
+                Log.e(TAG, "Input stream failed.");
                 e.printStackTrace();
             }
         }

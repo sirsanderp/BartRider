@@ -12,7 +12,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 /**
- * Created by Sander Peerna on 3/13/2016.
+ * Methods for accessing the SQLite tables on the device.
  */
 public class BartRiderProvider extends ContentProvider {
     private static final String TAG = "BartRiderProvider";

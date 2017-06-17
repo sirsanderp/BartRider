@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
+ * Asynchronously requests real-time etd data from the custom DynamoDB table for the specified trips.
  */
 public class RealTimeEtdService extends IntentService {
     private static final String TAG = "RealTimeEtdService";
@@ -42,7 +41,7 @@ public class RealTimeEtdService extends IntentService {
         if (intent != null) {
             Intent localIntent = new Intent(Constants.Broadcast.REAL_TIME_ETD_SERVICE)
                     .putExtra(RESULT, getRealTimeEtd(intent.getBundleExtra(OBJECT_LIST)));
-            Log.d(TAG, "Sending broadcast from service.");
+            Log.i(TAG, "Sending broadcast...");
             LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
         }
     }

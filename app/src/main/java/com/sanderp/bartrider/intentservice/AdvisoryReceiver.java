@@ -7,6 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
 
+/**
+ * Receiver triggered during device boot to start a repeating AdvisoryService alarm.
+ */
 public class AdvisoryReceiver extends BroadcastReceiver {
     private static final String TAG = "AdvisoryReceiver";
 

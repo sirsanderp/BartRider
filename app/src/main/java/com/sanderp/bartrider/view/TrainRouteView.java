@@ -13,7 +13,7 @@ import android.util.TypedValue;
 import android.view.View;
 
 /**
- * Created by Sander Peerna on 5/7/2017.
+ * Draws a train route based on the route color list from the trip legs.
  */
 public class TrainRouteView extends View {
     private static final String TAG = "TrainRouteView";

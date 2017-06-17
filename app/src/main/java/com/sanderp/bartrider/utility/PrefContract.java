@@ -1,9 +1,8 @@
 package com.sanderp.bartrider.utility;
 
 /**
- * Created by Sander Peerna on 4/4/2017.
+ * Constants used for application SharedPreferences.
  */
-
 public class PrefContract {
     public static final String PREFS_NAME = "BartRiderPrefs";
 

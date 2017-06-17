@@ -9,6 +9,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
+/**
+ * Custom Jackson POJO deserializer for converting trip origin and destination times to epoch.
+ */
 public class TimeToLongDeserializer extends StdDeserializer<Long> {
     private static final SimpleDateFormat df = new SimpleDateFormat("h:mm a", Locale.US);
 

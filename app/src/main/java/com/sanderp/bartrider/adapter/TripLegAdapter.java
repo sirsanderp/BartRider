@@ -16,9 +16,8 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Created by Sander Peerna on 11/16/2016.
+ * Adapter for presenting trip leg schedules in a list view.
  */
-
 public class TripLegAdapter extends BaseAdapter {
     private static final String TAG = "TripLegAdapter";
 

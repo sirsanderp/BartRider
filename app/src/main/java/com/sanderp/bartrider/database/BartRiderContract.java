@@ -4,7 +4,7 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 /**
- * Created by Sander Peerna on 3/13/2016.
+ * Constants for accessing SQLite tables on the device.
  */
 public class BartRiderContract {
     public static final String AUTHORITY = "com.sanderp.bartrider.database.provider";

@@ -65,6 +65,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+/**
+ * Displays information about the selected trip:
+ *      - a schedule for the trip listing the time for the next trains
+ *          - updated after a train has left the station
+ *      - an estimated arrival timer of the next train for the trip
+ *          - updated every 15 seconds
+ *      - trip fare information
+ *  Access to multiple action bar items:
+ *      - favorite a trip
+ *      - view BART advisories
+ *      - view BART map
+ *      - reverse trip
+ *      - refresh trip
+ *      - dynamic links ot @SFBART & @SFBARTalert twitters
+ */
 public class TripOverviewActivity extends AppCompatActivity
         implements TripPlannerFragment.OnFragmentListener, TripDrawerFragment.OnFragmentListener {
     private static final String TAG = "TripOverviewActivity";
@@ -135,7 +150,7 @@ public class TripOverviewActivity extends AppCompatActivity
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d(TAG, "Received broadcast.");
+                Log.i(TAG, "Received broadcast...");
                 if (intent.getAction().equals(Constants.Broadcast.ADVISORY_SERVICE)) {
                     Log.d(TAG, "onReceive(): delegate to onReceiveAdvisory()");
                     onReceiveAdvisory();
@@ -209,7 +224,7 @@ public class TripOverviewActivity extends AppCompatActivity
         });
 
         if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
-            Log.i(TAG, "onCreate(): Retrieving last trip information...");
+            Log.d(TAG, "onCreate(): Retrieving last trip information...");
             setTrip(
                     sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_ORIG_FULL, null),
@@ -227,7 +242,7 @@ public class TripOverviewActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         if (isTripSet()) {
-            Log.i(TAG, "onPause(): Saving last trip information...");
+            Log.d(TAG, "onPause(): Saving last trip information...");
             SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.putBoolean(PrefContract.LAST_TRIP, true)
                     .putInt(PrefContract.LAST_ID, favoriteTrip)
@@ -246,7 +261,7 @@ public class TripOverviewActivity extends AppCompatActivity
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.QUICK_PLANNER_SERVICE));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_ETD_SERVICE));
         if (isTripSet()) {
-            Log.i(TAG, "onResume(): Refreshing trip schedules...");
+            Log.d(TAG, "onResume(): Refreshing trip schedules...");
             getTripSchedules();
         }
     }
@@ -368,12 +383,11 @@ public class TripOverviewActivity extends AppCompatActivity
         if (favoriteTrip == -1) favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr);
 
 //        invalidateOptionsMenu();
-        Log.d(TAG, "Favorite Trip: " + favoriteTrip);
         if (favoriteTrip == 0) {
-            Log.d(TAG, "Favorite set to white.");
+            Log.d(TAG, "Favorite Trip: " + favoriteTrip + " set to white.");
             mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
         } else {
-            Log.d(TAG, "Favorite set to green.");
+            Log.d(TAG, "Favorite Trip: " + favoriteTrip + " set to green.");
             mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
         }
     }
@@ -469,43 +483,43 @@ public class TripOverviewActivity extends AppCompatActivity
             Leg tripLeg = trip.getLeg(0);
 
             String headAbbr = tripLeg.getTrainHeadStation();
-            Log.d(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
-            Log.d(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
+            Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
+            Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
             if (trip.getOrigTimeEpoch() < etdResults.get(headAbbr).getPrevDepartEpoch()) {
                 currTrips.remove(i--);
                 continue;
             }
 
-            Log.d(TAG, origAbbr + " -> " + headAbbr);
+            Log.v(TAG, origAbbr + " -> " + headAbbr);
             if (etdResults.get(headAbbr).getEtdSeconds().isEmpty()) {
                 continue;
             }
 
             long sinceLastUpdate = now.getTime() - etdResults.get(headAbbr).getApiUpdateEpoch();
             int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
-            Log.d(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
+            Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
             int etdSeconds = etdResults.get(headAbbr).getEtdSeconds().remove(0);
             if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
             else etdSeconds = etdSeconds - sinceLastUpdateSeconds;
 
             if (etdSeconds < nextDeparture) nextDeparture = etdSeconds;
-            Log.d(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
+            Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
 
-            Log.d(TAG, "Current Time: " + df.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
+            Log.v(TAG, "Current Time: " + df.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
             long estOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
             long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000) - sinceLastUpdate;
-            Log.d(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
-            Log.d(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " - " + df.format(estDestArrival));
+            Log.v(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
+            Log.v(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " - " + df.format(estDestArrival));
 
             long diffMinutes = ((estOrigDeparture - trip.getOrigTimeEpoch()) / (60 * 1000)) % 60;
             long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
             long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffMinutes * 60 * 1000) - sinceLastUpdate;
-            Log.d(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
-            Log.d(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " - " + df.format(estLegDestArrival));
+            Log.v(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
+            Log.v(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " - " + df.format(estLegDestArrival));
 
-            Log.d(TAG, "Difference: " + diffMinutes + " minutes");
+            Log.v(TAG, "Difference: " + diffMinutes + " minutes");
             if (diffMinutes > 0) {
-                Log.d(TAG, "Updating trip and trip leg estimated times...");
+                Log.v(TAG, "Updating trip and trip leg estimated times...");
                 trip.setEtdOrigTime(estOrigDeparture);
                 trip.setEtdDestTime(estDestArrival);
                 tripLeg.setEtdOrigTime(estLegOrigDeparture);
@@ -516,7 +530,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setNextDepartureProgressBar(int seconds) {
-        Log.d(TAG, "Next departure: " + seconds);
+        Log.v(TAG, "Next departure: " + seconds);
         mNextDepartureProgressBar.clearAnimation();
         ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
         animator.setDuration(seconds * 1000);

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Created by Sander Peerna on 11/3/2016.
+ * Adapter for presenting trip overall schedules in a list view.
  */
 public class TripAdapter extends BaseAdapter {
     private static final String TAG = "TripAdapter";

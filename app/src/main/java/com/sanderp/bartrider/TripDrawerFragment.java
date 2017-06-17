@@ -19,10 +19,9 @@ import android.widget.TextView;
 import com.sanderp.bartrider.database.BartRiderContract;
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnFragmentListener} interface
- * to handle interaction events.
+ * A simple {@link Fragment} subclass to display user favorited trips.
+ * Activities that contain this fragment must implement the {@link OnFragmentListener}
+ * interface to handle interaction events.
  */
 public class TripDrawerFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor> {

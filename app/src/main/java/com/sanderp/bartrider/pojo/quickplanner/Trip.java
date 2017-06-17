@@ -126,6 +126,10 @@ public class Trip implements Serializable {
         setEtdOrigTime(getOrigTimeEpoch());
     }
 
+    /**
+     * Converts trip origin time and date to epoch time.
+     * @return the epoch time
+     */
     public long getOrigTimeEpoch() {
         try {
             return DATE_FORMAT.parse(origTimeDate + " " + origTimeMin).getTime();
@@ -152,6 +156,10 @@ public class Trip implements Serializable {
         setEtdDestTime(getDestTimeEpoch());
     }
 
+    /**
+     * Converts trip destination time and date to epoch time.
+     * @return the epoch time
+     */
     public long getDestTimeEpoch() {
         try {
             return DATE_FORMAT.parse(destTimeDate + " " + destTimeMin).getTime();
@@ -230,6 +238,9 @@ public class Trip implements Serializable {
         this.routeColors = routeColors;
     }
 
+    /**
+     * Builds a list of route colors based on the trip legs.
+     */
     private void buildRouteColors() {
         int[] routeColors = new int[getLegs().size()];
         for (int leg = 0; leg < getLegs().size(); leg++) {

@@ -1,7 +1,7 @@
 package com.sanderp.bartrider.utility;
 
 /**
- * Created by Sander Peerna on 11/10/2016.
+ * Constants used throughout the application.
  */
 public class Constants {
     public class Bart {

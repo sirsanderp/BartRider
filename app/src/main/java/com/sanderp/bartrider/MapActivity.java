@@ -7,6 +7,9 @@ import android.support.v7.widget.Toolbar;
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 
+/**
+ * Displays the BART Map.
+ */
 public class MapActivity extends AppCompatActivity {
     private static final String TAG = "MapActivity";
 

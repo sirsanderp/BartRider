@@ -1,7 +1,7 @@
 package com.sanderp.bartrider.asynctask;
 
 /**
- * Created by Sander Peerna on 4/8/2016.
+ * Callback interface to delegate async task results to another class.
  */
 public interface AsyncTaskResponse {
     void processFinish(Object output);

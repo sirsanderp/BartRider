@@ -20,7 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Created by Sander Peerna on 4/4/2017.
+ * Utility methods that are used throughout the application.
  */
 public class Utils {
     private static final String TAG = "Utils";
@@ -39,7 +39,7 @@ public class Utils {
      */
     public static InputStream getUrlStream(String request) throws IOException {
         URL url = new URL(request);
-        Log.d(TAG, "accessing url: " + request);
+        Log.i(TAG, "accessing url: " + request);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setReadTimeout(10000);
         conn.setConnectTimeout(15000);
@@ -100,7 +100,6 @@ public class Utils {
     public static boolean isNetworkConnected(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-
         if (networkInfo != null && networkInfo.isConnected()) {
             return true;
         } else {

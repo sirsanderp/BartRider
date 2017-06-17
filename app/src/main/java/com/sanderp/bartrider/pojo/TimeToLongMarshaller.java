@@ -6,6 +6,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
+/**
+ * Custom DynamoDB POJO deserializer for converting API update and previous departure times to epoch.
+ */
 public class TimeToLongMarshaller implements DynamoDBMarshaller<Long> {
     private static final SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss a", Locale.US);
 

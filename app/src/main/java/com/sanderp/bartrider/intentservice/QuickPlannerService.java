@@ -16,8 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
+ * Asynchronously requests quick planner departure data from the BART API for the specified trip.
  */
 public class QuickPlannerService extends IntentService {
     private static final String TAG = "QuickPlannerService";
@@ -48,10 +47,10 @@ public class QuickPlannerService extends IntentService {
                 QuickPlannerPojo pojo = getSchedule(intent.getStringExtra(ORIG), intent.getStringExtra(DEST));
                 Intent localIntent = new Intent(Constants.Broadcast.QUICK_PLANNER_SERVICE)
                         .putExtra(RESULT, pojo);
-                Log.d(TAG, "Sending broadcast from service.");
+                Log.i(TAG, "Sending broadcast...");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
             } catch (IOException e) {
-                Log.d(TAG, "Input stream failed.");
+                Log.e(TAG, "Input stream failed.");
                 e.printStackTrace();
             }
         }

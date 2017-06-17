@@ -15,7 +15,7 @@ import android.util.TypedValue;
 import android.widget.TextView;
 
 /**
- * Created by Sander Peerna on 3/26/2017.
+ * Custom view for dynamically adjusting the size of the test to fit a set of constraints.
  * Code source: https://gist.github.com/TechIsFun/df5270aea46968ea165fb52d41bde803
  */
 public class AutoResizeTextView extends TextView {
