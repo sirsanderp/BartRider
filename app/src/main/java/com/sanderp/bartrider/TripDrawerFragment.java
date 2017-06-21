@@ -97,7 +97,7 @@ public class TripDrawerFragment extends Fragment implements
             }
         });
         mListView.setAdapter(mAdapter);
-        mEmptyView = (TextView) view.findViewById(R.id.empty_list_item);
+        mEmptyView = (TextView) view.findViewById(R.id.empty_drawer_list_item);
         getLoaderManager().initLoader(LOADER_ID, null, this);
 
         return view;

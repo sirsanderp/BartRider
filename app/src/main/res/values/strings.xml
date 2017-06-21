@@ -12,8 +12,8 @@
     <string name="confirm">Confirm</string>
     <string name="co2_saved">CO₂ saved: %1$.2f pounds.</string>
     <string name="default_advisory">No delays reported.</string>
-    <string name="drawer_open">Drawer Opened</string>
-    <string name="drawer_close">Drawer Closed</string>
+    <string name="drawer_open">Open Drawer</string>
+    <string name="drawer_close">Close Drawer</string>
     <string name="empty_drawer_list_view">You have no favorite trips.</string>
     <string name="empty_field">N/A</string>
     <string name="empty_overview_list_view">Select a trip using the \'+\' button on the bottom right.</string>

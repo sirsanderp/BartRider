@@ -36,7 +36,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.sanderp.bartrider.adapter.TripAdapter;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
@@ -231,9 +230,10 @@ public class TripOverviewActivity extends AppCompatActivity
                     sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
             );
-            findViewById(R.id.empty_list_item).setVisibility(View.GONE);
+            mTripHeader.setText(origFull + " - " + destFull);
+            findViewById(R.id.empty_overview_list_item).setVisibility(View.GONE);
         } else {
-            mTripSchedules.setEmptyView(findViewById(R.id.empty_list_item));
+            mTripSchedules.setEmptyView(findViewById(R.id.empty_overview_list_item));
         }
         favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
     }
@@ -324,11 +324,10 @@ public class TripOverviewActivity extends AppCompatActivity
                 getTripSchedules();
                 return true;
             case R.id.action_reverse_trip:
-                if (isTripSet()) {
-                    cancelAlarms();
-                    setTrip(destAbbr, destFull, origAbbr, origFull);
+                if (isTripSet() && setTrip(destAbbr, destFull, origAbbr, origFull)) {
                     favoriteTrip = -1;
                     invalidateOptionsMenu();
+                    mTripHeader.setText(origFull + " - " + destFull);
                     getTripSchedules();
                 }
                 return true;
@@ -344,34 +343,35 @@ public class TripOverviewActivity extends AppCompatActivity
 
     @Override
     public void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull) {
-        if (!isTripSame(origAbbr, destAbbr)) {
-            setTrip(origAbbr, origFull, destAbbr, destFull);
+        if (setTrip(origAbbr, origFull, destAbbr, destFull)) {
             favoriteTrip = -1;
             invalidateOptionsMenu();
+            mTripHeader.setText(origFull + " - " + destFull);
             getTripSchedules();
         }
     }
 
     @Override
     public void onFavoriteClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
-        if (!isTripSame(origAbbr, destAbbr)) {
-            setTrip(origAbbr, origFull, destAbbr, destFull);
+        if (setTrip(origAbbr, origFull, destAbbr, destFull)) {
             favoriteTrip = id;
             invalidateOptionsMenu();
+            mTripHeader.setText(origFull + " - " + destFull);
             getTripSchedules();
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
-    private void setTrip(String origAbbr, String origFull, String destAbbr, String destFull) {
+    protected boolean setTrip(String origAbbr, String origFull, String destAbbr, String destFull) {
         cancelAlarms();
-        if (isTripValid(origAbbr, destAbbr)) {
+        if (!isTripSame(origAbbr, destAbbr) && isTripValid(origAbbr, destAbbr)) {
             this.origAbbr = origAbbr;
             this.origFull = origFull;
             this.destAbbr = destAbbr;
             this.destFull = destFull;
-            mTripHeader.setText(origFull + " - " + destFull);
+            return true;
         }
+        return false;
     }
 
     private void setAdvisoryIcon() {
@@ -557,7 +557,7 @@ public class TripOverviewActivity extends AppCompatActivity
         layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
 
         mTripSchedules.setVisibility(View.GONE);
-        findViewById(R.id.empty_list_item).setVisibility(View.GONE);
+        findViewById(R.id.empty_overview_list_item).setVisibility(View.GONE);
         mNextDeparture.setLayoutParams(layout);
         mNextDeparture.setText(text);
         mNextDeparture.setTextSize(24);
@@ -622,17 +622,17 @@ public class TripOverviewActivity extends AppCompatActivity
         if (realTimeEtdPendingIntent != null) alarmManager.cancel(realTimeEtdPendingIntent);
     }
 
-    private boolean isTripSame(String orig, String dest) {
+    public boolean isTripSame(String orig, String dest) {
         return isTripSet() && orig.equals(origAbbr) && dest.equals(destAbbr);
     }
 
-    private boolean isTripSet() {
+    public boolean isTripSet() {
         return !(origAbbr == null || destAbbr == null);
     }
 
-    private boolean isTripValid(String orig, String dest) {
+    public boolean isTripValid(String orig, String dest) {
         if (orig.equals(dest)) {
-            Toast.makeText(this, "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;

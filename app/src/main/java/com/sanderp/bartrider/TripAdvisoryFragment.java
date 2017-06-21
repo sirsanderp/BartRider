@@ -37,7 +37,7 @@ public class TripAdvisoryFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = getActivity().getLayoutInflater().inflate(R.layout.trip_advisory_fragment, container, false);
+        View view = getActivity().getLayoutInflater().inflate(R.layout.advisory_fragment, container, false);
 
         sharedPrefs = getActivity().getSharedPreferences(PrefContract.PREFS_NAME, 0);
         mAdvisory = (TextView) view.findViewById(R.id.advisory);
