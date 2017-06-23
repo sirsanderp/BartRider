@@ -135,7 +135,7 @@ public class BartRiderProvider extends ContentProvider {
             case BartRiderContract.FAVORITE_TABLE:
                 Log.d(TAG, "by favorite table");
                 table = BartRiderContract.Favorites.TABLE;
-                where = (selection == null) ? "1" : selection;
+                where = null;
                 break;
             case BartRiderContract.FAVORITE_ITEM:
                 id = ContentUris.parseId(uri);
@@ -146,7 +146,7 @@ public class BartRiderProvider extends ContentProvider {
                 break;
             case BartRiderContract.STATION_TABLE:
                 table = BartRiderContract.Stations.TABLE;
-                where = (selection == null) ? "1" : selection;
+                where = null;
                 break;
             case BartRiderContract.STATION_ITEM:
                 id = ContentUris.parseId(uri);

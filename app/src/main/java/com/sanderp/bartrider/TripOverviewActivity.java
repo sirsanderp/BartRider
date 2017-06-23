@@ -231,9 +231,9 @@ public class TripOverviewActivity extends AppCompatActivity
                     sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
             );
             mTripHeader.setText(origFull + " - " + destFull);
-            findViewById(R.id.empty_overview_list_item).setVisibility(View.GONE);
+            findViewById(R.id.empty_overview_list).setVisibility(View.GONE);
         } else {
-            mTripSchedules.setEmptyView(findViewById(R.id.empty_overview_list_item));
+            mTripSchedules.setEmptyView(findViewById(R.id.empty_overview_list));
         }
         favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
     }
@@ -556,12 +556,9 @@ public class TripOverviewActivity extends AppCompatActivity
         RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
 
-        mTripSchedules.setVisibility(View.GONE);
-        findViewById(R.id.empty_overview_list_item).setVisibility(View.GONE);
-        mNextDeparture.setLayoutParams(layout);
-        mNextDeparture.setText(text);
-        mNextDeparture.setTextSize(24);
-        mNextDeparture.setVisibility(View.VISIBLE);
+        TextView mEmptyOverviewList = (TextView) findViewById(R.id.empty_overview_list);
+        mEmptyOverviewList.setText(text);
+        mEmptyOverviewList.setVisibility(View.VISIBLE);
     }
 
     private void setOverviewVisibility(int visibility) {

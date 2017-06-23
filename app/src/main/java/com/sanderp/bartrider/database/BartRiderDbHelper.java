@@ -59,7 +59,7 @@ public class BartRiderDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        String sql = "DROP TABLE IF EXISTS " + BartRiderContract.Stations.TABLE;
+        String sql = "DROP TABLE IF EXISTS " + BartRiderContract.Favorites.TABLE + ", " + BartRiderContract.Stations.TABLE;
         db.execSQL(sql);
 
         onCreate(db);
