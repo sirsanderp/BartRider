@@ -35,7 +35,6 @@ import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -386,10 +385,10 @@ public class TripOverviewActivity extends AppCompatActivity
 
 //        invalidateOptionsMenu();
         if (favoriteTrip == 0) {
-            Log.d(TAG, "Favorite Trip: " + favoriteTrip + " set to white.");
+//            Log.v(TAG, "Favorite Trip: " + favoriteTrip + " set to white.");
             mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
         } else {
-            Log.d(TAG, "Favorite Trip: " + favoriteTrip + " set to green.");
+//            Log.v(TAG, "Favorite Trip: " + favoriteTrip + " set to green.");
             mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
         }
     }
@@ -494,19 +493,19 @@ public class TripOverviewActivity extends AppCompatActivity
             Leg tripLeg = trip.getLeg(0);
 
             String headAbbr = tripLeg.getTrainHeadStation();
-            Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
-            Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
+//            Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
+//            Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
             if (trip.getOrigTimeEpoch() < etdResults.get(headAbbr).getPrevDepartEpoch()) {
                 currTrips.remove(i--);
                 continue;
             }
 
-            Log.v(TAG, origAbbr + " -> " + headAbbr);
+//            Log.v(TAG, origAbbr + " -> " + headAbbr);
             if (etdResults.get(headAbbr).getEtdSeconds().isEmpty()) {
                 continue;
             }
 
-            Log.v(TAG, "Current Time: " + df.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
+//            Log.v(TAG, "Current Time: " + df.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
             long sinceLastUpdate = now.getTime() - etdResults.get(headAbbr).getApiUpdateEpoch();
             int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
             if (sinceLastUpdateSeconds > 120) {
@@ -514,28 +513,28 @@ public class TripOverviewActivity extends AppCompatActivity
                 break;
             }
 
-            Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
+//            Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
             int etdSeconds = etdResults.get(headAbbr).getEtdSeconds().remove(0);
             if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
             else etdSeconds = etdSeconds - sinceLastUpdateSeconds;
 
             if (etdSeconds < nextDeparture) nextDeparture = etdSeconds;
-            Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
+//            Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
 
             long estOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
             long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000) - sinceLastUpdate;
-            Log.v(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
-            Log.v(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " - " + df.format(estDestArrival));
+//            Log.v(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
+//            Log.v(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " - " + df.format(estDestArrival));
 
             long diffMinutes = ((estOrigDeparture - trip.getOrigTimeEpoch()) / (60 * 1000)) % 60;
             long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
             long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffMinutes * 60 * 1000) - sinceLastUpdate;
-            Log.v(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
-            Log.v(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " - " + df.format(estLegDestArrival));
+//            Log.v(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
+//            Log.v(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " - " + df.format(estLegDestArrival));
 
-            Log.v(TAG, "Difference: " + diffMinutes + " minutes");
+//            Log.v(TAG, "Difference: " + diffMinutes + " minutes");
             if (diffMinutes > 0) {
-                Log.v(TAG, "Updating trip and trip leg estimated times...");
+//                Log.v(TAG, "Updating trip and trip leg estimated times...");
                 trip.setEtdOrigTime(estOrigDeparture);
                 trip.setEtdDestTime(estDestArrival);
                 tripLeg.setEtdOrigTime(estLegOrigDeparture);
@@ -546,7 +545,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setNextDepartureProgressBar(int seconds) {
-        Log.v(TAG, "Next departure: " + seconds);
+//        Log.v(TAG, "Next departure: " + seconds);
         mNextDepartureProgressBar.clearAnimation();
         ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
         animator.setDuration(seconds * 1000);
@@ -619,7 +618,7 @@ public class TripOverviewActivity extends AppCompatActivity
             Uri uri = this.getContentResolver().insert(BartRiderContract.Favorites.CONTENT_URI, values);
             if (uri != null) {
                 Log.d(TAG, uri.toString());
-                Log.d(TAG, String.format("Added to favorites: %s - %s", origAbbr, destAbbr));
+//                Log.v(TAG, String.format("Added to favorites: %s - %s", origAbbr, destAbbr));
             }
             favoriteTrip = Integer.parseInt(uri.getLastPathSegment());
         } else {
@@ -627,7 +626,7 @@ public class TripOverviewActivity extends AppCompatActivity
             int count = this.getContentResolver().delete(uri, null, null);
             if (count > 0) {
                 Log.d(TAG, uri.toString());
-                Log.d(TAG, String.format("Removed from favorites: %s - %s", origAbbr, destAbbr));
+//                Log.v(TAG, String.format("Removed from favorites: %s - %s", origAbbr, destAbbr));
             }
             favoriteTrip = 0;
         }
@@ -635,7 +634,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void cancelAlarms() {
-        Log.d(TAG, "Cancelling all alarms...");
+        Log.i(TAG, "Cancelling all alarms...");
         if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
         if (quickPlannerPendingIntent != null) alarmManager.cancel(quickPlannerPendingIntent);
         if (realTimeEtdPendingIntent != null) alarmManager.cancel(realTimeEtdPendingIntent);
