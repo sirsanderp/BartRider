@@ -36,6 +36,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.sanderp.bartrider.adapter.TripAdapter;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
@@ -629,7 +630,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
     public boolean isTripValid(String orig, String dest) {
         if (orig.equals(dest)) {
-//            Toast.makeText(this, "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;
