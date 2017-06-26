@@ -42,7 +42,6 @@
                 android:id="@+id/station_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/progress_layout"
                 android:orientation="vertical">
 
                 <com.sanderp.bartrider.view.AutoResizeTextView
@@ -78,7 +77,8 @@
                 android:id="@+id/progress_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/trip_fare">
+                android:layout_above="@+id/trip_fare"
+                android:layout_below="@+id/station_layout" >
 
                 <ProgressBar
                     android:id="@+id/next_departure_progress_bar"

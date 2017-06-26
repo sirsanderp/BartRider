@@ -25,6 +25,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -364,8 +365,8 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     protected boolean setTrip(String origAbbr, String origFull, String destAbbr, String destFull) {
-        cancelAlarms();
         if (!isTripSame(origAbbr, destAbbr) && isTripValid(origAbbr, destAbbr)) {
+            cancelAlarms();
             this.origAbbr = origAbbr;
             this.origFull = origFull;
             this.destAbbr = destAbbr;
@@ -442,13 +443,22 @@ public class TripOverviewActivity extends AppCompatActivity
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
         HashMap<String, RealTimeEtdPojo> etdResults = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
         int nextDeparture = mergeSchedulesAndEtd(etdResults);
-        if (currTrips.size() > 0) {
+
+        if (nextDeparture == -999) {
+            setUnavailableLayout();
+        } else if (currTrips.size() > 0) {
+            nextDeparture = (nextDeparture < 0) ? 0 : nextDeparture;
             List<Fare> fares = trips.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
             mTripSchedules.clearAnimation();
             mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, currTrips));
             setNextDepartureProgressBar(nextDeparture);
             setOverviewVisibility(View.VISIBLE);
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            ViewGroup.LayoutParams swipeRefreshLayoutParams = mSwipeRefreshLayout.getLayoutParams();
+            swipeRefreshLayoutParams.height = (int) (displayMetrics.heightPixels * 0.30);
+            mSwipeRefreshLayout.requestLayout();
 
             if (nextDeparture == 0)
                 alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
@@ -496,8 +506,14 @@ public class TripOverviewActivity extends AppCompatActivity
                 continue;
             }
 
+            Log.v(TAG, "Current Time: " + df.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
             long sinceLastUpdate = now.getTime() - etdResults.get(headAbbr).getApiUpdateEpoch();
             int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
+            if (sinceLastUpdateSeconds > 120) {
+                nextDeparture = -999;
+                break;
+            }
+
             Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
             int etdSeconds = etdResults.get(headAbbr).getEtdSeconds().remove(0);
             if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
@@ -506,7 +522,6 @@ public class TripOverviewActivity extends AppCompatActivity
             if (etdSeconds < nextDeparture) nextDeparture = etdSeconds;
             Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
 
-            Log.v(TAG, "Current Time: " + df.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
             long estOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
             long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000) - sinceLastUpdate;
             Log.v(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
@@ -554,12 +569,18 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setOfflineLayout(String text) {
-        RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+//        RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//        layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
 
         TextView mEmptyOverviewList = (TextView) findViewById(R.id.empty_overview_list);
         mEmptyOverviewList.setText(text);
         mEmptyOverviewList.setVisibility(View.VISIBLE);
+    }
+
+    private void setUnavailableLayout() {
+        mNextDepartureProgressBar.setVisibility(View.GONE);
+        mNextDeparture.setText("BART estimates are currently unavailable.");
+        mNextDepartureWindow.setVisibility(View.GONE);
     }
 
     private void setOverviewVisibility(int visibility) {
