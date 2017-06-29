@@ -89,7 +89,7 @@ public class TripDrawerFragment extends Fragment implements
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor itemCursor = mAdapter.getCursor();
                 mFragmentListener.onFavoriteClick(
-                        getColumnId(itemCursor),
+                        getId(itemCursor),
                         getOrigAbbr(itemCursor),
                         getOrigFull(itemCursor),
                         getDestAbbr(itemCursor),
@@ -151,7 +151,7 @@ public class TripDrawerFragment extends Fragment implements
             String orig = getOrigAbbr(favoritesTable);
             String dest = getDestAbbr(favoritesTable);
             if (orig.equals(origAbbr) && dest.equals(destAbbr)) {
-                return getColumnId(favoritesTable);
+                return getId(favoritesTable);
             }
             favoritesTable.moveToNext();
         }
@@ -164,7 +164,7 @@ public class TripDrawerFragment extends Fragment implements
         else return text.substring(0, maxLength) + "...";
     }
 
-    private int getColumnId(Cursor c) {
+    private int getId(Cursor c) {
         return c.getInt(c.getColumnIndex(BartRiderContract.Favorites.Column.ID));
     }
 
