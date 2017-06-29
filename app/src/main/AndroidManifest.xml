@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.sanderp.bartrider">
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -12,7 +13,6 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/BartTheme">
-
         <activity
             android:name=".TripOverviewActivity"
             android:label="@string/app_name"
@@ -23,20 +23,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".TripDetailActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:parentActivityName=".TripOverviewActivity" >
-        </activity>
-
+            android:parentActivityName=".TripOverviewActivity"
+            android:screenOrientation="portrait" />
         <activity
-            android:name=".MapActivity"
+            android:name=".BartMapActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:parentActivityName=".TripOverviewActivity" >
-        </activity>
+            android:parentActivityName=".TripOverviewActivity"
+            android:screenOrientation="portrait" />
 
         <provider
             android:name=".database.BartRiderProvider"
@@ -45,23 +41,20 @@
             android:exported="false" />
 
         <service
-            android:name=".intentservice.AdvisoryService"
+            android:name=".service.AdvisoryService"
             android:exported="false" />
-
         <service
-            android:name=".intentservice.RealTimeService"
+            android:name=".service.RealTimeService"
             android:exported="false" />
-
         <service
-            android:name=".intentservice.RealTimeEtdService"
+            android:name=".service.RealTimeEtdService"
             android:exported="false" />
-
         <service
-            android:name=".intentservice.QuickPlannerService"
+            android:name=".service.QuickPlannerService"
             android:exported="false" />
 
         <receiver
-            android:name=".intentservice.AdvisoryReceiver"
+            android:name=".service.AdvisoryReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
@@ -71,5 +64,10 @@
                 <action android:name="com.sanderp.bartrider.ADVISORY_SERVICE" />
             </intent-filter>
         </receiver>
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="@string/fabric_api_key" />
     </application>
+
 </manifest>

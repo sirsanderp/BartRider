@@ -38,13 +38,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.sanderp.bartrider.adapter.TripAdapter;
 import com.sanderp.bartrider.asynctask.AsyncTaskResponse;
 import com.sanderp.bartrider.asynctask.StationListAsyncTask;
 import com.sanderp.bartrider.database.BartRiderContract;
-import com.sanderp.bartrider.intentservice.AdvisoryService;
-import com.sanderp.bartrider.intentservice.QuickPlannerService;
-import com.sanderp.bartrider.intentservice.RealTimeEtdService;
+import com.sanderp.bartrider.service.AdvisoryService;
+import com.sanderp.bartrider.service.QuickPlannerService;
+import com.sanderp.bartrider.service.RealTimeEtdService;
 import com.sanderp.bartrider.pojo.quickplanner.Fare;
 import com.sanderp.bartrider.pojo.quickplanner.Leg;
 import com.sanderp.bartrider.pojo.quickplanner.QuickPlannerPojo;
@@ -55,6 +56,7 @@ import com.sanderp.bartrider.utility.Constants;
 import com.sanderp.bartrider.utility.PrefContract;
 import com.sanderp.bartrider.utility.Utils;
 
+import io.fabric.sdk.android.Fabric;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -83,6 +85,8 @@ import java.util.TimeZone;
 public class TripOverviewActivity extends AppCompatActivity
         implements TripPlannerFragment.OnFragmentListener, TripDrawerFragment.OnFragmentListener {
     private static final String TAG = "TripOverviewActivity";
+
+    private static final int OFFLINE_CODE = -999;
 
     private FragmentManager fragmentManager;
     private TripAdvisoryFragment advisoryFragment;
@@ -127,6 +131,10 @@ public class TripOverviewActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.trip_overview);
+
+        if (BuildConfig.USE_CRASHLYTICS) {
+            Fabric.with(this, new Crashlytics());
+        }
 
         // Set up Toolbar to replace ActionBar.
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -278,6 +286,7 @@ public class TripOverviewActivity extends AppCompatActivity
         super.onStop();
         cancelAlarms();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
     }
 
     @Override
@@ -318,7 +327,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 getAdvisory();
                 return true;
             case R.id.action_bart_map:
-                startActivity(new Intent(TripOverviewActivity.this, MapActivity.class));
+                startActivity(new Intent(TripOverviewActivity.this, BartMapActivity.class));
                 return true;
             case R.id.action_refresh:
                 cancelAlarms();
@@ -443,9 +452,12 @@ public class TripOverviewActivity extends AppCompatActivity
         HashMap<String, RealTimeEtdPojo> etdResults = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
         int nextDeparture = mergeSchedulesAndEtd(etdResults);
 
-        if (nextDeparture == -999) {
-            setUnavailableLayout();
+        if (nextDeparture == OFFLINE_CODE) {
+            Log.i(TAG, "API is unavailable...");
+            setOverviewVisibility(View.GONE);
+            setOfflineLayout("BART estimates are currently unavailable.");
         } else if (currTrips.size() > 0) {
+            Log.i(TAG, "Building trip view...");
             nextDeparture = (nextDeparture < 0) ? 0 : nextDeparture;
             List<Fare> fares = trips.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
@@ -453,10 +465,11 @@ public class TripOverviewActivity extends AppCompatActivity
             mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, currTrips));
             setNextDepartureProgressBar(nextDeparture);
             setOverviewVisibility(View.VISIBLE);
+
             DisplayMetrics displayMetrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             ViewGroup.LayoutParams swipeRefreshLayoutParams = mSwipeRefreshLayout.getLayoutParams();
-            swipeRefreshLayoutParams.height = (int) (displayMetrics.heightPixels * 0.30);
+            swipeRefreshLayoutParams.height = (int) (displayMetrics.heightPixels * 0.35);
             mSwipeRefreshLayout.requestLayout();
 
             if (nextDeparture == 0)
@@ -464,6 +477,7 @@ public class TripOverviewActivity extends AppCompatActivity
             else
                 alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimeEtdPendingIntent);
         } else {
+            Log.i(TAG, "BART is no longer running...");
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
             int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
@@ -482,7 +496,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private int mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> etdResults) {
-        DateFormat df = new SimpleDateFormat("h:mm:ss a", Locale.US);
+        DateFormat df = new SimpleDateFormat("hh:mm:ss a", Locale.US);
         df.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
         Date now = new Date();
 
@@ -509,7 +523,7 @@ public class TripOverviewActivity extends AppCompatActivity
             long sinceLastUpdate = now.getTime() - etdResults.get(headAbbr).getApiUpdateEpoch();
             int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
             if (sinceLastUpdateSeconds > 120) {
-                nextDeparture = -999;
+                nextDeparture = OFFLINE_CODE;
                 break;
             }
 
@@ -574,12 +588,6 @@ public class TripOverviewActivity extends AppCompatActivity
         TextView mEmptyOverviewList = (TextView) findViewById(R.id.empty_overview_list);
         mEmptyOverviewList.setText(text);
         mEmptyOverviewList.setVisibility(View.VISIBLE);
-    }
-
-    private void setUnavailableLayout() {
-        mNextDepartureProgressBar.setVisibility(View.GONE);
-        mNextDeparture.setText("BART estimates are currently unavailable.");
-        mNextDepartureWindow.setVisibility(View.GONE);
     }
 
     private void setOverviewVisibility(int visibility) {
