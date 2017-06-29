@@ -1,4 +1,4 @@
-package com.sanderp.bartrider.intentservice;
+package com.sanderp.bartrider.service;
 
 import android.app.IntentService;
 import android.content.Intent;
