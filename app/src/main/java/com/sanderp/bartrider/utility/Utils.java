@@ -59,7 +59,7 @@ public class Utils {
         if (credentialsProvider == null) {
             credentialsProvider = new CognitoCachingCredentialsProvider(
                     context,
-                    context.getResources().getString(R.string.identityPoolId),
+                    context.getResources().getString(R.string.cognitoIdentityPoolId),
                     Regions.US_WEST_2
             );
         }
