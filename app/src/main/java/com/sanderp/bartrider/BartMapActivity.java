@@ -10,8 +10,8 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 /**
  * Displays the BART Map.
  */
-public class MapActivity extends AppCompatActivity {
-    private static final String TAG = "MapActivity";
+public class BartMapActivity extends AppCompatActivity {
+    private static final String TAG = "BartMapActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
