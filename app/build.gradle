@@ -23,12 +23,10 @@ android {
         applicationId "com.sanderp.bartrider"
         minSdkVersion 19
         targetSdkVersion 25
-        versionCode 1
+        versionCode 2
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
-        resValue "string", "fabric_api_key", (project.findProperty("FABRIC_API_KEY") ?: "")
     }
 
     buildTypes {
