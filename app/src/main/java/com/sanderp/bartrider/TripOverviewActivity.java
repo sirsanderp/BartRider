@@ -86,7 +86,14 @@ public class TripOverviewActivity extends AppCompatActivity
         implements TripPlannerFragment.OnFragmentListener, TripDrawerFragment.OnFragmentListener {
     private static final String TAG = "TripOverviewActivity";
 
-    private static final int OFFLINE_CODE = -999;
+    private static final int ETD_FAILURE = -101;
+    private static final int SCHED_FAILURE = -102;
+
+    private static final DateFormat DF;
+    static {
+        DF = new SimpleDateFormat("hh:mm:ss a", Locale.US);
+        DF.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+    }
 
     private FragmentManager fragmentManager;
     private TripAdvisoryFragment advisoryFragment;
@@ -117,6 +124,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private String destAbbr;
     private String destFull;
 
+    private ObjectAnimator nextDepartureAnimator;
     private AlarmManager alarmManager;
     private BroadcastReceiver broadcastReceiver;
     private CountDownTimer nextDepartureCountdown;
@@ -226,8 +234,10 @@ public class TripOverviewActivity extends AppCompatActivity
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                plannerFragment.setSpinners(origAbbr, destAbbr);
-                plannerFragment.show(fragmentManager, "Trip Planner Fragment");
+                if (!plannerFragment.isAdded()) {
+                    plannerFragment.setSpinners(origAbbr, destAbbr);
+                    plannerFragment.show(fragmentManager, "Trip Planner Fragment");
+                }
             }
         });
 
@@ -286,7 +296,6 @@ public class TripOverviewActivity extends AppCompatActivity
         super.onStop();
         cancelAlarms();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
     }
 
     @Override
@@ -437,7 +446,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void getTripRealTimeEtd(Request result) {
         if (isTripSet() && Utils.isNetworkConnected(this)) {
-            // Have to use bundle to be able to pass serialized objects through the AlarmManager.
+            // Use bundle to pass serialized objects using the AlarmManager.
             Bundle bundle = new Bundle();
             bundle.putSerializable(RealTimeEtdService.OBJECT_LIST, result.buildBatchLoad());
             Intent realTimeEtdIntent = new Intent(TripOverviewActivity.this, RealTimeEtdService.class);
@@ -451,20 +460,18 @@ public class TripOverviewActivity extends AppCompatActivity
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
         HashMap<String, RealTimeEtdPojo> etdResults = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
         int nextDeparture = mergeSchedulesAndEtd(etdResults);
-
-        if (nextDeparture == OFFLINE_CODE) {
+        if (nextDeparture == SCHED_FAILURE) {
             Log.i(TAG, "API is unavailable...");
             setOverviewVisibility(View.GONE);
-            setOfflineLayout("BART estimates are currently unavailable.");
+            setOfflineLayout("BART schedules are currently unavailable.");
+            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
         } else if (currTrips.size() > 0) {
             Log.i(TAG, "Building trip view...");
-            nextDeparture = (nextDeparture < 0) ? 0 : nextDeparture;
             List<Fare> fares = trips.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
-            mTripSchedules.clearAnimation();
             mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, currTrips));
-            setNextDepartureProgressBar(nextDeparture);
             setOverviewVisibility(View.VISIBLE);
+            setNextDepartureProgressBar(nextDeparture);
 
             DisplayMetrics displayMetrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -472,12 +479,12 @@ public class TripOverviewActivity extends AppCompatActivity
             swipeRefreshLayoutParams.height = (int) (displayMetrics.heightPixels * 0.35);
             mSwipeRefreshLayout.requestLayout();
 
-            if (nextDeparture == 0)
+            if (nextDeparture <= 0)
                 alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
             else
                 alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, realTimeEtdPendingIntent);
         } else {
-            Log.i(TAG, "BART is no longer running...");
+            Log.i(TAG, "BART is offline for the night...");
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
             int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
@@ -496,56 +503,58 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private int mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> etdResults) {
-        DateFormat df = new SimpleDateFormat("hh:mm:ss a", Locale.US);
-        df.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
-        Date now = new Date();
-
+        if (trips == null || trips.isEmpty()) return SCHED_FAILURE;
         currTrips = new ArrayList<>(trips);
+        if (etdResults == null || etdResults.isEmpty()) return ETD_FAILURE;
+
+        boolean isEtdApiDown = false;
         int nextDeparture = Integer.MAX_VALUE;
+        Date now = new Date();
         for (int i = 0; i < currTrips.size(); i++) {
             Trip trip = currTrips.get(i);
             Leg tripLeg = trip.getLeg(0);
-
             String headAbbr = tripLeg.getTrainHeadStation();
+
+//            Log.v(TAG, origAbbr + " -> " + headAbbr);
 //            Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
 //            Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
+            // Check if the selected trip has already left the station.
             if (trip.getOrigTimeEpoch() < etdResults.get(headAbbr).getPrevDepartEpoch()) {
                 currTrips.remove(i--);
                 continue;
             }
 
-//            Log.v(TAG, origAbbr + " -> " + headAbbr);
+            // Check if estimates data has been populated for the selected trip.
             if (etdResults.get(headAbbr).getEtdSeconds().isEmpty()) {
                 continue;
             }
 
-//            Log.v(TAG, "Current Time: " + df.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
+//            Log.v(TAG, "Current Time: " + DF.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
+            // Check if the BART estimates API has been updated recently.
             long sinceLastUpdate = now.getTime() - etdResults.get(headAbbr).getApiUpdateEpoch();
             int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
             if (sinceLastUpdateSeconds > 120) {
-                nextDeparture = OFFLINE_CODE;
-                break;
+                isEtdApiDown = true;
+                continue;
             }
 
-//            Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
             int etdSeconds = etdResults.get(headAbbr).getEtdSeconds().remove(0);
             if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
-            else etdSeconds = etdSeconds - sinceLastUpdateSeconds;
-
+            else etdSeconds -= sinceLastUpdateSeconds;
             if (etdSeconds < nextDeparture) nextDeparture = etdSeconds;
-//            Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
 
             long estOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
             long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000) - sinceLastUpdate;
-//            Log.v(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
-//            Log.v(TAG, "Trip (estimated): " + df.format(estOrigDeparture) + " - " + df.format(estDestArrival));
-
             long diffMinutes = ((estOrigDeparture - trip.getOrigTimeEpoch()) / (60 * 1000)) % 60;
             long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
             long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffMinutes * 60 * 1000) - sinceLastUpdate;
-//            Log.v(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
-//            Log.v(TAG, "Trip Leg (estimated): " + df.format(estLegOrigDeparture) + " - " + df.format(estLegDestArrival));
 
+//            Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
+//            Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
+//            Log.v(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
+//            Log.v(TAG, "Trip (estimated): " + DF.format(estOrigDeparture) + " - " + DF.format(estDestArrival));
+//            Log.v(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
+//            Log.v(TAG, "Trip Leg (estimated): " + DF.format(estLegOrigDeparture) + " - " + DF.format(estLegDestArrival));
 //            Log.v(TAG, "Difference: " + diffMinutes + " minutes");
             if (diffMinutes > 0) {
 //                Log.v(TAG, "Updating trip and trip leg estimated times...");
@@ -555,36 +564,47 @@ public class TripOverviewActivity extends AppCompatActivity
                 tripLeg.setEtdDestTime(estLegDestArrival);
             }
         }
-        return nextDeparture;
+
+        if (isEtdApiDown && nextDeparture == Integer.MAX_VALUE) return ETD_FAILURE;
+        else return nextDeparture;
     }
 
     private void setNextDepartureProgressBar(int seconds) {
 //        Log.v(TAG, "Next departure: " + seconds);
-        mNextDepartureProgressBar.clearAnimation();
-        ObjectAnimator animator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
-        animator.setDuration(seconds * 1000);
-        animator.setInterpolator(new LinearInterpolator());
-        animator.start();
-
-        mNextDeparture.setTextSize(42);
         if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
-        nextDepartureCountdown = new CountDownTimer(seconds * 1000, 1000) {
-            public void onTick(long millisUntilFinished) {
-                String timeLeft = String.format(Locale.US, "%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
-                mNextDeparture.setText(timeLeft);
-            }
+//        mNextDepartureProgressBar.clearAnimation();
+        mNextDeparture.setTextSize(42);
 
-            public void onFinish() {
-                mNextDeparture.setTextSize(30);
-                mNextDeparture.setText(R.string.status_leaving);
-            }
-        }.start();
+        if (seconds == ETD_FAILURE) {
+            Log.i(TAG, "BART estimates are unavailable...");
+            nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", 0, 0);
+            nextDepartureAnimator.setDuration(0);
+            nextDepartureAnimator.setInterpolator(new LinearInterpolator());
+            nextDepartureAnimator.start();
+            mNextDeparture.setText("N/A");
+            mNextDepartureWindow.setText("API error!");
+        } else {
+            seconds = (seconds <= 0) ? 0 : seconds;
+            nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
+            nextDepartureAnimator.setDuration(seconds * 1000);
+            nextDepartureAnimator.setInterpolator(new LinearInterpolator());
+            nextDepartureAnimator.start();
+
+            nextDepartureCountdown = new CountDownTimer(seconds * 1000, 1000) {
+                public void onTick(long millisUntilFinished) {
+                    String timeLeft = String.format(Locale.US, "%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
+                    mNextDeparture.setText(timeLeft);
+                }
+
+                public void onFinish() {
+                    mNextDeparture.setTextSize(30);
+                    mNextDeparture.setText(R.string.status_leaving);
+                }
+            }.start();
+        }
     }
 
     private void setOfflineLayout(String text) {
-//        RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-//        layout.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-
         TextView mEmptyOverviewList = (TextView) findViewById(R.id.empty_overview_list);
         mEmptyOverviewList.setText(text);
         mEmptyOverviewList.setVisibility(View.VISIBLE);
@@ -601,7 +621,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void showAdvisory() {
-        advisoryFragment.show(fragmentManager, "Trip Advisory Fragment");
+        if (!advisoryFragment.isAdded()) advisoryFragment.show(fragmentManager, "Trip Advisory Fragment");
     }
 
     private void showTwitter(String username) {
