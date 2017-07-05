@@ -18,6 +18,7 @@ import java.io.InputStream;
 /**
  * Asynchronously requests real-time etd data from the BART API for the specified origin.
  */
+@Deprecated
 public class RealTimeService extends IntentService {
     private static final String TAG = "RealTimeService";
 
