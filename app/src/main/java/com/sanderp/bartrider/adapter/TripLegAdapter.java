@@ -54,15 +54,13 @@ public class TripLegAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View rowView = mInflater.inflate(R.layout.trip_detail_list_item, parent, false);
-        TextView mOrigName = (TextView) rowView.findViewById(R.id.trip_leg_orig_name);
+        TextView mTripLegHeader = (TextView) rowView.findViewById(R.id.trip_leg_header);
         TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_leg_orig_time);
-        TextView mDestName = (TextView) rowView.findViewById(R.id.trip_leg_dest_name);
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_leg_dest_time);
         TrainRouteView mTrainRoute = (TrainRouteView) rowView.findViewById(R.id.train_route);
 
         Leg tripLeg = (Leg) getItem(position);
-        mOrigName.setText(tripLeg.getOrigin());
-        mDestName.setText(tripLeg.getDestination());
+        mTripLegHeader.setText(tripLeg.getOriginFull() + " - " + tripLeg.getDestinationFull());
         mOrigTime.setText(df.format(tripLeg.getEtdOrigTime()));
         mDestTime.setText(df.format(tripLeg.getEtdDestTime()));
         mTrainRoute.setTrainRoutes(1, new int[]{colors[position]});

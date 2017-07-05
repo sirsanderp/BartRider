@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -19,10 +21,10 @@ public class TripDetailActivity extends AppCompatActivity {
     public static final String ORIG = "origin";
     public static final String DEST = "destination";
     public static final String TRIP = "trip";
+    public static final String TRIP_LEG = "tripLeg";
 
     private ListView mListView;
     private TextView mCo2;
-    private TextView mTripHeader;
     private Toolbar mToolbar;
 //    private TrainRouteView mTrainRoute;
 
@@ -38,18 +40,24 @@ public class TripDetailActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mTripHeader = (TextView) findViewById(R.id.trip_header);
         mListView = (ListView) findViewById(R.id.trip_detail_list_view);
         mCo2 = (TextView) findViewById(R.id.trip_co2);
 //        mTrainRoute = (TrainRouteView) findViewById(R.id.train_route);
 
-        Intent data = this.getIntent();
+        Intent data = getIntent();
         Trip trip = (Trip) data.getSerializableExtra(TRIP);
-        mTripHeader.setText(data.getStringExtra(ORIG) + " - " + data.getStringExtra(DEST));
         mCo2.setText(String.format(getResources().getString(R.string.co2_saved), trip.getCo2()));
 //        mTrainRoute.setTrainRoutes(trip.getLegs().size(), trip.getRouteColors());
 
-        TripLegAdapter adapter = new TripLegAdapter(TripDetailActivity.this, trip.getLegs(), trip.getRouteColors());
+        TripLegAdapter adapter = new TripLegAdapter(this, trip.getLegs(), trip.getRouteColors());
         mListView.setAdapter(adapter);
+        mListView.setOnItemClickListener(new ListView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent tripDetailIntent = new Intent(TripDetailActivity.this, TripOverviewActivity.class)
+                        .putExtra(TripDetailActivity.TRIP_LEG, ((Trip) getIntent().getSerializableExtra(TRIP)).getLeg(position));
+                startActivity(tripDetailIntent);
+            }
+        });
     }
 }

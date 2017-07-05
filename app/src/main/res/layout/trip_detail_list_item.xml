@@ -4,54 +4,55 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp">
+    android:paddingBottom="4dp"
+    android:paddingTop="4dp">
 
-    <TextView
-        android:id="@+id/trip_leg_orig_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_above="@+id/trip_leg_orig_time"
-        android:textSize="12sp"
-        tools:text="@string/sample_orig_abbr" />
-
-    <TextView
-        android:id="@+id/trip_leg_orig_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:minWidth="100dp"
+    <com.sanderp.bartrider.view.AutoResizeTextView
+        android:id="@+id/trip_leg_header"
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:gravity="center"
+        android:layout_marginBottom="4dp"
+        android:maxLines="1"
+        android:text="@string/empty_field"
         android:textSize="20sp"
-        tools:text="@string/sample_time" />
+        android:textStyle="bold"
+        tools:text="@string/sample_trip" />
 
-    <TextView
-        android:id="@+id/trip_leg_dest_name"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/station_layout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_above="@+id/trip_leg_dest_time"
-        android:textSize="12sp"
-        tools:text="@string/sample_dest_abbr" />
+        android:layout_below="@+id/trip_leg_header"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/trip_leg_dest_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:gravity="end"
-        android:minWidth="100dp"
-        android:textSize="20sp"
-        tools:text="@string/sample_time" />
+        <TextView
+            android:id="@+id/trip_leg_orig_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:minWidth="100dp"
+            android:textSize="20sp"
+            tools:text="@string/sample_time" />
 
-    <com.sanderp.bartrider.view.TrainRouteView
-        android:id="@+id/train_route"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/trip_leg_orig_time"
-        android:layout_toStartOf="@+id/trip_leg_dest_time"
-        android:layout_centerInParent="true" />
+        <TextView
+            android:id="@+id/trip_leg_dest_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:gravity="end"
+            android:minWidth="100dp"
+            android:textSize="20sp"
+            tools:text="@string/sample_time" />
+
+        <com.sanderp.bartrider.view.TrainRouteView
+            android:id="@+id/train_route"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/trip_leg_orig_time"
+            android:layout_toStartOf="@+id/trip_leg_dest_time"
+            android:layout_centerInParent="true" />
+
+    </RelativeLayout>
 
 </RelativeLayout>

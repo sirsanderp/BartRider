@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sanderp.bartrider.utility.Utils;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
@@ -63,6 +64,10 @@ public class Leg implements Serializable {
     private int trainIdx;
 
     @JsonIgnore
+    private String originFull;
+    @JsonIgnore
+    private String destinationFull;
+    @JsonIgnore
     private long etdOrigTime;
     @JsonIgnore
     private long etdDestTime;
@@ -89,6 +94,15 @@ public class Leg implements Serializable {
 
     public void setOrigin(String origin) {
         this.origin = origin;
+        setOriginFull(origin);
+    }
+
+    public String getOriginFull() {
+        return originFull;
+    }
+
+    public void setOriginFull(String abbr) {
+        this.originFull = Utils.getStationFull(abbr);
     }
 
     public String getDestination() {
@@ -97,6 +111,15 @@ public class Leg implements Serializable {
 
     public void setDestination(String destination) {
         this.destination = destination;
+        setDestinationFull(destination);
+    }
+
+    public String getDestinationFull() {
+        return destinationFull;
+    }
+
+    public void setDestinationFull(String abbr) {
+        this.destinationFull = Utils.getStationFull(abbr);;
     }
 
     public String getOrigTimeMin() {
