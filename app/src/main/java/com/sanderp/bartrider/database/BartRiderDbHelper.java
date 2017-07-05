@@ -38,6 +38,18 @@ public class BartRiderDbHelper extends SQLiteOpenHelper {
         Log.d(TAG, "onCreate with SQL: " + favoritesTable);
         db.execSQL(favoritesTable);
 
+        String recentsTable = String.format(
+                "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s text, %s text, %s text, %s text)",
+                BartRiderContract.Recents.TABLE,
+                BartRiderContract.Recents.Column.ID,
+                BartRiderContract.Recents.Column.ORIG_FULL,
+                BartRiderContract.Recents.Column.ORIG_ABBR,
+                BartRiderContract.Recents.Column.DEST_FULL,
+                BartRiderContract.Recents.Column.DEST_ABBR
+        );
+        Log.d(TAG, "onCreate with SQL: " + recentsTable);
+        db.execSQL(recentsTable);
+
         String stationsTable = String.format(
                 "CREATE TABLE %s (%s int PRIMARY KEY, %s text, %s text, %s text, %s text, " +
                         "%s text, %s text, %s text, %s text, %s text)",
@@ -59,7 +71,10 @@ public class BartRiderDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        String sql = "DROP TABLE IF EXISTS " + BartRiderContract.Favorites.TABLE + ", " + BartRiderContract.Stations.TABLE;
+        String sql = "DROP TABLE IF EXISTS " +
+                BartRiderContract.Favorites.TABLE + ", " +
+                BartRiderContract.Recents.TABLE + ", " +
+                BartRiderContract.Stations.TABLE;
         db.execSQL(sql);
 
         onCreate(db);

@@ -41,8 +41,21 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="5"
+        android:paddingBottom="16dp"
         android:background="@color/material_light">
+
+        <TextView
+            android:id="@+id/empty_favorites_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="@string/empty_favorites_list_view"
+            android:textSize="16sp"
+            android:visibility="gone" />
 
         <ListView
             android:id="@+id/favorites_list_view"
@@ -50,16 +63,48 @@
             android:layout_height="wrap_content"
             android:choiceMode="singleChoice" />
 
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:background="@color/material_light">
+
         <TextView
-            android:id="@+id/empty_drawer_list_item"
+            android:id="@+id/recents_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="@string/empty_drawer_list_view"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/recent_trips"
             android:textSize="16sp"
-            android:visibility="gone" />
+            android:textStyle="bold" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/recents_text"
+            android:background="@color/material_light">
+
+            <TextView
+                android:id="@+id/empty_recents_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="@string/empty_recents_list_view"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <ListView
+                android:id="@+id/recents_list_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:choiceMode="singleChoice" />
+
+        </RelativeLayout>
 
     </RelativeLayout>
 

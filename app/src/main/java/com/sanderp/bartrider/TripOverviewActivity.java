@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -386,6 +387,7 @@ public class TripOverviewActivity extends AppCompatActivity
             invalidateOptionsMenu();
             mTripHeader.setText(origFull + " - " + destFull);
             getTripSchedules();
+            setRecentTrip();
         }
     }
 
@@ -420,12 +422,9 @@ public class TripOverviewActivity extends AppCompatActivity
         // -1: Not checked yet, 0: Checked, not a favorite, 1+: Checked, a favorite
         if (favoriteTrip == -1) favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr);
 
-//        invalidateOptionsMenu();
         if (favoriteTrip == 0) {
-//            Log.v(TAG, "Favorite Trip: " + favoriteTrip + " set to white.");
             mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
         } else {
-//            Log.v(TAG, "Favorite Trip: " + favoriteTrip + " set to green.");
             mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
         }
     }
@@ -664,21 +663,41 @@ public class TripOverviewActivity extends AppCompatActivity
             values.put(BartRiderContract.Favorites.Column.DEST_FULL, destFull);
 
             Uri uri = this.getContentResolver().insert(BartRiderContract.Favorites.CONTENT_URI, values);
-            if (uri != null) {
-                Log.d(TAG, uri.toString());
+//            if (uri != null) {
 //                Log.v(TAG, String.format("Added to favorites: %s - %s", origAbbr, destAbbr));
-            }
+//            }
             favoriteTrip = Integer.parseInt(uri.getLastPathSegment());
         } else {
             Uri uri = Uri.parse(BartRiderContract.Favorites.CONTENT_URI + "/" + favoriteTrip);
-            int count = this.getContentResolver().delete(uri, null, null);
-            if (count > 0) {
-                Log.d(TAG, uri.toString());
-//                Log.v(TAG, String.format("Removed from favorites: %s - %s", origAbbr, destAbbr));
-            }
+            this.getContentResolver().delete(uri, null, null);
             favoriteTrip = 0;
         }
         invalidateOptionsMenu();
+    }
+
+    private void setRecentTrip() {
+        Log.d(TAG, "Origin: " + origAbbr + " | Destination: " + destAbbr);
+        if (isTripSet() && !drawerFragment.isRecentTrip(origAbbr, destAbbr)) {
+            Cursor c = this.getContentResolver().query(BartRiderContract.Recents.CONTENT_URI,
+                    new String[] {BartRiderContract.Recents.Column.ID} , null, null, null);
+            if (c.getCount() > 2) {
+                c.moveToLast();
+                Log.d(TAG, "LOL: " + c.getInt(c.getColumnIndex(BartRiderContract.Recents.Column.ID)));
+                Uri uri = Uri.parse(BartRiderContract.Recents.CONTENT_URI + "/" + c.getInt(c.getColumnIndex(BartRiderContract.Recents.Column.ID)));
+                this.getContentResolver().delete(uri, null, null);
+            }
+
+            ContentValues values = new ContentValues();
+            values.put(BartRiderContract.Recents.Column.ORIG_ABBR, origAbbr);
+            values.put(BartRiderContract.Recents.Column.ORIG_FULL, origFull);
+            values.put(BartRiderContract.Recents.Column.DEST_ABBR, destAbbr);
+            values.put(BartRiderContract.Recents.Column.DEST_FULL, destFull);
+
+            Uri uri = this.getContentResolver().insert(BartRiderContract.Recents.CONTENT_URI, values);
+            if (uri != null) {
+                Log.v(TAG, String.format("Added to recents: %s - %s", origAbbr, destAbbr));
+            }
+        }
     }
 
     private void cancelAlarms() {

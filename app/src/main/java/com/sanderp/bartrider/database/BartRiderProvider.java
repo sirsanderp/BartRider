@@ -25,6 +25,10 @@ public class BartRiderProvider extends ContentProvider {
                 BartRiderContract.FAVORITE_TABLE);
         sURIMatcher.addURI(BartRiderContract.AUTHORITY, BartRiderContract.Favorites.TABLE + "/#",
                 BartRiderContract.FAVORITE_ITEM);
+        sURIMatcher.addURI(BartRiderContract.AUTHORITY, BartRiderContract.Recents.TABLE,
+                BartRiderContract.RECENTS_TABLE);
+        sURIMatcher.addURI(BartRiderContract.AUTHORITY, BartRiderContract.Recents.TABLE + "/#",
+                BartRiderContract.RECENTS_ITEM);
         sURIMatcher.addURI(BartRiderContract.AUTHORITY, BartRiderContract.Stations.TABLE,
                 BartRiderContract.STATION_TABLE);
         sURIMatcher.addURI(BartRiderContract.AUTHORITY, BartRiderContract.Stations.TABLE + "/#",
@@ -34,7 +38,7 @@ public class BartRiderProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         mStationDbHelper = BartRiderDbHelper.getInstance(getContext());
-        return (mStationDbHelper == null) ? false : true;
+        return mStationDbHelper != null;
     }
 
     @Override
@@ -52,6 +56,15 @@ public class BartRiderProvider extends ContentProvider {
                 defaultSort = BartRiderContract.Favorites.DEFAULT_SORT;
                 qb.setTables(BartRiderContract.Favorites.TABLE);
                 qb.appendWhere(BartRiderContract.Favorites.Column.ID + "=" + uri.getLastPathSegment());
+                break;
+            case BartRiderContract.RECENTS_TABLE:
+                defaultSort = BartRiderContract.Recents.DEFAULT_SORT;
+                qb.setTables(BartRiderContract.Recents.TABLE);
+                break;
+            case BartRiderContract.RECENTS_ITEM:
+                defaultSort = BartRiderContract.Recents.DEFAULT_SORT;
+                qb.setTables(BartRiderContract.Recents.TABLE);
+                qb.appendWhere(BartRiderContract.Recents.Column.ID + "=" + uri.getLastPathSegment());
                 break;
             case BartRiderContract.STATION_TABLE:
                 defaultSort = BartRiderContract.Stations.DEFAULT_SORT;
@@ -84,6 +97,10 @@ public class BartRiderProvider extends ContentProvider {
             case BartRiderContract.FAVORITE_TABLE:
                 columnId = BartRiderContract.Favorites.Column.ID;
                 table = BartRiderContract.Favorites.TABLE;
+                break;
+            case BartRiderContract.RECENTS_TABLE:
+                columnId = BartRiderContract.Recents.Column.ID;
+                table = BartRiderContract.Recents.TABLE;
                 break;
             case BartRiderContract.STATION_TABLE:
                 columnId = BartRiderContract.Stations.Column.ID;
@@ -133,15 +150,23 @@ public class BartRiderProvider extends ContentProvider {
         String table, where;
         switch (sURIMatcher.match(uri)) {
             case BartRiderContract.FAVORITE_TABLE:
-                Log.d(TAG, "by favorite table");
                 table = BartRiderContract.Favorites.TABLE;
                 where = null;
                 break;
             case BartRiderContract.FAVORITE_ITEM:
                 id = ContentUris.parseId(uri);
-                Log.d(TAG, "by favorite item with id=" + id);
                 table = BartRiderContract.Favorites.TABLE;
                 where = BartRiderContract.Favorites.Column.ID + "=" + id
+                        + (TextUtils.isEmpty(selection) ? "" : " and ( " + selection + " )");
+                break;
+            case BartRiderContract.RECENTS_TABLE:
+                table = BartRiderContract.Recents.TABLE;
+                where = null;
+                break;
+            case BartRiderContract.RECENTS_ITEM:
+                id = ContentUris.parseId(uri);
+                table = BartRiderContract.Recents.TABLE;
+                where = BartRiderContract.Recents.Column.ID + "=" + id
                         + (TextUtils.isEmpty(selection) ? "" : " and ( " + selection + " )");
                 break;
             case BartRiderContract.STATION_TABLE:

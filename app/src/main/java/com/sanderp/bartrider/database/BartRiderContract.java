@@ -11,10 +11,12 @@ public class BartRiderContract {
     public static final String DB_NAME = "bart_rider.db";
     public static final int DB_VERSION = 1;
 
-    public static final int FAVORITE_TABLE = 2;
     public static final int FAVORITE_ITEM = 1;
-    public static final int STATION_TABLE = 4;
+    public static final int FAVORITE_TABLE = 2;
+    public static final int RECENTS_ITEM = 5;
+    public static final int RECENTS_TABLE = 6;
     public static final int STATION_ITEM = 3;
+    public static final int STATION_TABLE = 4;
 
     public static class Favorites {
         public static final String TABLE = "favorites";
@@ -29,6 +31,21 @@ public class BartRiderContract {
 
         public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + TABLE);
         public static final String DEFAULT_SORT = Column.ID + " ASC";
+    }
+
+    public static class Recents {
+        public static final String TABLE = "recents";
+
+        public static class Column {
+            public static final String ID = BaseColumns._ID;
+            public static final String ORIG_FULL = "orig_full";
+            public static final String ORIG_ABBR = "orig_abbr";
+            public static final String DEST_FULL = "dest_full";
+            public static final String DEST_ABBR = "dest_abbr";
+        }
+
+        public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + TABLE);
+        public static final String DEFAULT_SORT = Column.ID + " DESC";
     }
 
     public static class Stations {

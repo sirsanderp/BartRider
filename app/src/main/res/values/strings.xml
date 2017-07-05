@@ -14,13 +14,15 @@
     <string name="default_advisory">No delays reported.</string>
     <string name="drawer_open">Open Drawer</string>
     <string name="drawer_close">Close Drawer</string>
-    <string name="empty_drawer_list_view">You have no favorite trips.</string>
+    <string name="empty_favorites_list_view">You have no favorite trips.</string>
     <string name="empty_field">N/A</string>
     <string name="empty_overview_list_view">Select a trip using the \'+\' button on the bottom right.</string>
+    <string name="empty_recents_list_view">You have no recent trips.</string>
     <string name="fares">$%1$.2f / $%2$.2f*</string>
     <string name="fare_info">*youth, senior or RTC Clipper card</string>
     <string name="favorite_trips">Favorite Trips</string>
     <string name="offline_status">BART is offline for the night.\nTrains will start running at %1$sam.</string>
+    <string name="recent_trips">Recent Trips</string>
     <string name="sample_fare">"$5.00"</string>
     <string name="sample_time">"11:43 AM"</string>
     <string name="sample_orig_abbr">ORIG</string>
