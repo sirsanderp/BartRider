@@ -68,8 +68,6 @@ public class TripPlannerFragment extends DialogFragment implements
     private String destAbbr;
 
     private FusedLocationProviderClient mFusedLocationClient;
-//    private GoogleApiClient mGoogleApiClient;
-//    private Location mLastKnownLocation;
     private OnFragmentListener mFragmentListener;
 
     public interface OnFragmentListener {
@@ -94,12 +92,6 @@ public class TripPlannerFragment extends DialogFragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = getActivity().getLayoutInflater().inflate(R.layout.trip_planner_fragment, container, false);
-
-//        mGoogleApiClient = new GoogleApiClient.Builder(getContext())
-//                .addConnectionCallbacks(this)
-//                .addOnConnectionFailedListener(this)
-//                .addApi(LocationServices.API)
-//                .build();
 
         // Initialize buttons
         mConfirm = (Button) view.findViewById(R.id.confirm);
@@ -169,35 +161,7 @@ public class TripPlannerFragment extends DialogFragment implements
     public void onDetach() {
         super.onDetach();
         mFragmentListener = null;
-//        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-//            mGoogleApiClient.disconnect();
-//        }
     }
-
-//    @Override
-//    public void onConnected(@Nullable Bundle bundle) {
-//        if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-//            mLocationPermissionGranted = true;
-//        } else {
-//            ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-//        }
-//
-//        if (mLocationPermissionGranted) {
-//            mLastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-//            mLastKnownLocation.getLatitude();
-//            mLastKnownLocation.getLongitude();
-//        }
-//    }
-//
-//    @Override
-//    public void onConnectionSuspended(int cause) {
-//        Log.d(TAG, "Play services connection suspended");
-//    }
-//
-//    @Override
-//    public void onConnectionFailed(@NonNull ConnectionResult result) {
-//        Log.d(TAG, "Play services connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
-//    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -255,23 +219,23 @@ public class TripPlannerFragment extends DialogFragment implements
                         mCursor.moveToFirst();
                         double deviceLat = location.getLatitude();
                         double deviceLon = location.getLongitude();
-                        Log.v(TAG, "dLat: " + deviceLat + " dLon: " + deviceLon);
+//                        Log.v(TAG, "dLat: " + deviceLat + " dLon: " + deviceLon);
                         int nearestStationId = 1;
                         double nearestStationDist = 1;
                         while (!mCursor.isAfterLast()) {
                             double stationLat = Double.parseDouble(getLatitude(mCursor));
                             double stationLon = Double.parseDouble(getLongitude(mCursor));
-                            Log.v(TAG, "sLat: " + stationLat + " sLon: " + stationLon);
+//                            Log.v(TAG, "sLat: " + stationLat + " sLon: " + stationLon);
                             double distance = Math.sqrt(Math.pow((deviceLat - stationLat), 2) + Math.pow((deviceLon - stationLon), 2));
-                            Log.v(TAG, "Station: " + getAbbr(mCursor) + " Distance: " + distance);
+//                            Log.v(TAG, "Station: " + getAbbr(mCursor) + " Distance: " + distance);
                             if (distance < nearestStationDist) {
                                 nearestStationId = getId(mCursor);
                                 nearestStationDist = distance;
                             }
                             mCursor.moveToNext();
                         }
-                        Log.v(TAG, "Nearest Station ID: " + nearestStationId);
-                        Log.v(TAG, "Nearest Station Distance: " + nearestStationDist);
+//                        Log.v(TAG, "Nearest Station ID: " + nearestStationId);
+//                        Log.v(TAG, "Nearest Station Distance: " + nearestStationDist);
                         mOrigSpinner.setSelection(nearestStationId - 1);
                     } else {
                         Toast.makeText(getContext(), "Location unavailable.", Toast.LENGTH_SHORT).show();
