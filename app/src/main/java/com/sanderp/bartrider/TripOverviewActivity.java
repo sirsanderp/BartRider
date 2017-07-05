@@ -61,6 +61,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -148,17 +149,22 @@ public class TripOverviewActivity extends AppCompatActivity
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
 
-        // Set up advisory notifications and station database on first run.
+        // Set up station database on first run.
         sharedPrefs = getSharedPreferences(PrefContract.PREFS_NAME, 0);
         if (sharedPrefs.getBoolean(PrefContract.FIRST_RUN, true)) {
             Log.i(TAG, "First run setup...");
-            sendBroadcast(new Intent(Constants.Broadcast.ADVISORY_SERVICE));
             new StationListAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object output) {
                     sharedPrefs.edit().putBoolean(PrefContract.FIRST_RUN, false).apply();
                 }
             }, this).execute();
+        }
+
+        // Start advisory notification service if it's not running.
+        if (PendingIntent.getService(this, -1, new Intent(this, AdvisoryService.class), PendingIntent.FLAG_NO_CREATE) == null) {
+            Log.i(TAG, "Starting advisory notification service...");
+            sendBroadcast(new Intent(Constants.Broadcast.ADVISORY_SERVICE));
         }
 
         // Configurations for scheduling repeating jobs.
@@ -241,7 +247,19 @@ public class TripOverviewActivity extends AppCompatActivity
             }
         });
 
-        if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
+        if (getIntent() != null && getIntent().getSerializableExtra(TripDetailActivity.TRIP_LEG) != null) {
+            Intent data = getIntent();
+            Leg tripLeg = (Leg) data.getSerializableExtra(TripDetailActivity.TRIP_LEG);
+            setTrip(
+                    tripLeg.getOrigin(),
+                    tripLeg.getOriginFull(),
+                    tripLeg.getDestination(),
+                    tripLeg.getDestinationFull()
+            );
+            favoriteTrip = -1;
+            invalidateOptionsMenu();
+            mTripHeader.setText(origFull + " - " + destFull);
+        } else if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
             Log.d(TAG, "onCreate(): Retrieving last trip information...");
             setTrip(
                     sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
@@ -250,16 +268,19 @@ public class TripOverviewActivity extends AppCompatActivity
                     sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
             );
             mTripHeader.setText(origFull + " - " + destFull);
+            favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
             findViewById(R.id.empty_overview_list).setVisibility(View.GONE);
         } else {
             mTripSchedules.setEmptyView(findViewById(R.id.empty_overview_list));
+            favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
         }
-        favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        cancelAlarms();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
         if (isTripSet()) {
             Log.d(TAG, "onPause(): Saving last trip information...");
             SharedPreferences.Editor editor = sharedPrefs.edit();
@@ -294,8 +315,6 @@ public class TripOverviewActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
-        cancelAlarms();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
     @Override
@@ -336,7 +355,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 getAdvisory();
                 return true;
             case R.id.action_bart_map:
-                startActivity(new Intent(TripOverviewActivity.this, BartMapActivity.class));
+                startActivity(new Intent(this, BartMapActivity.class));
                 return true;
             case R.id.action_refresh:
                 cancelAlarms();
@@ -413,7 +432,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void getAdvisory() {
         if (Utils.isNetworkConnected(this)) {
-            startService(new Intent(TripOverviewActivity.this, AdvisoryService.class)
+            startService(new Intent(this, AdvisoryService.class)
                     .putExtra(AdvisoryService.NOTIFY, false));
         }
     }
@@ -425,7 +444,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void getTripSchedules() {
         if (isTripSet() && Utils.isNetworkConnected(this)) {
-            Intent quickPlannerIntent = new Intent(TripOverviewActivity.this, QuickPlannerService.class);
+            Intent quickPlannerIntent = new Intent(this, QuickPlannerService.class);
             quickPlannerIntent.putExtra(QuickPlannerService.ORIG, origAbbr)
                     .putExtra(QuickPlannerService.DEST, destAbbr);
             quickPlannerPendingIntent = PendingIntent.getService(this, -1, quickPlannerIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -449,7 +468,7 @@ public class TripOverviewActivity extends AppCompatActivity
             // Use bundle to pass serialized objects using the AlarmManager.
             Bundle bundle = new Bundle();
             bundle.putSerializable(RealTimeEtdService.OBJECT_LIST, result.buildBatchLoad());
-            Intent realTimeEtdIntent = new Intent(TripOverviewActivity.this, RealTimeEtdService.class);
+            Intent realTimeEtdIntent = new Intent(this, RealTimeEtdService.class);
             realTimeEtdIntent.putExtra(RealTimeEtdService.OBJECT_LIST, bundle);
             realTimeEtdPendingIntent = PendingIntent.getService(this, -1, realTimeEtdIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             startService(realTimeEtdIntent);
@@ -469,7 +488,8 @@ public class TripOverviewActivity extends AppCompatActivity
             Log.i(TAG, "Building trip view...");
             List<Fare> fares = trips.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
-            mTripSchedules.setAdapter(new TripAdapter(TripOverviewActivity.this, currTrips));
+            mTripSchedules.setAdapter(new TripAdapter(this, currTrips));
+            findViewById(R.id.empty_overview_list).setVisibility(View.GONE);
             setOverviewVisibility(View.VISIBLE);
             setNextDepartureProgressBar(nextDeparture);
 
@@ -564,7 +584,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 tripLeg.setEtdDestTime(estLegDestArrival);
             }
         }
-
+        Collections.sort(currTrips);
         if (isEtdApiDown && nextDeparture == Integer.MAX_VALUE) return ETD_FAILURE;
         else return nextDeparture;
     }
@@ -663,9 +683,16 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private void cancelAlarms() {
         Log.i(TAG, "Cancelling all alarms...");
-        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
-        if (quickPlannerPendingIntent != null) alarmManager.cancel(quickPlannerPendingIntent);
-        if (realTimeEtdPendingIntent != null) alarmManager.cancel(realTimeEtdPendingIntent);
+        if (quickPlannerPendingIntent != null) {
+            Log.d(TAG, "Cancel quickPlanner alarm...");
+            alarmManager.cancel(quickPlannerPendingIntent);
+            quickPlannerPendingIntent.cancel();
+        }
+        if (realTimeEtdPendingIntent != null) {
+            Log.d(TAG, "Cancel realTimeEtd alarm...");
+            alarmManager.cancel(realTimeEtdPendingIntent);
+            realTimeEtdPendingIntent.cancel();
+        }
     }
 
     public boolean isTripSame(String orig, String dest) {
