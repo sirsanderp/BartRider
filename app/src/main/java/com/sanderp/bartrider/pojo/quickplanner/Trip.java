@@ -1,6 +1,7 @@
 package com.sanderp.bartrider.pojo.quickplanner;
 
 import android.graphics.Color;
+import android.support.annotation.NonNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -31,7 +32,7 @@ import java.util.Locale;
         "fares",
         "leg"
 })
-public class Trip implements Serializable {
+public class Trip implements Comparable<Trip>, Serializable {
     private static final long serialVersionUID = 4533555934408239702L;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy h:mm a", Locale.US);
     private static final HashMap<String, String> ROUTE_COLORS = new HashMap<String, String>() {
@@ -247,6 +248,13 @@ public class Trip implements Serializable {
             routeColors[leg] = Color.parseColor(ROUTE_COLORS.get(getLegs().get(leg).getLine()));
         }
         setRouteColors(routeColors);
+    }
+
+    @Override
+    public int compareTo(@NonNull Trip other) {
+        if (etdOrigTime < other.getEtdOrigTime()) return -1;
+        if (etdOrigTime > other.getEtdOrigTime()) return 1;
+        return 0;
     }
 
     @Override
