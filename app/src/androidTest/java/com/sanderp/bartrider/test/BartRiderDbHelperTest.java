@@ -64,12 +64,37 @@ public class BartRiderDbHelperTest {
 
         Cursor c = getTargetContext().getContentResolver()
                 .query(Uri.parse(BartRiderContract.Favorites.CONTENT_URI + "/1"), FAV_PROJ, null, null, null, null);
-        c.moveToFirst();
-        assertTrue(c.getCount() == 1);
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Favorites.Column.ORIG_ABBR)).equals("CAST"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Favorites.Column.ORIG_FULL)).equals("Castro Valley"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Favorites.Column.DEST_ABBR)).equals("MONT"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Favorites.Column.DEST_FULL)).equals("Montgomery St."));
+        if (c != null) {
+            c.moveToFirst();
+            assertTrue(c.getCount() == 1);
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Favorites.Column.ORIG_ABBR)).equals("CAST"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Favorites.Column.ORIG_FULL)).equals("Castro Valley"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Favorites.Column.DEST_ABBR)).equals("MONT"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Favorites.Column.DEST_FULL)).equals("Montgomery St."));
+            c.close();
+        }
+    }
+
+    @Test
+    public void insertRecent() throws Exception {
+        ContentValues values = new ContentValues();
+        values.put(BartRiderContract.Recents.Column.ORIG_ABBR, "CAST");
+        values.put(BartRiderContract.Recents.Column.ORIG_FULL, "Castro Valley");
+        values.put(BartRiderContract.Recents.Column.DEST_ABBR, "MONT");
+        values.put(BartRiderContract.Recents.Column.DEST_FULL, "Montgomery St.");
+        getTargetContext().getContentResolver().insert(BartRiderContract.Recents.CONTENT_URI, values);
+
+        Cursor c = getTargetContext().getContentResolver()
+                .query(Uri.parse(BartRiderContract.Recents.CONTENT_URI + "/1"), FAV_PROJ, null, null, null, null);
+        if (c != null) {
+            c.moveToFirst();
+            assertTrue(c.getCount() == 1);
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Recents.Column.ORIG_ABBR)).equals("CAST"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Recents.Column.ORIG_FULL)).equals("Castro Valley"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Recents.Column.DEST_ABBR)).equals("MONT"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Recents.Column.DEST_FULL)).equals("Montgomery St."));
+            c.close();
+        }
     }
 
     @Test
@@ -89,16 +114,19 @@ public class BartRiderDbHelperTest {
 
         Cursor c = getTargetContext().getContentResolver()
                 .query(Uri.parse(BartRiderContract.Stations.CONTENT_URI + "/1"), STN_PROJ, null, null, null, null);
-        c.moveToFirst();
-        assertTrue(c.getCount() == 1);
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.NAME)).equals("Ashby"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.ABBREVIATION)).equals("ASHB"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.LATITUDE)).equals("37.852803"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.LONGITUDE)).equals("-122.270062"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.ADDRESS)).equals("3100 Adeline Street"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.CITY)).equals("Berkeley"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.COUNTY)).equals("alameda"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.STATE)).equals("CA"));
-        assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.ZIPCODE)).equals("94703"));
+        if (c != null) {
+            c.moveToFirst();
+            assertTrue(c.getCount() == 1);
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.NAME)).equals("Ashby"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.ABBREVIATION)).equals("ASHB"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.LATITUDE)).equals("37.852803"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.LONGITUDE)).equals("-122.270062"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.ADDRESS)).equals("3100 Adeline Street"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.CITY)).equals("Berkeley"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.COUNTY)).equals("alameda"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.STATE)).equals("CA"));
+            assertTrue(c.getString(c.getColumnIndex(BartRiderContract.Stations.Column.ZIPCODE)).equals("94703"));
+            c.close();
+        }
     }
 }

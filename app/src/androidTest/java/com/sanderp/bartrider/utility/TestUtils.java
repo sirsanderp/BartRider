@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.DataInteraction;
 import android.support.test.espresso.matcher.CursorMatchers;
 
 import com.sanderp.bartrider.R;
@@ -23,6 +24,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 public class TestUtils {
     public void clearSharedPrefs(boolean firstRun) {
@@ -34,6 +36,12 @@ public class TestUtils {
 
     public void dropTable(Uri table) {
         getTargetContext().getContentResolver().delete(table, null, null);
+    }
+
+    public void checkListViewItem(int id, int position, String text, boolean matches) {
+        DataInteraction data = onData(instanceOf(Cursor.class)).inAdapterView(allOf(withId(id), isDisplayed())).atPosition(position);
+        if (matches) data.check(matches(withText(text)));
+        else data.check(matches(not(withText(text))));
     }
 
     public void selectTrip(String orig, String dest) {
