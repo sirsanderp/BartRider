@@ -176,7 +176,7 @@ public class TripDrawerFragment extends Fragment implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data != null) {
-            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
+//            Log.d(TAG, DatabaseUtils.dumpCursorToString(data));
             if (loader.getId() == FAVORITES_LOADER_ID) {
                 Log.i(TAG, "Loaded favorites table.");
                 if (data.getCount() == 0) mFavoritesListView.setEmptyView(mEmptyFavoritesView);

@@ -207,6 +207,7 @@ public class TripOverviewTest {
                 .check(matches(withText("19th St. Oakland - Rockridge")));
         onData(instanceOf(Leg.class)).inAdapterView(allOf(withId(R.id.trip_detail_list_view), isDisplayed())).atPosition(1).perform(click());
         onView(withId(R.id.trip_header)).check(matches(withText("Bay Fair - 19th St. Oakland")));
+        SystemClock.sleep(3000);
         onView(withId(R.id.trip_list_view)).check(matches(isDisplayed()));
     }
 }
