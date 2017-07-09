@@ -52,7 +52,7 @@ public class RealTimeEtdService extends IntentService {
         HashMap<String, RealTimeEtdPojo> headMap = new HashMap<>();
         for (Object object : pojoMap.get("REAL_TIME_ETD")) {
             RealTimeEtdPojo pojo = (RealTimeEtdPojo) object;
-            if (!headMap.containsKey(pojo.getHeadAbbr())) headMap.put(pojo.getHeadAbbr(), pojo);
+            headMap.put(pojo.getHeadAbbr(), pojo);
         }
         return headMap;
     }

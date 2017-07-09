@@ -22,34 +22,14 @@ public class RealTimeEtdPojo implements Serializable {
     private String apiUpdate;
     private String color;
     private String direction;
-    private List<Integer> etdMinutes = null;
-    private List<Integer> etdSeconds = null;
     private String headAbbr;
     private String headName;
     private String hexcolor;
-    private String prevDepart;
-    private List<Integer> lengths = null;
     private String origAbbr;
     private String origName;
     private int platform;
-
-    @DynamoDBHashKey(attributeName = "orig_abbr")
-    public String getOrigAbbr() {
-        return origAbbr;
-    }
-
-    public void setOrigAbbr(String origAbbr) {
-        this.origAbbr = origAbbr;
-    }
-
-    @DynamoDBRangeKey(attributeName = "head_abbr")
-    public String getHeadAbbr() {
-        return headAbbr;
-    }
-
-    public void setHeadAbbr(String headAbbr) {
-        this.headAbbr = headAbbr;
-    }
+    private String prevDepart;
+    private List<List<Integer>> trains = null;
 
     @DynamoDBAttribute(attributeName = "api_update")
     public String getApiUpdate() {
@@ -92,30 +72,13 @@ public class RealTimeEtdPojo implements Serializable {
         this.direction = direction;
     }
 
-    @DynamoDBAttribute(attributeName = "etd_minutes")
-    public List<Integer> getEtdMinutes() {
-        return etdMinutes;
+    @DynamoDBRangeKey(attributeName = "head_abbr")
+    public String getHeadAbbr() {
+        return headAbbr;
     }
 
-    public int getEtdMinutes(int index) {
-        return etdMinutes.get(index);
-    }
-
-    public void setEtdMinutes(List<Integer> etdMinutes) {
-        this.etdMinutes = etdMinutes;
-    }
-
-    @DynamoDBAttribute(attributeName = "etd_seconds")
-    public List<Integer> getEtdSeconds() {
-        return etdSeconds;
-    }
-
-    public int getEtdSeconds(int index) {
-        return etdSeconds.get(index);
-    }
-
-    public void setEtdSeconds(List<Integer> etdSeconds) {
-        this.etdSeconds = etdSeconds;
+    public void setHeadAbbr(String headAbbr) {
+        this.headAbbr = headAbbr;
     }
 
     @DynamoDBAttribute(attributeName = "head_name")
@@ -136,13 +99,13 @@ public class RealTimeEtdPojo implements Serializable {
         this.hexcolor = hexcolor;
     }
 
-    @DynamoDBAttribute(attributeName = "lengths")
-    public List<Integer> getLengths() {
-        return lengths;
+    @DynamoDBHashKey(attributeName = "orig_abbr")
+    public String getOrigAbbr() {
+        return origAbbr;
     }
 
-    public void setLengths(List<Integer> lengths) {
-        this.lengths = lengths;
+    public void setOrigAbbr(String origAbbr) {
+        this.origAbbr = origAbbr;
     }
 
     @DynamoDBAttribute(attributeName = "orig_name")
@@ -184,6 +147,27 @@ public class RealTimeEtdPojo implements Serializable {
             e.printStackTrace();
         }
         return 0L;
+    }
+
+    @DynamoDBAttribute(attributeName = "trains")
+    public List<List<Integer>> getTrains() {
+        return trains;
+    }
+
+    public void setTrains(List<List<Integer>> trains) {
+        this.trains = trains;
+    }
+
+    public int getEtdMinutes(int index) {
+        return trains.get(index).get(0);
+    }
+
+    public int getEtdSeconds(int index) {
+        return trains.get(index).get(1);
+    }
+
+    public int getLength(int index) {
+        return trains.get(index).get(2);
     }
 
     @Override

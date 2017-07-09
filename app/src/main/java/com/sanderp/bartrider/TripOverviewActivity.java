@@ -529,59 +529,66 @@ public class TripOverviewActivity extends AppCompatActivity
         boolean isEtdApiDown = false;
         int nextDeparture = Integer.MAX_VALUE;
         Date now = new Date();
+
         for (int i = 0; i < currTrips.size(); i++) {
             Trip trip = currTrips.get(i);
-            Leg tripLeg = trip.getLeg(0);
-            String headAbbr = tripLeg.getTrainHeadStation();
-
-//            Log.v(TAG, origAbbr + " -> " + headAbbr);
-//            Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
-//            Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
+            String firstHeadAbbr = trip.getLeg(0).getTrainHeadStation();
             // Check if the selected trip has already left the station.
-            if (trip.getOrigTimeEpoch() < etdResults.get(headAbbr).getPrevDepartEpoch()) {
+            if (trip.getOrigTimeEpoch() < etdResults.get(firstHeadAbbr).getPrevDepartEpoch()) {
                 currTrips.remove(i--);
                 continue;
             }
 
             // Check if estimates data has been populated for the selected trip.
-            if (etdResults.get(headAbbr).getEtdSeconds().isEmpty()) {
-                continue;
+            if (etdResults.get(firstHeadAbbr).getTrains().isEmpty()) {
+                break;
             }
 
-//            Log.v(TAG, "Current Time: " + DF.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
             // Check if the BART estimates API has been updated recently.
-            long sinceLastUpdate = now.getTime() - etdResults.get(headAbbr).getApiUpdateEpoch();
+            long sinceLastUpdate = now.getTime() - etdResults.get(firstHeadAbbr).getApiUpdateEpoch();
             int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
             if (sinceLastUpdateSeconds > 120) {
                 isEtdApiDown = true;
-                continue;
+                break;
             }
 
-            int etdSeconds = etdResults.get(headAbbr).getEtdSeconds().remove(0);
-            if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
-            else etdSeconds -= sinceLastUpdateSeconds;
-            if (etdSeconds < nextDeparture) nextDeparture = etdSeconds;
+            long prevEstLegDestArrival = 0;
+            for (Leg tripLeg : trip.getLegs()) {
+                String headAbbr = tripLeg.getTrainHeadStation();
+                if (etdResults.get(headAbbr).getTrains().size() == 0) continue;
+//                Log.v(TAG, tripLeg.getOrigin() + " -> " + headAbbr);
+//                Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
+//                Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
+//                Log.v(TAG, "Current Time: " + DF.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
+//                Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
+                for (int j = 0; j < etdResults.get(headAbbr).getTrains().size(); j++) {
+                    List<Integer> trainInfo = etdResults.get(headAbbr).getTrains().remove(0);
+                    int etdSeconds = trainInfo.get(1);
+                    if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
+                    else etdSeconds -= sinceLastUpdateSeconds;
+                    if (tripLeg.getOrder() == 1 && etdSeconds < nextDeparture) nextDeparture = etdSeconds;
 
-            long estOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
-            long estDestArrival = estOrigDeparture + (trip.getTripTime() * 60 * 1000) - sinceLastUpdate;
-            long diffMinutes = ((estOrigDeparture - trip.getOrigTimeEpoch()) / (60 * 1000)) % 60;
-            long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000) - sinceLastUpdate;
-            long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffMinutes * 60 * 1000) - sinceLastUpdate;
+                    long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000);
+                    if (estLegOrigDeparture < prevEstLegDestArrival) {
+                        continue;
+                    }
 
-//            Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
-//            Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
-//            Log.v(TAG, "Trip (planned): " + trip.getOrigTimeMin() + " - " + trip.getDestTimeMin());
-//            Log.v(TAG, "Trip (estimated): " + DF.format(estOrigDeparture) + " - " + DF.format(estDestArrival));
-//            Log.v(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
-//            Log.v(TAG, "Trip Leg (estimated): " + DF.format(estLegOrigDeparture) + " - " + DF.format(estLegDestArrival));
-//            Log.v(TAG, "Difference: " + diffMinutes + " minutes");
-            if (diffMinutes > 0) {
-//                Log.v(TAG, "Updating trip and trip leg estimated times...");
-                trip.setEtdOrigTime(estOrigDeparture);
-                trip.setEtdDestTime(estDestArrival);
-                tripLeg.setEtdOrigTime(estLegOrigDeparture);
-                tripLeg.setEtdDestTime(estLegDestArrival);
+                    long diffSeconds = (estLegOrigDeparture - tripLeg.getOrigTimeEpoch()) / 1000;
+                    long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffSeconds * 1000);
+
+//                    Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
+//                    Log.v(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
+//                    Log.v(TAG, "Trip Leg (estimated): " + DF.format(estLegOrigDeparture) + " - " + DF.format(estLegDestArrival));
+//                    Log.v(TAG, "Difference: " + diffSeconds + " seconds");
+                    prevEstLegDestArrival = estLegDestArrival;
+                    tripLeg.setEtdOrigTime(estLegOrigDeparture);
+                    tripLeg.setEtdDestTime(estLegDestArrival);
+                    tripLeg.setLength(trainInfo.get(2));
+                    break;
+                }
             }
+            trip.setEtdOrigTime(trip.getLeg(0).getEtdOrigTime());
+            trip.setEtdDestTime(trip.getLeg(trip.getLegs().size() - 1).getEtdDestTime());
         }
         Collections.sort(currTrips);
         if (isEtdApiDown && nextDeparture == Integer.MAX_VALUE) return ETD_FAILURE;
@@ -601,13 +608,14 @@ public class TripOverviewActivity extends AppCompatActivity
             nextDepartureAnimator.setInterpolator(new LinearInterpolator());
             nextDepartureAnimator.start();
             mNextDeparture.setText("N/A");
-            mNextDepartureWindow.setText("API error!");
+            mNextDepartureWindow.setText(R.string.api_error);
         } else {
             seconds = (seconds <= 0) ? 0 : seconds;
             nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
             nextDepartureAnimator.setDuration(seconds * 1000);
             nextDepartureAnimator.setInterpolator(new LinearInterpolator());
             nextDepartureAnimator.start();
+            mNextDepartureWindow.setText(R.string.time_window);
 
             nextDepartureCountdown = new CountDownTimer(seconds * 1000, 1000) {
                 public void onTick(long millisUntilFinished) {
@@ -695,7 +703,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
             Uri uri = this.getContentResolver().insert(BartRiderContract.Recents.CONTENT_URI, values);
             if (uri != null) {
-                Log.v(TAG, String.format("Added to recents: %s - %s", origAbbr, destAbbr));
+//                Log.v(TAG, String.format("Added to recents: %s - %s", origAbbr, destAbbr));
             }
         }
     }

@@ -33,7 +33,7 @@
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:textSize="12sp"
+            android:textSize="14sp"
             tools:text="@string/sample_co2" />
 
     </RelativeLayout>

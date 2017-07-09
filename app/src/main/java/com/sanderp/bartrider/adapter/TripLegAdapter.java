@@ -57,6 +57,7 @@ public class TripLegAdapter extends BaseAdapter {
         TextView mTripLegHeader = (TextView) rowView.findViewById(R.id.trip_leg_header);
         TextView mOrigTime = (TextView) rowView.findViewById(R.id.trip_leg_orig_time);
         TextView mDestTime = (TextView) rowView.findViewById(R.id.trip_leg_dest_time);
+        TextView mTrainLength = (TextView) rowView.findViewById(R.id.train_length_text);
         TrainRouteView mTrainRoute = (TrainRouteView) rowView.findViewById(R.id.train_route);
 
         Leg tripLeg = (Leg) getItem(position);
@@ -64,6 +65,14 @@ public class TripLegAdapter extends BaseAdapter {
         mOrigTime.setText(df.format(tripLeg.getEtdOrigTime()));
         mDestTime.setText(df.format(tripLeg.getEtdDestTime()));
         mTrainRoute.setTrainRoutes(1, new int[]{colors[position]});
+        if (tripLeg.getLength() != 0) {
+            mTrainLength.setText(String.format(mContext.getResources().getString(R.string.train_length), tripLeg.getLength()));
+            mTrainLength.setVisibility(View.VISIBLE);
+            rowView.findViewById(R.id.train_length).setVisibility(View.VISIBLE);
+        }
+        if (tripLeg.getBikeFlag() == 0) {
+            rowView.findViewById(R.id.negative_bicycle_flag).setVisibility(View.VISIBLE);
+        }
 
         return rowView;
     }

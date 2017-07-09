@@ -71,6 +71,8 @@ public class Leg implements Serializable {
     private long etdOrigTime;
     @JsonIgnore
     private long etdDestTime;
+    @JsonIgnore
+    private int length = 0;
 
     public int getOrder() {
         return order;
@@ -244,6 +246,18 @@ public class Leg implements Serializable {
 
     public void setEtdDestTime(long etdDestTime) {
         this.etdDestTime = etdDestTime;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
+
+    public long getTripTime() {
+        return etdDestTime - etdOrigTime;
     }
 
     @Override

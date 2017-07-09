@@ -38,14 +38,16 @@ public class Request implements Serializable {
         ArrayList<Object> batchLoad = new ArrayList<>();
         HashSet<String> headStationSet = new HashSet<>();
         for (Trip trip : trips) {
-            String origAbbr = trip.getOrigin();
-            String headAbbr = trip.getLeg(0).getTrainHeadStation();
-            if (!headStationSet.contains(headAbbr)) {
-                RealTimeEtdPojo pojo = new RealTimeEtdPojo();
-                pojo.setOrigAbbr(origAbbr);
-                pojo.setHeadAbbr(headAbbr);
-                batchLoad.add(pojo);
-                headStationSet.add(headAbbr);
+            for (Leg tripLeg : trip.getLegs()) {
+                String origAbbr = tripLeg.getOrigin();
+                String headAbbr = tripLeg.getTrainHeadStation();
+                if (!headStationSet.contains(origAbbr + " - " + headAbbr)) {
+                    RealTimeEtdPojo pojo = new RealTimeEtdPojo();
+                    pojo.setOrigAbbr(origAbbr);
+                    pojo.setHeadAbbr(headAbbr);
+                    batchLoad.add(pojo);
+                    headStationSet.add(origAbbr + " - " + headAbbr);
+                }
             }
         }
         return batchLoad;

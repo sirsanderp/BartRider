@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingBottom="4dp"
     android:paddingTop="4dp">
 
@@ -52,6 +53,54 @@
             android:layout_toEndOf="@+id/trip_leg_orig_time"
             android:layout_toStartOf="@+id/trip_leg_dest_time"
             android:layout_centerInParent="true" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/station_layout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="-10dp"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:id="@+id/train_length_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/train_length"
+            android:layout_marginBottom="-4dp"
+            android:gravity="bottom"
+            android:visibility="gone"
+            android:text="@string/train_length"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:id="@+id/train_length"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:layout_toEndOf="@+id/train_length_text"
+            android:visibility="gone"
+            android:src="@drawable/black_railroad_car_24" />
+
+        <ImageView
+            android:id="@+id/bicycle_flag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/train_length"
+            android:layout_marginStart="48dp"
+            android:src="@drawable/black_bicycle_24" />
+
+        <ImageView
+            android:id="@+id/negative_bicycle_flag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/bicycle_flag"
+            android:layout_alignEnd="@+id/bicycle_flag"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_cancel_24dp" />
 
     </RelativeLayout>
 

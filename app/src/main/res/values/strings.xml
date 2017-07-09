@@ -8,6 +8,7 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_reverse_trip">Reverse Trip</string>
     <string name="action_settings">Settings</string>
+    <string name="api_error">API error!</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
     <string name="co2_saved">CO₂ saved: %1$.2f pounds.</string>
@@ -34,4 +35,6 @@
     <string name="sample_trip">Origin Station - Destination Station</string>
     <string name="status_leaving">Leaving…</string>
     <string name="time_window">±30 sec</string>
+    <string name="train_length">%1$dx</string>
+    <string name="train_length_default">9x</string>
 </resources>
