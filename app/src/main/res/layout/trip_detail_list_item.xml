@@ -57,10 +57,9 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/station_layout"
-        android:layout_centerHorizontal="true"
         android:layout_marginTop="-10dp"
         android:layout_marginBottom="4dp">
 
@@ -70,6 +69,7 @@
             android:layout_height="wrap_content"
             android:layout_alignBottom="@+id/train_length"
             android:layout_marginBottom="-4dp"
+            android:layout_toStartOf="@+id/train_length"
             android:gravity="bottom"
             android:visibility="gone"
             android:text="@string/train_length"
@@ -80,16 +80,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="1dp"
-            android:layout_toEndOf="@+id/train_length_text"
+            android:layout_toStartOf="@+id/separator"
             android:visibility="gone"
             android:src="@drawable/black_railroad_car_24" />
+
+        <ImageView
+            android:id="@+id/separator"
+            android:layout_width="32dp"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"/>
 
         <ImageView
             android:id="@+id/bicycle_flag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/train_length"
-            android:layout_marginStart="48dp"
+            android:layout_toEndOf="@+id/separator"
             android:src="@drawable/black_bicycle_24" />
 
         <ImageView

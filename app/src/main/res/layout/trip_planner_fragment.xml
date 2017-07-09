@@ -31,30 +31,30 @@
         android:text="@string/confirm"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
-        android:layout_marginStart="64dp"
         android:layout_below="@+id/dest_spinner"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
+        android:layout_toStartOf="@+id/my_location"
         android:background="@drawable/rounded_buttons" />
+
+    <ImageView
+        android:id="@+id/my_location"
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/confirm"
+        android:layout_alignTop="@+id/confirm"
+        android:layout_centerHorizontal="true"
+        android:layout_marginEnd="20dp"
+        android:layout_marginStart="20dp"
+        app:srcCompat="@drawable/ic_my_location_24dp" />
 
     <Button
         android:id="@+id/cancel"
         android:text="@string/cancel"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
-        android:layout_marginEnd="64dp"
-        android:layout_alignParentEnd="true"
         android:layout_alignBottom="@+id/confirm"
+        android:layout_toEndOf="@+id/my_location"
         android:background="@drawable/rounded_buttons" />
-
-    <ImageView
-        android:id="@+id/my_location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="20dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignBottom="@+id/confirm"
-        android:layout_alignTop="@+id/confirm"
-        app:srcCompat="@drawable/ic_my_location_24dp" />
 
 </RelativeLayout>
