@@ -44,9 +44,6 @@
             android:name=".service.AdvisoryService"
             android:exported="false" />
         <service
-            android:name=".service.RealTimeService"
-            android:exported="false" />
-        <service
             android:name=".service.RealTimeEtdService"
             android:exported="false" />
         <service
@@ -67,7 +64,7 @@
 
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="" />
+            android:value="${FABRIC_API_KEY}" />
     </application>
 
 </manifest>
