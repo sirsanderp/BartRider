@@ -48,7 +48,7 @@ public class TripOverviewTest {
 
     @Before
     public void setUp() {
-        utils.clearSharedPrefs(false);
+        utils.clearSharedPrefs();
     }
 
     @Test

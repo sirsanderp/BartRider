@@ -27,10 +27,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 public class TestUtils {
-    public void clearSharedPrefs(boolean firstRun) {
+    public void clearSharedPrefs() {
         SharedPreferences.Editor sharedPrefs = InstrumentationRegistry.getTargetContext().getSharedPreferences(PrefContract.PREFS_NAME, Context.MODE_PRIVATE).edit();
         sharedPrefs.clear();
-        sharedPrefs.putBoolean(PrefContract.FIRST_RUN, firstRun);
         sharedPrefs.commit();
     }
 

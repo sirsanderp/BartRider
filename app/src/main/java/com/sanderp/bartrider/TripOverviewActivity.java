@@ -152,12 +152,11 @@ public class TripOverviewActivity extends AppCompatActivity
 
         // Set up station database on first run.
         sharedPrefs = getSharedPreferences(PrefContract.PREFS_NAME, 0);
-        if (sharedPrefs.getBoolean(PrefContract.FIRST_RUN, true)) {
-            Log.i(TAG, "First run setup...");
+        if (getContentResolver().query(BartRiderContract.Stations.CONTENT_URI, null , null, null, null).getCount() == 0) {
             new StationListAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object output) {
-                    sharedPrefs.edit().putBoolean(PrefContract.FIRST_RUN, false).apply();
+                    // Do nothing.
                 }
             }, this).execute();
         }
@@ -670,14 +669,14 @@ public class TripOverviewActivity extends AppCompatActivity
             values.put(BartRiderContract.Favorites.Column.DEST_ABBR, destAbbr);
             values.put(BartRiderContract.Favorites.Column.DEST_FULL, destFull);
 
-            Uri uri = this.getContentResolver().insert(BartRiderContract.Favorites.CONTENT_URI, values);
+            Uri uri = getContentResolver().insert(BartRiderContract.Favorites.CONTENT_URI, values);
 //            if (uri != null) {
 //                Log.v(TAG, String.format("Added to favorites: %s - %s", origAbbr, destAbbr));
 //            }
             favoriteTrip = Integer.parseInt(uri.getLastPathSegment());
         } else {
             Uri uri = Uri.parse(BartRiderContract.Favorites.CONTENT_URI + "/" + favoriteTrip);
-            this.getContentResolver().delete(uri, null, null);
+            getContentResolver().delete(uri, null, null);
             favoriteTrip = 0;
         }
         invalidateOptionsMenu();
@@ -686,13 +685,13 @@ public class TripOverviewActivity extends AppCompatActivity
     private void setRecentTrip() {
         Log.d(TAG, "Origin: " + origAbbr + " | Destination: " + destAbbr);
         if (isTripSet() && !drawerFragment.isRecentTrip(origAbbr, destAbbr)) {
-            Cursor c = this.getContentResolver().query(BartRiderContract.Recents.CONTENT_URI,
+            Cursor c = getContentResolver().query(BartRiderContract.Recents.CONTENT_URI,
                     new String[] {BartRiderContract.Recents.Column.ID} , null, null, null);
             if (c.getCount() > 2) {
                 c.moveToLast();
                 Log.d(TAG, "LOL: " + c.getInt(c.getColumnIndex(BartRiderContract.Recents.Column.ID)));
                 Uri uri = Uri.parse(BartRiderContract.Recents.CONTENT_URI + "/" + c.getInt(c.getColumnIndex(BartRiderContract.Recents.Column.ID)));
-                this.getContentResolver().delete(uri, null, null);
+                getContentResolver().delete(uri, null, null);
             }
 
             ContentValues values = new ContentValues();
@@ -701,7 +700,7 @@ public class TripOverviewActivity extends AppCompatActivity
             values.put(BartRiderContract.Recents.Column.DEST_ABBR, destAbbr);
             values.put(BartRiderContract.Recents.Column.DEST_FULL, destFull);
 
-            Uri uri = this.getContentResolver().insert(BartRiderContract.Recents.CONTENT_URI, values);
+            Uri uri = getContentResolver().insert(BartRiderContract.Recents.CONTENT_URI, values);
             if (uri != null) {
 //                Log.v(TAG, String.format("Added to recents: %s - %s", origAbbr, destAbbr));
             }

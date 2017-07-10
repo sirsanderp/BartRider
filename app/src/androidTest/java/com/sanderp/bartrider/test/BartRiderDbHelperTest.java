@@ -50,7 +50,7 @@ public class BartRiderDbHelperTest {
     public void tearDown() throws Exception {
         dbHelper.close();
         getTargetContext().deleteDatabase(BartRiderContract.DB_NAME);
-        utils.clearSharedPrefs(true);
+        utils.clearSharedPrefs();
     }
 
     @Test

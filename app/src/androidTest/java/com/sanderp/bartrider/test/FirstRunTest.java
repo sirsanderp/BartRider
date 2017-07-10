@@ -33,7 +33,7 @@ public class FirstRunTest {
     @Before
     public void setUp() {
         // Clear "firstRun" shared preference and "stations" table.
-        utils.clearSharedPrefs(true);
+        utils.clearSharedPrefs();
         utils.dropTable(BartRiderContract.Stations.CONTENT_URI);
     }
 
