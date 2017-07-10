@@ -71,11 +71,13 @@ public class BartRiderDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        String sql = "DROP TABLE IF EXISTS " +
-                BartRiderContract.Favorites.TABLE + ", " +
-                BartRiderContract.Recents.TABLE + ", " +
-                BartRiderContract.Stations.TABLE;
-        db.execSQL(sql);
+        // When BartRiderContract.DB_VERSION is increased.
+        String dropFavorites = "DROP TABLE IF EXISTS " + BartRiderContract.Favorites.TABLE;
+        db.execSQL(dropFavorites);
+        String dropRecents = "DROP TABLE IF EXISTS " + BartRiderContract.Recents.TABLE;
+        db.execSQL(dropRecents);
+        String dropStations = "DROP TABLE IF EXISTS " + BartRiderContract.Stations.TABLE;
+        db.execSQL(dropStations);
 
         onCreate(db);
     }
