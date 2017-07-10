@@ -95,7 +95,7 @@
                 android:layout_marginTop="8dp"
                 android:gravity="center"
                 android:text="@string/empty_recents_list_view"
-                android:textSize="12sp"
+                android:textSize="16sp"
                 android:visibility="gone" />
 
             <ListView
