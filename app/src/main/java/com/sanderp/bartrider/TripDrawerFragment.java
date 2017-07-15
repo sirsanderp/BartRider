@@ -131,7 +131,7 @@ public class TripDrawerFragment extends Fragment implements
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor itemCursor = mRecentsAdapter.getCursor();
                 mFragmentListener.onFavoriteClick(
-                        getId(itemCursor),
+                        -1,
                         getOrigAbbr(itemCursor),
                         getOrigFull(itemCursor),
                         getDestAbbr(itemCursor),
