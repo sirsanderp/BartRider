@@ -221,22 +221,23 @@ public class TripPlannerFragment extends DialogFragment implements
                         double deviceLon = location.getLongitude();
 //                        Log.v(TAG, "dLat: " + deviceLat + " dLon: " + deviceLon);
                         int nearestStationId = 1;
-                        double nearestStationDist = 1;
+                        double nearestStationDist = Double.MAX_VALUE;
                         while (!mCursor.isAfterLast()) {
                             double stationLat = Double.parseDouble(getLatitude(mCursor));
                             double stationLon = Double.parseDouble(getLongitude(mCursor));
-//                            Log.v(TAG, "sLat: " + stationLat + " sLon: " + stationLon);
                             double distance = Math.sqrt(Math.pow((deviceLat - stationLat), 2) + Math.pow((deviceLon - stationLon), 2));
+//                            Log.v(TAG, "sLat: " + stationLat + " sLon: " + stationLon);
 //                            Log.v(TAG, "Station: " + getAbbr(mCursor) + " Distance: " + distance);
                             if (distance < nearestStationDist) {
-                                nearestStationId = getId(mCursor);
+                                nearestStationId = mCursor.getPosition();
                                 nearestStationDist = distance;
+//                                Log.v(TAG, "NEW: " + getAbbr(mCursor) + " | " + nearestStationId);
                             }
                             mCursor.moveToNext();
                         }
 //                        Log.v(TAG, "Nearest Station ID: " + nearestStationId);
 //                        Log.v(TAG, "Nearest Station Distance: " + nearestStationDist);
-                        mOrigSpinner.setSelection(nearestStationId - 1);
+                        mOrigSpinner.setSelection(nearestStationId);
                     } else {
                         Toast.makeText(getContext(), "Location unavailable.", Toast.LENGTH_SHORT).show();
                     }
