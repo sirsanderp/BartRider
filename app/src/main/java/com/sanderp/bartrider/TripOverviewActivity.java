@@ -109,8 +109,10 @@ public class TripOverviewActivity extends AppCompatActivity
     private Drawable mAdvisoryIcon;
     private Drawable mFavoriteIcon;
     private ListView mTripSchedules;
+    private ProgressBar mLoadingProgressBar;
     private ProgressBar mNextDepartureProgressBar;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private TextView mEmptyTripSchedules;
     private TextView mNextDeparture;
     private TextView mNextDepartureWindow;
     private TextView mTripHeader;
@@ -195,6 +197,7 @@ public class TripOverviewActivity extends AppCompatActivity
         // Open the TripDetailActivity based on the list item that was clicked
         mTripHeader = (TextView) findViewById(R.id.trip_header);
         mTripFare = (TextView) findViewById(R.id.trip_fare);
+        mEmptyTripSchedules = (TextView) findViewById(R.id.empty_overview_list);
         mTripSchedules = (ListView) findViewById(R.id.trip_list_view);
         mTripSchedules.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
@@ -216,6 +219,7 @@ public class TripOverviewActivity extends AppCompatActivity
             }
         });
 
+        mLoadingProgressBar = (ProgressBar) findViewById(R.id.loading);
         mNextDepartureProgressBar = (ProgressBar) findViewById(R.id.next_departure_progress_bar);
         mNextDeparture = (TextView) findViewById(R.id.next_departure);
         mNextDepartureWindow = (TextView) findViewById(R.id.next_departure_window);
@@ -258,7 +262,6 @@ public class TripOverviewActivity extends AppCompatActivity
             );
             favoriteTrip = -1;
             invalidateOptionsMenu();
-            mTripHeader.setText(origFull + " - " + destFull);
         } else if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
             Log.d(TAG, "onCreate(): Retrieving last trip information...");
             setTrip(
@@ -267,11 +270,10 @@ public class TripOverviewActivity extends AppCompatActivity
                     sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
             );
-            mTripHeader.setText(origFull + " - " + destFull);
             favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
-            findViewById(R.id.empty_overview_list).setVisibility(View.GONE);
+            mEmptyTripSchedules.setVisibility(View.GONE);
         } else {
-            mTripSchedules.setEmptyView(findViewById(R.id.empty_overview_list));
+            mTripSchedules.setEmptyView(mEmptyTripSchedules);
             favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
         }
     }
@@ -365,7 +367,6 @@ public class TripOverviewActivity extends AppCompatActivity
                 if (isTripSet() && setTrip(destAbbr, destFull, origAbbr, origFull)) {
                     favoriteTrip = -1;
                     invalidateOptionsMenu();
-                    mTripHeader.setText(origFull + " - " + destFull);
                     getTripSchedules();
                 }
                 return true;
@@ -384,18 +385,16 @@ public class TripOverviewActivity extends AppCompatActivity
         if (setTrip(origAbbr, origFull, destAbbr, destFull)) {
             favoriteTrip = -1;
             invalidateOptionsMenu();
-            mTripHeader.setText(origFull + " - " + destFull);
             getTripSchedules();
             setRecentTrip();
         }
     }
 
     @Override
-    public void onFavoriteClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
+    public void onTripClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
         if (setTrip(origAbbr, origFull, destAbbr, destFull)) {
             favoriteTrip = id;
             invalidateOptionsMenu();
-            mTripHeader.setText(origFull + " - " + destFull);
             getTripSchedules();
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
@@ -408,6 +407,10 @@ public class TripOverviewActivity extends AppCompatActivity
             this.origFull = origFull;
             this.destAbbr = destAbbr;
             this.destFull = destFull;
+            setOverviewVisibility(View.INVISIBLE);
+            mTripHeader.setText(origFull + " - " + destFull);
+            mTripHeader.setVisibility(View.VISIBLE);
+            mLoadingProgressBar.setVisibility(View.VISIBLE);
             return true;
         }
         return false;
@@ -477,6 +480,7 @@ public class TripOverviewActivity extends AppCompatActivity
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
         HashMap<String, RealTimeEtdPojo> etdResults = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
         int nextDeparture = mergeSchedulesAndEtd(etdResults);
+        mLoadingProgressBar.setVisibility(View.GONE);
         if (nextDeparture == SCHED_FAILURE) {
             Log.i(TAG, "API is unavailable...");
             setOverviewVisibility(View.GONE);
@@ -487,7 +491,7 @@ public class TripOverviewActivity extends AppCompatActivity
             List<Fare> fares = trips.get(0).getFares().getFare();
             mTripFare.setText(String.format(getResources().getString(R.string.fares), fares.get(0).getAmount(), fares.get(1).getAmount()));
             mTripSchedules.setAdapter(new TripAdapter(this, currTrips));
-            findViewById(R.id.empty_overview_list).setVisibility(View.GONE);
+            mEmptyTripSchedules.setVisibility(View.GONE);
             setOverviewVisibility(View.VISIBLE);
             setNextDepartureProgressBar(nextDeparture);
 
@@ -631,9 +635,8 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setOfflineLayout(String text) {
-        TextView mEmptyOverviewList = (TextView) findViewById(R.id.empty_overview_list);
-        mEmptyOverviewList.setText(text);
-        mEmptyOverviewList.setVisibility(View.VISIBLE);
+        mEmptyTripSchedules.setText(text);
+        mEmptyTripSchedules.setVisibility(View.VISIBLE);
     }
 
     private void setOverviewVisibility(int visibility) {
