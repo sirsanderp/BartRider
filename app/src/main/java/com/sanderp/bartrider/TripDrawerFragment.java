@@ -2,7 +2,6 @@ package com.sanderp.bartrider;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -59,7 +58,7 @@ public class TripDrawerFragment extends Fragment implements
     private OnFragmentListener mFragmentListener;
 
     public interface OnFragmentListener {
-        void onFavoriteClick(int id, String origFull, String origAbbr, String destFull, String destAbbr);
+        void onTripClick(int id, String origFull, String origAbbr, String destFull, String destAbbr);
     }
 
     @Override
@@ -95,7 +94,7 @@ public class TripDrawerFragment extends Fragment implements
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor itemCursor = mFavoritesAdapter.getCursor();
-                mFragmentListener.onFavoriteClick(
+                mFragmentListener.onTripClick(
                         getId(itemCursor),
                         getOrigAbbr(itemCursor),
                         getOrigFull(itemCursor),
@@ -130,7 +129,7 @@ public class TripDrawerFragment extends Fragment implements
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor itemCursor = mRecentsAdapter.getCursor();
-                mFragmentListener.onFavoriteClick(
+                mFragmentListener.onTripClick(
                         -1,
                         getOrigAbbr(itemCursor),
                         getOrigFull(itemCursor),
