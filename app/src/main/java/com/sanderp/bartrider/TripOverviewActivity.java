@@ -408,6 +408,7 @@ public class TripOverviewActivity extends AppCompatActivity
             this.destAbbr = destAbbr;
             this.destFull = destFull;
             setOverviewVisibility(View.INVISIBLE);
+            mEmptyTripSchedules.setVisibility(View.GONE);
             mTripHeader.setText(origFull + " - " + destFull);
             mTripHeader.setVisibility(View.VISIBLE);
             mLoadingProgressBar.setVisibility(View.VISIBLE);
