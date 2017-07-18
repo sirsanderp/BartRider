@@ -483,7 +483,7 @@ public class TripOverviewActivity extends AppCompatActivity
         int nextDeparture = mergeSchedulesAndEtd(etdResults);
         mLoadingProgressBar.setVisibility(View.GONE);
         if (nextDeparture == SCHED_FAILURE) {
-            Log.i(TAG, "API is unavailable...");
+            Log.i(TAG, "BART API is unavailable...");
             setOverviewVisibility(View.GONE);
             setOfflineLayout("BART schedules are currently unavailable.");
             alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 15 * 1000, quickPlannerPendingIntent);
@@ -494,7 +494,14 @@ public class TripOverviewActivity extends AppCompatActivity
             mTripSchedules.setAdapter(new TripAdapter(this, currTrips));
             mEmptyTripSchedules.setVisibility(View.GONE);
             setOverviewVisibility(View.VISIBLE);
-            setNextDepartureProgressBar(nextDeparture);
+
+            if (nextDeparture == ETD_FAILURE) {
+                mNextDepartureWindow.setText(R.string.time_window_api_error);
+                setNextDepartureProgressBar((int) ((currTrips.get(0).getOrigTimeEpoch() - new Date().getTime()) / 1000));
+            } else {
+                mNextDepartureWindow.setText(R.string.time_window);
+                setNextDepartureProgressBar(nextDeparture);
+            }
 
             DisplayMetrics displayMetrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -528,12 +535,26 @@ public class TripOverviewActivity extends AppCompatActivity
     private int mergeSchedulesAndEtd(HashMap<String, RealTimeEtdPojo> etdResults) {
         if (trips == null || trips.isEmpty()) return SCHED_FAILURE;
         currTrips = new ArrayList<>(trips);
-        if (etdResults == null || etdResults.isEmpty()) return ETD_FAILURE;
 
         boolean isEtdApiDown = false;
-        int nextDeparture = Integer.MAX_VALUE;
-        Date now = new Date();
+        if (etdResults == null || etdResults.isEmpty()) isEtdApiDown = true;
 
+        // Check if the BART estimates API has been updated recently.
+        Date now = new Date();
+        long sinceLastUpdate = now.getTime() - etdResults.get(currTrips.get(2).getLeg(0).getTrainHeadStation()).getApiUpdateEpoch();
+        int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
+        if (sinceLastUpdateSeconds > 120) isEtdApiDown = true;
+
+        if (isEtdApiDown) {
+            Log.i(TAG, "Real-time estimates are unavailable...");
+            // Check if the selected trip is past its departure time.
+            for (int i = 0; i < currTrips.size(); i++) {
+                if (currTrips.get(i).getOrigTimeEpoch() < now.getTime()) currTrips.remove(i--);
+            }
+            return ETD_FAILURE;
+        }
+
+        int nextDeparture = Integer.MAX_VALUE;
         for (int i = 0; i < currTrips.size(); i++) {
             Trip trip = currTrips.get(i);
             String firstHeadAbbr = trip.getLeg(0).getTrainHeadStation();
@@ -545,14 +566,6 @@ public class TripOverviewActivity extends AppCompatActivity
 
             // Check if estimates data has been populated for the selected trip.
             if (etdResults.get(firstHeadAbbr).getTrains().isEmpty()) {
-                break;
-            }
-
-            // Check if the BART estimates API has been updated recently.
-            long sinceLastUpdate = now.getTime() - etdResults.get(firstHeadAbbr).getApiUpdateEpoch();
-            int sinceLastUpdateSeconds = (int) (sinceLastUpdate / 1000);
-            if (sinceLastUpdateSeconds > 120) {
-                isEtdApiDown = true;
                 break;
             }
 
@@ -595,44 +608,30 @@ public class TripOverviewActivity extends AppCompatActivity
             trip.setEtdDestTime(trip.getLeg(trip.getLegs().size() - 1).getEtdDestTime());
         }
         Collections.sort(currTrips);
-        if (isEtdApiDown && nextDeparture == Integer.MAX_VALUE) return ETD_FAILURE;
-        else return nextDeparture;
+        return nextDeparture;
     }
 
     private void setNextDepartureProgressBar(int seconds) {
 //        Log.v(TAG, "Next departure: " + seconds);
-        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
-//        mNextDepartureProgressBar.clearAnimation();
+        seconds = (seconds <= 0) ? 0 : seconds;
+        nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
+        nextDepartureAnimator.setDuration(seconds * 1000);
+        nextDepartureAnimator.setInterpolator(new LinearInterpolator());
+        nextDepartureAnimator.start();
         mNextDeparture.setTextSize(42);
 
-        if (seconds == ETD_FAILURE) {
-            Log.i(TAG, "BART estimates are unavailable...");
-            nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", 0, 0);
-            nextDepartureAnimator.setDuration(0);
-            nextDepartureAnimator.setInterpolator(new LinearInterpolator());
-            nextDepartureAnimator.start();
-            mNextDeparture.setText("N/A");
-            mNextDepartureWindow.setText(R.string.api_error);
-        } else {
-            seconds = (seconds <= 0) ? 0 : seconds;
-            nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
-            nextDepartureAnimator.setDuration(seconds * 1000);
-            nextDepartureAnimator.setInterpolator(new LinearInterpolator());
-            nextDepartureAnimator.start();
-            mNextDepartureWindow.setText(R.string.time_window);
+        if (nextDepartureCountdown != null) nextDepartureCountdown.cancel();
+        nextDepartureCountdown = new CountDownTimer(seconds * 1000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                String timeLeft = String.format(Locale.US, "%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
+                mNextDeparture.setText(timeLeft);
+            }
 
-            nextDepartureCountdown = new CountDownTimer(seconds * 1000, 1000) {
-                public void onTick(long millisUntilFinished) {
-                    String timeLeft = String.format(Locale.US, "%d:%02d", millisUntilFinished / (60 * 1000), millisUntilFinished / 1000 % 60);
-                    mNextDeparture.setText(timeLeft);
-                }
-
-                public void onFinish() {
-                    mNextDeparture.setTextSize(30);
-                    mNextDeparture.setText(R.string.status_leaving);
-                }
-            }.start();
-        }
+            public void onFinish() {
+                mNextDeparture.setTextSize(30);
+                mNextDeparture.setText(R.string.status_leaving);
+            }
+        }.start();
     }
 
     private void setOfflineLayout(String text) {
