@@ -77,12 +77,12 @@
 
         <ImageView
             android:id="@+id/train_length"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_marginStart="1dp"
             android:layout_toStartOf="@+id/separator"
             android:visibility="gone"
-            android:src="@drawable/black_railroad_car_24" />
+            android:src="@drawable/black_railroad_car_48" />
 
         <ImageView
             android:id="@+id/separator"
@@ -92,10 +92,10 @@
 
         <ImageView
             android:id="@+id/bicycle_flag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_toEndOf="@+id/separator"
-            android:src="@drawable/black_bicycle_24" />
+            android:src="@drawable/black_bicycle_48" />
 
         <ImageView
             android:id="@+id/negative_bicycle_flag"

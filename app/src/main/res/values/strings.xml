@@ -35,6 +35,6 @@
     <string name="status_leaving">Leaving…</string>
     <string name="time_window">±30 sec</string>
     <string name="time_window_api_error">±N/A</string>
-    <string name="train_length">%1$dx</string>
+    <string name="train_length">%1$d×</string>
     <string name="train_length_default">9x</string>
 </resources>
