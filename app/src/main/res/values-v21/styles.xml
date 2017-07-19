@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Base style -->
     <style name="BartTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/bart_primary1</item>
         <item name="colorPrimaryDark">@color/bart_primary1</item>
@@ -13,6 +13,12 @@
         <item name="drawerArrowStyle">@style/ToolbarIconTheme</item>
     </style>
 
+    <!-- Splash screen style -->
+    <style name="SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+    </style>
+
+    <!-- Toolbar style -->
     <style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="android:textColorPrimary">@color/material_light</item>
     </style>
@@ -21,6 +27,7 @@
         <item name="color">@color/material_light</item>
     </style>
 
+    <!-- FAB style -->
     <style name="fab">
         <item name="android:layout_margin">16dp</item>
     </style>

@@ -141,6 +141,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.BartTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.trip_overview);
 
@@ -560,14 +561,14 @@ public class TripOverviewActivity extends AppCompatActivity
             String firstHeadAbbr = trip.getLeg(0).getTrainHeadStation();
             // Check if the selected trip has already left the station.
             if (trip.getOrigTimeEpoch() < etdResults.get(firstHeadAbbr).getPrevDepartEpoch()) {
+                Log.v(TAG, "Removing trip: " + trip.getOrigin() + " -> " + firstHeadAbbr);
+                Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(firstHeadAbbr).getPrevDepart());
                 currTrips.remove(i--);
                 continue;
             }
 
             // Check if estimates data has been populated for the selected trip.
-            if (etdResults.get(firstHeadAbbr).getTrains().isEmpty()) {
-                break;
-            }
+            if (etdResults.get(firstHeadAbbr).getTrains().isEmpty()) break;
 
             long prevEstLegDestArrival = 0;
             for (Leg tripLeg : trip.getLegs()) {
@@ -586,9 +587,7 @@ public class TripOverviewActivity extends AppCompatActivity
                     if (tripLeg.getOrder() == 1 && etdSeconds < nextDeparture) nextDeparture = etdSeconds;
 
                     long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000);
-                    if (estLegOrigDeparture < prevEstLegDestArrival) {
-                        continue;
-                    }
+                    if (estLegOrigDeparture < prevEstLegDestArrival) continue;
 
                     long diffSeconds = (estLegOrigDeparture - tripLeg.getOrigTimeEpoch()) / 1000;
                     long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffSeconds * 1000);
@@ -612,7 +611,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setNextDepartureProgressBar(int seconds) {
-//        Log.v(TAG, "Next departure: " + seconds);
+        Log.v(TAG, "Next departure: " + seconds);
         seconds = (seconds <= 0) ? 0 : seconds;
         nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
         nextDepartureAnimator.setDuration(seconds * 1000);

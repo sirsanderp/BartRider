@@ -30,6 +30,7 @@ public class TripDetailActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.BartTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.trip_detail);
 
