@@ -13,6 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -124,6 +125,17 @@ public class Trip implements Comparable<Trip>, Serializable {
 
     public void setOrigTimeDate(String origTimeDate) {
         this.origTimeDate = origTimeDate;
+        try {
+            if ("12:00 AM".equals(origTimeMin)) {
+                SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+                Calendar c = Calendar.getInstance();
+                c.setTime(df.parse(origTimeDate));
+                c.add(Calendar.DATE, 1);
+                this.origTimeDate = df.format(c.getTime());
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         setEtdOrigTime(getOrigTimeEpoch());
     }
 

@@ -561,8 +561,9 @@ public class TripOverviewActivity extends AppCompatActivity
             String firstHeadAbbr = trip.getLeg(0).getTrainHeadStation();
             // Check if the selected trip has already left the station.
             if (trip.getOrigTimeEpoch() < etdResults.get(firstHeadAbbr).getPrevDepartEpoch()) {
-                Log.v(TAG, "Removing trip: " + trip.getOrigin() + " -> " + firstHeadAbbr);
-                Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(firstHeadAbbr).getPrevDepart());
+//                Log.v(TAG, "Removing trip: " + trip.getOrigin() + " -> " + firstHeadAbbr);
+//                Log.v(TAG, trip.getOrigTimeDate() + "" + trip.getOrigTimeMin() + " | "  + etdResults.get(firstHeadAbbr).getPrevDepart());
+//                Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(firstHeadAbbr).getPrevDepartEpoch());
                 currTrips.remove(i--);
                 continue;
             }
@@ -611,7 +612,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setNextDepartureProgressBar(int seconds) {
-        Log.v(TAG, "Next departure: " + seconds);
+//        Log.v(TAG, "Next departure: " + seconds);
         seconds = (seconds <= 0) ? 0 : seconds;
         nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
         nextDepartureAnimator.setDuration(seconds * 1000);
