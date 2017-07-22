@@ -71,6 +71,18 @@ public class TripOverviewTest {
         onView(withId(R.id.trip_overview_drawer_layout)).perform(DrawerActions.close());
         utils.selectTrip("Castro Valley", "Ashby");
         onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
+        onView(withId(R.id.action_favorite)).perform(click());
         onView(withId(R.id.trip_overview_drawer_layout)).perform(DrawerActions.open());
         utils.checkListViewItem(R.id.favorites_list_view, 0, "Castro Valley - Ashby", false);
         utils.checkListViewItem(R.id.favorites_list_view, 0, "Castro Valley - Montgomery St.", true);
