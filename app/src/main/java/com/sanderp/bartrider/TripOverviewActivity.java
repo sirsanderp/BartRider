@@ -155,7 +155,7 @@ public class TripOverviewActivity extends AppCompatActivity
 
         // Set up station database on first run.
         sharedPrefs = getSharedPreferences(PrefContract.PREFS_NAME, 0);
-        if (getContentResolver().query(BartRiderContract.Stations.CONTENT_URI, null , null, null, null).getCount() == 0) {
+        if (Utils.isNetworkConnected(this) && getContentResolver().query(BartRiderContract.Stations.CONTENT_URI, null , null, null, null).getCount() == 0) {
             new StationListAsyncTask(new AsyncTaskResponse() {
                 @Override
                 public void processFinish(Object output) {
@@ -245,7 +245,7 @@ public class TripOverviewActivity extends AppCompatActivity
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!plannerFragment.isAdded()) {
+                if (!plannerFragment.isAdded() && Utils.isNetworkConnected(TripOverviewActivity.this)) {
                     plannerFragment.setSpinners(origAbbr, destAbbr);
                     plannerFragment.show(fragmentManager, "Trip Planner Fragment");
                 }
@@ -253,29 +253,26 @@ public class TripOverviewActivity extends AppCompatActivity
         });
 
         if (getIntent() != null && getIntent().getSerializableExtra(TripDetailActivity.TRIP_LEG) != null) {
-            Intent data = getIntent();
-            Leg tripLeg = (Leg) data.getSerializableExtra(TripDetailActivity.TRIP_LEG);
+            Leg tripLeg = (Leg) getIntent().getSerializableExtra(TripDetailActivity.TRIP_LEG);
             setTrip(
+                    -1,
                     tripLeg.getOrigin(),
                     tripLeg.getOriginFull(),
                     tripLeg.getDestination(),
                     tripLeg.getDestinationFull()
             );
-            favoriteTrip = -1;
-            invalidateOptionsMenu();
         } else if (sharedPrefs.getBoolean(PrefContract.LAST_TRIP, false)) {
             Log.d(TAG, "onCreate(): Retrieving last trip information...");
             setTrip(
+                    sharedPrefs.getInt(PrefContract.LAST_ID, -1),
                     sharedPrefs.getString(PrefContract.LAST_ORIG_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_ORIG_FULL, null),
                     sharedPrefs.getString(PrefContract.LAST_DEST_ABBR, null),
                     sharedPrefs.getString(PrefContract.LAST_DEST_FULL, null)
             );
-            favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
-            mEmptyTripSchedules.setVisibility(View.GONE);
         } else {
             mTripSchedules.setEmptyView(mEmptyTripSchedules);
-            favoriteTrip = sharedPrefs.getInt(PrefContract.LAST_ID, -1);
+            favoriteTrip = 0;
         }
     }
 
@@ -305,6 +302,7 @@ public class TripOverviewActivity extends AppCompatActivity
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_ETD_SERVICE));
         if (isTripSet()) {
             Log.d(TAG, "onResume(): Refreshing trip schedules...");
+            setTripLoading();
             getTripSchedules();
         }
     }
@@ -365,11 +363,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 getTripSchedules();
                 return true;
             case R.id.action_reverse_trip:
-                if (isTripSet() && setTrip(destAbbr, destFull, origAbbr, origFull)) {
-                    favoriteTrip = -1;
-                    invalidateOptionsMenu();
-                    getTripSchedules();
-                }
+                setTrip(-1, destAbbr, destFull, origAbbr, origFull);
                 return true;
             case R.id.action_sfbart_twitter:
                 showTwitter("SFBART");
@@ -383,39 +377,36 @@ public class TripOverviewActivity extends AppCompatActivity
 
     @Override
     public void onConfirm(String origAbbr, String origFull, String destAbbr, String destFull) {
-        if (setTrip(origAbbr, origFull, destAbbr, destFull)) {
-            favoriteTrip = -1;
-            invalidateOptionsMenu();
-            getTripSchedules();
-            setRecentTrip();
-        }
+        setTrip(-1, origAbbr, origFull, destAbbr, destFull);
+        setRecentTrip();
     }
 
     @Override
     public void onTripClick(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
-        if (setTrip(origAbbr, origFull, destAbbr, destFull)) {
-            favoriteTrip = id;
-            invalidateOptionsMenu();
-            getTripSchedules();
-        }
+        setTrip(id, origAbbr, origFull, destAbbr, destFull);
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
-    protected boolean setTrip(String origAbbr, String origFull, String destAbbr, String destFull) {
+    protected void setTrip(int id, String origAbbr, String origFull, String destAbbr, String destFull) {
         if (!isTripSame(origAbbr, destAbbr) && isTripValid(origAbbr, destAbbr)) {
             cancelAlarms();
+            favoriteTrip = id;
             this.origAbbr = origAbbr;
             this.origFull = origFull;
             this.destAbbr = destAbbr;
             this.destFull = destFull;
-            setOverviewVisibility(View.INVISIBLE);
-            mEmptyTripSchedules.setVisibility(View.GONE);
-            mTripHeader.setText(origFull + " - " + destFull);
-            mTripHeader.setVisibility(View.VISIBLE);
-            mLoadingProgressBar.setVisibility(View.VISIBLE);
-            return true;
+            setTripLoading();
+            invalidateOptionsMenu();
+            getTripSchedules();
         }
-        return false;
+    }
+
+    private void setTripLoading() {
+        setOverviewVisibility(View.INVISIBLE);
+        mEmptyTripSchedules.setVisibility(View.GONE);
+        mTripHeader.setText(origFull + " - " + destFull);
+        mTripHeader.setVisibility(View.VISIBLE);
+        mLoadingProgressBar.setVisibility(View.VISIBLE);
     }
 
     private void setAdvisoryIcon() {
@@ -425,19 +416,16 @@ public class TripOverviewActivity extends AppCompatActivity
     private void setFavoriteIcon() {
         // -1: Not checked yet, 0: Checked, not a favorite, 1+: Checked, a favorite
         if (favoriteTrip == -1) favoriteTrip = drawerFragment.isFavoriteTrip(origAbbr, destAbbr);
-
-        if (favoriteTrip == 0) {
+        if (favoriteTrip == 0)
             mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.material_light), PorterDuff.Mode.SRC_ATOP);
-        } else {
+        else
             mFavoriteIcon.setColorFilter(ContextCompat.getColor(this, R.color.bart_primary2), PorterDuff.Mode.SRC_ATOP);
-        }
     }
 
     private void getAdvisory() {
-        if (Utils.isNetworkConnected(this)) {
+        if (Utils.isNetworkConnected(this))
             startService(new Intent(this, AdvisoryService.class)
                     .putExtra(AdvisoryService.NOTIFY, false));
-        }
     }
 
     private void onReceiveAdvisory() {
@@ -733,6 +721,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     public boolean isTripValid(String orig, String dest) {
+        if (orig == null || dest == null) return false;
         if (orig.equals(dest)) {
             Toast.makeText(this, "Origin and destination cannot be the same.", Toast.LENGTH_SHORT).show();
             return false;
