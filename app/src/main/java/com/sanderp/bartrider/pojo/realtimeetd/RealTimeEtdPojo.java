@@ -11,6 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -52,6 +53,15 @@ public class RealTimeEtdPojo implements Serializable {
             e.printStackTrace();
         }
         return 0L;
+    }
+
+    /**
+     * Computes the seconds since the API was updated relative to a time.
+     * @return the seconds since
+     */
+    @DynamoDBIgnore
+    public int getSinceApiUpdateSeconds() {
+        return (int) ((new Date().getTime() - getApiUpdateEpoch()) / 1000);
     }
 
     @DynamoDBAttribute(attributeName = "color")

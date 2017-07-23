@@ -43,15 +43,17 @@ public class QuickPlannerService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
+            QuickPlannerPojo pojo = null;
             try {
-                QuickPlannerPojo pojo = getSchedule(intent.getStringExtra(ORIG), intent.getStringExtra(DEST));
+                pojo = getSchedule(intent.getStringExtra(ORIG), intent.getStringExtra(DEST));
+            } catch (IOException e) {
+                Log.e(TAG, "Input stream failed.");
+                e.printStackTrace();
+            } finally {
                 Intent localIntent = new Intent(Constants.Broadcast.QUICK_PLANNER_SERVICE)
                         .putExtra(RESULT, pojo);
                 Log.i(TAG, "Sending broadcast...");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-            } catch (IOException e) {
-                Log.e(TAG, "Input stream failed.");
-                e.printStackTrace();
             }
         }
     }

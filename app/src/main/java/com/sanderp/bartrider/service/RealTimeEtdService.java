@@ -48,7 +48,16 @@ public class RealTimeEtdService extends IntentService {
 
     private HashMap<String, RealTimeEtdPojo> getRealTimeEtd(Bundle bundle) {
         Log.i(TAG, "Getting real-time etds...");
-        Map<String, List<Object>> pojoMap = mapper.batchLoad((List<Object>) bundle.getSerializable(OBJECT_LIST));
+        Map<String, List<Object>> pojoMap = null;
+        try {
+            pojoMap = mapper.batchLoad((List<Object>) bundle.getSerializable(OBJECT_LIST));
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to retrieve real-time etds.");
+            e.printStackTrace();
+        }
+
+        if (pojoMap == null || pojoMap.isEmpty()) return null;
+        if (pojoMap.get("REAL_TIME_ETD") == null || pojoMap.get("REAL_TIME_ETD").isEmpty()) return null;
         HashMap<String, RealTimeEtdPojo> headMap = new HashMap<>();
         for (Object object : pojoMap.get("REAL_TIME_ETD")) {
             RealTimeEtdPojo pojo = (RealTimeEtdPojo) object;
