@@ -514,7 +514,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
                 Log.v(TAG, "Current Time: " + DF.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
                 Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
-                for (int j = 0; j < etdResults.get(headAbbr).getTrains().size(); j++) {
+                while (etdResults.get(headAbbr).getTrains().size() > 0) {
                     Log.d(TAG, "Checking the estimates for the trip...");
                     List<Integer> trainInfo = etdResults.get(headAbbr).getTrains().remove(0);
                     int etdSeconds = trainInfo.get(1);
