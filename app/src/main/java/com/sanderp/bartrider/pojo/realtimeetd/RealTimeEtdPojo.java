@@ -32,6 +32,8 @@ public class RealTimeEtdPojo implements Serializable {
     private String prevDepart;
     private List<List<Integer>> trains = null;
 
+    private int sinceApiUpdate;
+
     @DynamoDBAttribute(attributeName = "api_update")
     public String getApiUpdate() {
         return apiUpdate;
@@ -39,6 +41,7 @@ public class RealTimeEtdPojo implements Serializable {
 
     public void setApiUpdate(String date) {
         this.apiUpdate = date;
+        setSinceApiUpdate();
     }
 
     /**
@@ -55,13 +58,18 @@ public class RealTimeEtdPojo implements Serializable {
         return 0L;
     }
 
+    @DynamoDBIgnore
+    public int getSinceApiUpdate() {
+        return sinceApiUpdate;
+    }
+
     /**
      * Computes the seconds since the API was updated relative to a time.
      * @return the seconds since
      */
     @DynamoDBIgnore
-    public int getSinceApiUpdateSeconds() {
-        return (int) ((new Date().getTime() - getApiUpdateEpoch()) / 1000);
+    public void setSinceApiUpdate() {
+        sinceApiUpdate = (int) ((new Date().getTime() - getApiUpdateEpoch()) / 1000);
     }
 
     @DynamoDBAttribute(attributeName = "color")
