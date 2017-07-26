@@ -74,7 +74,7 @@ public class Leg implements Serializable {
     @JsonIgnore
     private long etdDestTime;
     @JsonIgnore
-    private int etdSeconds;
+    private int untilOrigDepart;
     @JsonIgnore
     private int length = 0;
 
@@ -154,7 +154,7 @@ public class Leg implements Serializable {
             e.printStackTrace();
         }
         setEtdOrigTime(getOrigTimeEpoch());
-        setEtdSeconds();
+        setUntilOrigDeparts();
     }
 
     /**
@@ -211,12 +211,12 @@ public class Leg implements Serializable {
         return 0L;
     }
 
-    public int getEtdSeconds() {
-        return etdSeconds;
+    public int getUntilOrigDepart() {
+        return untilOrigDepart;
     }
 
-    public void setEtdSeconds() {
-        etdSeconds = (int) ((getOrigTimeEpoch() - new Date().getTime()) / 1000);
+    public void setUntilOrigDeparts() {
+        untilOrigDepart = (int) ((getOrigTimeEpoch() - new Date().getTime()) / 1000);
     }
 
     public String getLine() {
