@@ -11,6 +11,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -138,6 +140,17 @@ public class Leg implements Serializable {
 
     public void setOrigTimeDate(String origTimeDate) {
         this.origTimeDate = origTimeDate;
+        try {
+            if ("12:00 AM".equals(origTimeMin)) {
+                SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+                Calendar c = Calendar.getInstance();
+                c.setTime(df.parse(origTimeDate));
+                c.add(Calendar.DATE, 1);
+                this.origTimeDate = df.format(c.getTime());
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         setEtdOrigTime(getOrigTimeEpoch());
     }
 
@@ -168,6 +181,17 @@ public class Leg implements Serializable {
 
     public void setDestTimeDate(String destTimeDate) {
         this.destTimeDate = destTimeDate;
+        try {
+            if ("12:00 AM".equals(destTimeMin)) {
+                SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+                Calendar c = Calendar.getInstance();
+                c.setTime(df.parse(destTimeDate));
+                c.add(Calendar.DATE, 1);
+                this.destTimeDate = df.format(c.getTime());
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         setEtdDestTime(getDestTimeEpoch());
     }
 

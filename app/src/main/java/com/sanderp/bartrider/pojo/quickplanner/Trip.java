@@ -166,6 +166,17 @@ public class Trip implements Comparable<Trip>, Serializable {
 
     public void setDestTimeDate(String destTimeDate) {
         this.destTimeDate = destTimeDate;
+        try {
+            if ("12:00 AM".equals(destTimeMin)) {
+                SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+                Calendar c = Calendar.getInstance();
+                c.setTime(df.parse(destTimeDate));
+                c.add(Calendar.DATE, 1);
+                this.destTimeDate = df.format(c.getTime());
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         setEtdDestTime(getDestTimeEpoch());
     }
 
