@@ -508,7 +508,7 @@ public class TripOverviewActivity extends AppCompatActivity
                         currTrips.remove(i--);
                         break;
                     } else {
-                        if (tripLeg.getUntilOrigDepart() < nextDeparture) nextDeparture = tripLeg.getUntilOrigDepart();
+                        if (i == 0 && j == 0) nextDeparture = tripLeg.getUntilOrigDepart();
                         prevEstLegDestArrival = tripLeg.getEtdDestTime();
                         continue;
                     }
@@ -541,8 +541,6 @@ public class TripOverviewActivity extends AppCompatActivity
                     if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
                     else etdSeconds -= sinceLastUpdateSeconds;
 
-                    if (j == 0 && etdSeconds < nextDeparture) nextDeparture = etdSeconds;
-
                     long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000);
                     Log.v(TAG, "Leg : " + DF.format(estLegOrigDeparture) + " | " + DF.format(prevEstLegDestArrival));
                     Log.v(TAG, "Leg : " + estLegOrigDeparture + " | " + prevEstLegDestArrival);
@@ -554,13 +552,18 @@ public class TripOverviewActivity extends AppCompatActivity
                     foundTripLeg = true;
                     long diffSeconds = (estLegOrigDeparture - tripLeg.getOrigTimeEpoch()) / 1000;
                     long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffSeconds * 1000);
+                    prevEstLegDestArrival = estLegDestArrival;
+
+                    if (j == 0) {
+                        if (i == 0) nextDeparture = etdSeconds;
+                    } else {
+                        etdResults.get(headAbbr).getTrains().add(0, trainInfo);
+                    }
 
                     Log.v(TAG, "Adjusted seconds: " + etdSeconds + " | Offset seconds: " + sinceLastUpdateSeconds);
                     Log.v(TAG, "Trip Leg (planned): " + tripLeg.getOrigTimeMin() + " - " + tripLeg.getDestTimeMin());
                     Log.v(TAG, "Trip Leg (estimated): " + DF.format(estLegOrigDeparture) + " - " + DF.format(estLegDestArrival));
                     Log.v(TAG, "Difference: " + diffSeconds + " seconds");
-                    if (j != 0) etdResults.get(headAbbr).getTrains().add(0, trainInfo);
-                    prevEstLegDestArrival = estLegDestArrival;
                     tripLeg.setEtdOrigTime(estLegOrigDeparture);
                     tripLeg.setEtdDestTime(estLegDestArrival);
                     tripLeg.setLength(trainInfo.get(2));
@@ -569,7 +572,6 @@ public class TripOverviewActivity extends AppCompatActivity
 
                 if (!foundTripLeg) {
                     // Add to trip leg (last trip leg - curr trip leg) until it's > prevEstLegDestArrival
-
                 }
             }
             trip.setEtdOrigTime(trip.getLeg(0).getEtdOrigTime());
