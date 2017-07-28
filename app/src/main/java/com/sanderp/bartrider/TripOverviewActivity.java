@@ -122,7 +122,7 @@ public class TripOverviewActivity extends AppCompatActivity
     private QuickPlannerPojo scheduleResults;
     private List<Trip> currTrips;
 
-    private boolean wasOnCreate = false;
+    private boolean ranOnCreate = false;
     private int favoriteTrip = -1;
     private String origAbbr;
     private String origFull;
@@ -274,7 +274,7 @@ public class TripOverviewActivity extends AppCompatActivity
             mTripSchedules.setEmptyView(mEmptyTripSchedules);
             favoriteTrip = 0;
         }
-        wasOnCreate = true;
+        ranOnCreate = true;
     }
 
     @Override
@@ -293,7 +293,7 @@ public class TripOverviewActivity extends AppCompatActivity
                     .putString(PrefContract.LAST_DEST_FULL, destFull)
                     .apply();
         }
-        wasOnCreate = false;
+        ranOnCreate = false;
     }
 
     @Override
@@ -302,7 +302,7 @@ public class TripOverviewActivity extends AppCompatActivity
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.ADVISORY_SERVICE));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.QUICK_PLANNER_SERVICE));
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(Constants.Broadcast.REAL_TIME_ETD_SERVICE));
-        if (isTripSet() && !wasOnCreate ) {
+        if (isTripSet() && !ranOnCreate) {
             Log.d(TAG, "onResume(): Refreshing trip schedules...");
             setTripLoading();
             getTripSchedules("onResume()");
@@ -481,55 +481,72 @@ public class TripOverviewActivity extends AppCompatActivity
 
     private int mergeSchedulesAndEtd() {
         // Check if the BART estimates API has been updated recently.
-        Date now = new Date();
-        int sinceLastUpdateSeconds = etdResults.get(currTrips.get(5).getLeg(0).getTrainHeadStation()).getSinceApiUpdateSeconds();
-        if (etdResults == null || etdResults.isEmpty() || sinceLastUpdateSeconds > 120) {
-            Log.i(TAG, "Real-time estimates are unavailable...");
-            // Check if the selected trip is past its departure time.
-            for (int i = 0; i < currTrips.size(); i++) {
-                if (currTrips.get(i).getOrigTimeEpoch() < now.getTime()) currTrips.remove(i--);
-            }
-            setTripOverview(ETD_FAILURE);
-        }
+        boolean isEtdApiDown = true;
+        if (etdResults != null && !etdResults.isEmpty()) isEtdApiDown = false;
 
+        Date now = new Date();
         int nextDeparture = Integer.MAX_VALUE;
         for (int i = 0; i < currTrips.size(); i++) {
+            if (isEtdApiDown) break;
             Trip trip = currTrips.get(i);
-            String firstHeadAbbr = trip.getLeg(0).getTrainHeadStation();
-            // Check if the selected trip has already left the station.
-            if (trip.getOrigTimeEpoch() < etdResults.get(firstHeadAbbr).getPrevDepartEpoch()) {
-//                Log.v(TAG, "Removing trip: " + trip.getOrigin() + " -> " + firstHeadAbbr);
-//                Log.v(TAG, trip.getOrigTimeDate() + "" + trip.getOrigTimeMin() + " | "  + etdResults.get(firstHeadAbbr).getPrevDepart());
-//                Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(firstHeadAbbr).getPrevDepartEpoch());
-                currTrips.remove(i--);
-                continue;
-            }
-
-            // Check if estimates data has been populated for the selected trip.
-            if (etdResults.get(firstHeadAbbr).getTrains().isEmpty()) break;
-
             long prevEstLegDestArrival = 0;
             for (int j = 0; j < trip.getLegs().size(); j++) {
                 Leg tripLeg = trip.getLeg(j);
                 String headAbbr = tripLeg.getTrainHeadStation();
-                if (etdResults.get(headAbbr).getTrains().size() == 0) continue;
                 Log.v(TAG, tripLeg.getOrigin() + " -> " + headAbbr);
+
+                // Check if the real-time etds for the head station exist.
+                if (etdResults.get(headAbbr) == null || etdResults.get(headAbbr).getTrains().isEmpty()) {
+                    if (tripLeg.getOrigTimeEpoch() < now.getTime()) {
+                        Log.d(TAG, "Trip originates before current time.");
+                        currTrips.remove(i--);
+                        break;
+                    } else {
+                        if (tripLeg.getUntilOrigDepart() < nextDeparture) nextDeparture = tripLeg.getUntilOrigDepart();
+                        prevEstLegDestArrival = tripLeg.getEtdDestTime();
+                        continue;
+                    }
+                }
+
+                // Check if the trip has already left the station.
+                if (j == 0 && trip.getOrigTimeEpoch() < etdResults.get(headAbbr).getPrevDepartEpoch()) {
+                    Log.v(TAG, "Removing trip: " + trip.getOrigin() + " -> " + headAbbr);
+                    Log.v(TAG, trip.getOrigTimeDate() + "" + trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
+                    Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
+                    currTrips.remove(i--);
+                    break;
+                }
+
+                // Check if the real-time etds are recent.
+                int sinceLastUpdateSeconds = etdResults.get(headAbbr).getSinceApiUpdate();
+                if (sinceLastUpdateSeconds > 120) continue;
+
                 Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
                 Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
                 Log.v(TAG, "Current Time: " + DF.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
                 Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
+                isEtdApiDown = false;
+                boolean foundTripLeg = false;
                 while (etdResults.get(headAbbr).getTrains().size() > 0) {
                     Log.d(TAG, "Checking trip leg real-time etds...");
                     List<Integer> trainInfo = etdResults.get(headAbbr).getTrains().remove(0);
+
                     int etdSeconds = trainInfo.get(1);
+                    Log.v(TAG, "Estimated seconds: " + etdSeconds);
                     if (etdSeconds <= sinceLastUpdateSeconds) etdSeconds = 0;
                     else etdSeconds -= sinceLastUpdateSeconds;
-                    if (tripLeg.getOrder() == 1 && etdSeconds < nextDeparture) nextDeparture = etdSeconds;
+
+                    if (j == 0 && etdSeconds < nextDeparture) nextDeparture = etdSeconds;
 
                     long estLegOrigDeparture = now.getTime() + (etdSeconds * 1000);
                     Log.v(TAG, "Leg : " + DF.format(estLegOrigDeparture) + " | " + DF.format(prevEstLegDestArrival));
-                    if (estLegOrigDeparture < prevEstLegDestArrival) continue;
+                    Log.v(TAG, "Leg : " + estLegOrigDeparture + " | " + prevEstLegDestArrival);
+                    if (estLegOrigDeparture < prevEstLegDestArrival) {
+//                        prevEstLegDestArrival = tripLeg.getEtdDestTime();  // Makes no sense, forgot why I put it here.
+                        continue;
+                    }
 
+                    foundTripLeg = true;
                     long diffSeconds = (estLegOrigDeparture - tripLeg.getOrigTimeEpoch()) / 1000;
                     long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffSeconds * 1000);
 
@@ -544,10 +561,26 @@ public class TripOverviewActivity extends AppCompatActivity
                     tripLeg.setLength(trainInfo.get(2));
                     break;
                 }
+
+                if (!foundTripLeg) {
+                    // Add to trip leg (last trip leg - curr trip leg) until it's > prevEstLegDestArrival
+
+                }
             }
             trip.setEtdOrigTime(trip.getLeg(0).getEtdOrigTime());
             trip.setEtdDestTime(trip.getLeg(trip.getLegs().size() - 1).getEtdDestTime());
         }
+
+        if (isEtdApiDown) {
+            Log.i(TAG, "Real-time estimates are unavailable...");
+            // Check if the selected trip is past its departure time.
+            for (int i = 0; i < currTrips.size(); i++) {
+                if (currTrips.get(i).getOrigTimeEpoch() < now.getTime())
+                    currTrips.remove(i--);
+            }
+            return ETD_FAILURE;
+        }
+
         Collections.sort(currTrips);
         return nextDeparture;
     }
@@ -608,7 +641,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setNextDepartureProgressBar(int seconds) {
-//        Log.v(TAG, "Next departure: " + seconds);
+        Log.v(TAG, "Next departure: " + seconds);
         seconds = (seconds <= 0) ? 0 : seconds;
         ObjectAnimator nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
         nextDepartureAnimator.setDuration(seconds * 1000);
