@@ -480,14 +480,20 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private int mergeSchedulesAndEtd() {
-        // Check if the BART estimates API has been updated recently.
-        boolean isEtdApiDown = true;
-        if (etdResults != null && !etdResults.isEmpty()) isEtdApiDown = false;
-
         Date now = new Date();
+        // Check if the BART estimates API has been updated recently.
+        if (etdResults == null || etdResults.isEmpty()) {
+            Log.i(TAG, "Real-time estimates are unavailable...");
+            // Check if the selected trip is past its departure time.
+            for (int i = 0; i < currTrips.size(); i++) {
+                if (currTrips.get(i).getOrigTimeEpoch() < now.getTime())
+                    currTrips.remove(i--);
+            }
+            return ETD_FAILURE;
+        }
+
         int nextDeparture = Integer.MAX_VALUE;
         for (int i = 0; i < currTrips.size(); i++) {
-            if (isEtdApiDown) break;
             Trip trip = currTrips.get(i);
             long prevEstLegDestArrival = 0;
             for (int j = 0; j < trip.getLegs().size(); j++) {
@@ -525,7 +531,6 @@ public class TripOverviewActivity extends AppCompatActivity
                 Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
                 Log.v(TAG, "Current Time: " + DF.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
                 Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
-                isEtdApiDown = false;
                 boolean foundTripLeg = false;
                 while (etdResults.get(headAbbr).getTrains().size() > 0) {
                     Log.d(TAG, "Checking trip leg real-time etds...");
@@ -570,17 +575,6 @@ public class TripOverviewActivity extends AppCompatActivity
             trip.setEtdOrigTime(trip.getLeg(0).getEtdOrigTime());
             trip.setEtdDestTime(trip.getLeg(trip.getLegs().size() - 1).getEtdDestTime());
         }
-
-        if (isEtdApiDown) {
-            Log.i(TAG, "Real-time estimates are unavailable...");
-            // Check if the selected trip is past its departure time.
-            for (int i = 0; i < currTrips.size(); i++) {
-                if (currTrips.get(i).getOrigTimeEpoch() < now.getTime())
-                    currTrips.remove(i--);
-            }
-            return ETD_FAILURE;
-        }
-
         Collections.sort(currTrips);
         return nextDeparture;
     }
