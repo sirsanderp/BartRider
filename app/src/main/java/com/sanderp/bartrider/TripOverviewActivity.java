@@ -649,6 +649,7 @@ public class TripOverviewActivity extends AppCompatActivity
         ObjectAnimator nextDepartureAnimator = ObjectAnimator.ofInt(mNextDepartureProgressBar, "progress", seconds, 0);
         nextDepartureAnimator.setDuration(seconds * 1000);
         nextDepartureAnimator.setInterpolator(new LinearInterpolator());
+        nextDepartureAnimator.setAutoCancel(true);
         nextDepartureAnimator.start();
         mNextDeparture.setTextSize(42);
 
