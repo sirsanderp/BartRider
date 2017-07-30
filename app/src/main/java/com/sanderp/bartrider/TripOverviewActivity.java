@@ -503,11 +503,13 @@ public class TripOverviewActivity extends AppCompatActivity
 
                 // Check if the real-time etds for the head station exist.
                 if (etdResults.get(headAbbr) == null || etdResults.get(headAbbr).getTrains().isEmpty()) {
+                    Log.d(TAG, "There are no etd results for the head station.");
                     if (tripLeg.getOrigTimeEpoch() < now.getTime()) {
                         Log.d(TAG, "Trip originates before current time.");
                         currTrips.remove(i--);
                         break;
                     } else {
+                        Log.d(TAG, "Trip originates after current time.");
                         if (i == 0 && j == 0) nextDeparture = tripLeg.getUntilOrigDepart();
                         prevEstLegDestArrival = tripLeg.getEtdDestTime();
                         continue;
@@ -525,13 +527,18 @@ public class TripOverviewActivity extends AppCompatActivity
 
                 // Check if the real-time etds are recent.
                 int sinceLastUpdateSeconds = etdResults.get(headAbbr).getSinceApiUpdate();
-                if (sinceLastUpdateSeconds > 120) continue;
+                Log.v(TAG, "sinceLastUpdate: " + sinceLastUpdateSeconds);
+                if (sinceLastUpdateSeconds > 120) {
+                    Log.v(TAG, "It's been too long since last update.");
+                    prevEstLegDestArrival = tripLeg.getEtdDestTime();
+                    continue;
+                }
 
                 Log.v(TAG, trip.getOrigTimeMin() + " | "  + etdResults.get(headAbbr).getPrevDepart());
                 Log.v(TAG, trip.getOrigTimeEpoch() + " | "  + etdResults.get(headAbbr).getPrevDepartEpoch());
                 Log.v(TAG, "Current Time: " + DF.format(now) + " | API Time: " + etdResults.get(headAbbr).getApiUpdate());
                 Log.v(TAG, "Actual seconds: " + etdResults.get(headAbbr).getEtdSeconds(0));
-                boolean foundTripLeg = false;
+//                boolean foundTripLeg = false;
                 while (etdResults.get(headAbbr).getTrains().size() > 0) {
                     Log.d(TAG, "Checking trip leg real-time etds...");
                     List<Integer> trainInfo = etdResults.get(headAbbr).getTrains().remove(0);
@@ -549,7 +556,7 @@ public class TripOverviewActivity extends AppCompatActivity
                         continue;
                     }
 
-                    foundTripLeg = true;
+//                    foundTripLeg = true;
                     long diffSeconds = (estLegOrigDeparture - tripLeg.getOrigTimeEpoch()) / 1000;
                     long estLegDestArrival = tripLeg.getDestTimeEpoch() + (diffSeconds * 1000);
                     prevEstLegDestArrival = estLegDestArrival;
@@ -570,9 +577,9 @@ public class TripOverviewActivity extends AppCompatActivity
                     break;
                 }
 
-                if (!foundTripLeg) {
-                    // Add to trip leg (last trip leg - curr trip leg) until it's > prevEstLegDestArrival
-                }
+//                if (!foundTripLeg) {
+////                     Add to trip leg (last trip leg - curr trip leg) until it's > prevEstLegDestArrival
+//                }
             }
             trip.setEtdOrigTime(trip.getLeg(0).getEtdOrigTime());
             trip.setEtdDestTime(trip.getLeg(trip.getLegs().size() - 1).getEtdDestTime());
