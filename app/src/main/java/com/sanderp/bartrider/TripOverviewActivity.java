@@ -477,22 +477,17 @@ public class TripOverviewActivity extends AppCompatActivity
         Log.d(TAG, "onReceiveTripRealTimeEtd(): Received callback from broadcast.");
         etdResults = (HashMap<String, RealTimeEtdPojo>) intent.getSerializableExtra(RealTimeEtdService.RESULT);
         currTrips = new ArrayList<>(scheduleResults.getRoot().getSchedule().getRequest().getTrips());
-        setTripOverview(mergeSchedulesAndEtd());
+        if (etdResults == null || etdResults.isEmpty()) {
+            removeTripsPastNow();
+            setTripOverview(ETD_FAILURE);
+        } else {
+            setTripOverview(mergeSchedulesAndEtd());
+        }
     }
 
     private int mergeSchedulesAndEtd() {
         Date now = new Date();
-        // Check if the BART estimates API has been updated recently.
-        if (etdResults == null || etdResults.isEmpty()) {
-            Log.i(TAG, "Real-time estimates are unavailable...");
-            // Check if the selected trip is past its departure time.
-            for (int i = 0; i < currTrips.size(); i++) {
-                if (currTrips.get(i).getOrigTimeEpoch() < now.getTime())
-                    currTrips.remove(i--);
-            }
-            return ETD_FAILURE;
-        }
-
+        boolean isEtdApiDown = true;
         int nextDeparture = NEXT_DEPARTURE_MAX;
         for (int i = 0; i < currTrips.size(); i++) {
             Trip trip = currTrips.get(i);
@@ -503,6 +498,7 @@ public class TripOverviewActivity extends AppCompatActivity
                 Log.v(TAG, tripLeg.getOrigin() + " -> " + headAbbr);
 
                 // Check if the real-time etds for the head station exist.
+                // Mainly applies for Oakland Airport station since it has no estimates.
                 if (etdResults.get(headAbbr) == null || etdResults.get(headAbbr).getTrains().isEmpty()) {
                     Log.d(TAG, "There are no etd results for the head station.");
                     if (tripLeg.getOrigTimeEpoch() < now.getTime()) {
@@ -538,6 +534,7 @@ public class TripOverviewActivity extends AppCompatActivity
                     prevEstLegDestArrival = tripLeg.getEtdDestTime();
                     continue;
                 }
+                isEtdApiDown = false;
 
 //                boolean foundTripLeg = false;
                 while (etdResults.get(headAbbr).getTrains().size() > 0) {
@@ -585,8 +582,23 @@ public class TripOverviewActivity extends AppCompatActivity
             trip.setEtdOrigTime(trip.getLeg(0).getEtdOrigTime());
             trip.setEtdDestTime(trip.getLeg(trip.getLegs().size() - 1).getEtdDestTime());
         }
-        Collections.sort(currTrips);
-        return nextDeparture;
+
+        if (isEtdApiDown) {
+            removeTripsPastNow();
+            return ETD_FAILURE;
+        } else {
+            Collections.sort(currTrips);
+            return nextDeparture;
+        }
+    }
+
+    private void removeTripsPastNow() {
+        Log.i(TAG, "Real-time estimates are unavailable...");
+        Date now = new Date();
+        for (int i = 0; i < currTrips.size(); i++) {
+            if (currTrips.get(i).getOrigTimeEpoch() < now.getTime())
+                currTrips.remove(i--);
+        }
     }
 
     private void setTripOverview(int nextDeparture) {
@@ -669,7 +681,7 @@ public class TripOverviewActivity extends AppCompatActivity
     }
 
     private void setOfflineLayout(String text) {
-//        mTripHeader.setVisibility(View.VISIBLE);
+        mTripHeader.setVisibility(View.VISIBLE);
         mEmptyTripSchedules.setText(text);
         mEmptyTripSchedules.setVisibility(View.VISIBLE);
         invalidateOptionsMenu();
