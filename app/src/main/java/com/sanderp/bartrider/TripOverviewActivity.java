@@ -451,7 +451,9 @@ public class TripOverviewActivity extends AppCompatActivity
     private void onReceiveTripSchedules(Intent intent) {
         Log.d(TAG, "onReceiveTripSchedules(): Received callback from broadcast.");
         scheduleResults = (QuickPlannerPojo) intent.getSerializableExtra(QuickPlannerService.RESULT);
-        if (scheduleResults == null || scheduleResults.getRoot() == null || scheduleResults.getRoot().getSchedule().getRequest().getTrips().isEmpty()) {
+        if (scheduleResults == null || scheduleResults.getRoot() == null ||
+                scheduleResults.getRoot().getSchedule().getRequest().getTrips() == null ||
+                scheduleResults.getRoot().getSchedule().getRequest().getTrips().isEmpty()) {
             setTripOverview(SCHED_FAILURE);
         } else {
             getTripRealTimeEtd();
