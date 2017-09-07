@@ -1,6 +1,7 @@
 package com.sanderp.bartrider.pojo.stationlist;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -11,6 +12,7 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder({
         "name",
         "abbr",

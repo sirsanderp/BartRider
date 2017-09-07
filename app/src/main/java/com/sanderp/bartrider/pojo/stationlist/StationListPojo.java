@@ -10,9 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties({
-        "?xml"
-})
+@JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder({
         "root"
 })

@@ -10,9 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties({
-        "uri"
-})
+@JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder({
         "stations",
         "message"

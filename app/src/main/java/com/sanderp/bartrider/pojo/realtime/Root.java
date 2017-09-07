@@ -11,10 +11,7 @@ import java.io.Serializable;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties({
-        "@id",
-        "uri"
-})
+@JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder({
         "date",
         "time",
