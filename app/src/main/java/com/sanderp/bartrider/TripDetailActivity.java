@@ -37,7 +37,7 @@ public class TripDetailActivity extends AppCompatActivity {
         // Set up Toolbar to replace ActionBar.
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mToolbar.setTitle("Trip Details");
-        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        mToolbar.setNavigationIcon(R.drawable.ic_menu_arrow_back);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 

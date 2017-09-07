@@ -95,7 +95,7 @@
                     android:layout_centerInParent="true"
                     android:max="1200"
                     android:progress="1200"
-                    android:progressDrawable="@drawable/circular_progress"
+                    android:progressDrawable="@drawable/circular_progress_bar"
                     style="?android:attr/progressBarStyleHorizontal" />
 
                 <TextView
@@ -157,7 +157,7 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
             android:tint="@color/material_light"
-            app:srcCompat="@drawable/ic_add_24dp"
+            app:srcCompat="@drawable/ic_add"
             style="@style/fab" />
 
     </RelativeLayout>

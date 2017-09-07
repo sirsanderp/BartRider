@@ -22,7 +22,7 @@ public class BartMapActivity extends AppCompatActivity {
         // Set up Toolbar to replace ActionBar.
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mToolbar.setTitle("BART Map");
-        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        mToolbar.setNavigationIcon(R.drawable.ic_menu_arrow_back);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 

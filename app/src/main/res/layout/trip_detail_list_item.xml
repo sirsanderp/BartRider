@@ -61,7 +61,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/station_layout"
         android:layout_marginTop="-10dp"
-        android:layout_marginBottom="4dp">
+        android:layout_marginBottom="-4dp">
 
         <TextView
             android:id="@+id/train_length_text"
@@ -92,10 +92,10 @@
 
         <ImageView
             android:id="@+id/bicycle_flag"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_toEndOf="@+id/separator"
-            android:src="@drawable/black_bicycle_48" />
+            android:src="@drawable/ic_bike_img" />
 
         <ImageView
             android:id="@+id/negative_bicycle_flag"
@@ -105,7 +105,7 @@
             android:layout_alignEnd="@+id/bicycle_flag"
             android:layout_marginTop="4dp"
             android:visibility="gone"
-            app:srcCompat="@drawable/ic_cancel_24dp" />
+            app:srcCompat="@drawable/ic_no_bike" />
 
     </RelativeLayout>
 

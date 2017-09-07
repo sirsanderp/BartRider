@@ -104,7 +104,7 @@ public class AdvisoryService extends IntentService {
             Notification notification = new NotificationCompat.Builder(this)
                     .setContentTitle("BART Advisory")
                     .setContentText(advisories)
-                    .setSmallIcon(R.drawable.ic_bart_rider_24dp)
+                    .setSmallIcon(R.drawable.ic_stat_bart_rider_img)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(advisories))
                     .build();
             mNotificationManager.notify(NOTIFICATION_ID, notification);
